@@ -1,0 +1,83 @@
+﻿@model List<Selecao.Domain.Entities.Candidato>
+@{
+    ViewData["Title"] = "Candidatos";
+}
+
+<div class="d-flex justify-content-between">
+    <div class="page-header">
+        <h3 class="fw-bold mb-3">Candidatos</h3>
+        <ul class="breadcrumbs">
+            <li class="nav-home active">
+                <a asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <p href="#">Candidatos</p>
+            </li>
+        </ul>
+    </div>
+    <div>
+        <a class="btn btn-stantard" asp-controller="Candidatos" asp-action="Incluir">
+            <span class="btn-label">
+                <i class="fa fa-plus me-1"></i>
+            </span>
+            Incluir
+        </a>
+    </div>
+</div>
+<div class="card">
+    <form id="filtrosCandidatos">
+        <div class="card-body row">
+            <div class="col-2">
+                <div class="form-group form-group-default">
+                    <label>Código</label>
+                    <input name="Id" id="codigo" type="text" class="form-control" />
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="form-group form-group-default">
+                    <label>Nome</label>
+                    <input id="nome" name="Nome" type="text" class="form-control" />
+                </div>
+            </div>
+            <div class="col-2">
+                <div class="form-group form-group-default">
+                    <label>Status</label>
+                    <select class="form-select" id="formGroupDefaultSelect" name="Status">
+                        <option>Todos</option>
+                        <option value="1" selected>Disponivel</option>
+                        <option value="2">Selecionado</option>
+                        <option value="3">Excluído</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-2">
+                <div class="form-group form-group-default">
+                    <label>Total de Registros</label>
+                    <select class="form-select" id="formGroupDefaultSelect" name="TotalRegistros">                        
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="500">500</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-2 pt-2 text-end">
+                <button type="reset" class="btn btn-danger">Limpar</button>
+                <button type="submit" class="btn btn-stantard">Filtar</button>
+            </div>
+        </div>
+    </form>
+    <div class="card-body overflow-auto" style="max-height: 62vh" id="tableCandidatos">
+        <partial name="_Candidatos" model="@Model" />
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Candidatos/Index.js"></script>
+}

@@ -1,0 +1,46 @@
+﻿@using Selecao.Domain.Entities
+@model List<Selecao.Domain.Entities.CandidatoCurso>
+@{
+    var isVisualizar = ViewContext.RouteData.Values["action"].ToString() == "Visualizar";
+    var isRemover = ViewContext.RouteData.Values["action"].ToString() == "Remover";
+}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Titulo</th>
+            <th>Area</th>
+            <th>Instituicao</th>
+            <th>Duração em Horas</th>
+            <th>Ano Conclusao</th>
+            @if (!isVisualizar && !isRemover)
+            {
+                <th class="text-end">
+                    <button type="button" class="btn btn-outline-light text-dark" onclick="novoCurso()">
+                        <i class="fa fa-plus me-1"></i> Adicionar
+                    </button>
+                </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var curso in Model)
+        {
+            var duracaoCurso = "";
+            if (curso.DuracaoHoras != 0)
+            {
+                duracaoCurso = curso.DuracaoHoras.ToString();
+            }
+            <tr>
+                <td>@curso.Titulo</td>
+                <td>@curso.InstituicaoEnsino</td>
+                <td>@curso.Area</td>
+                <td>@duracaoCurso</td>
+                <td>@curso.AnoConclusao</td>
+                @if (!isVisualizar && !isRemover)
+                {
+                    <td class="text-center"><i class="fa fa-times text-danger ms-4 c-pointer" title="Excluir" onclick="removerCurso('@curso.Titulo','@curso.DuracaoHoras','@curso.InstituicaoEnsino')"></i></td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>

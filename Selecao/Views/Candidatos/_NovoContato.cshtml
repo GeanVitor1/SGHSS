@@ -1,0 +1,29 @@
+﻿@using Selecao.Domain.Entities
+<form id="incluirContato">
+    <div class="row">
+        <div class="col-6">
+            <div class="form-group form-group-default">
+                <label>Contato</label>
+                <input id="Contato" name="Contato" type="text" class="form-control" />
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="form-group form-group-default">
+                <label>Tipo Contato</label>
+                <select class="form-select" name="Tipo" id="tipo">
+                    <option></option>
+                    @foreach (var tipo in CandidatoContato.GetTiposContato())
+                    {
+                        <option value="@tipo">@tipo</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="form-check form-switch mt-3">
+                <input class="form-check-input" type="checkbox" name="IsWhatsApp" role="switch" id="flexSwitchCheckDefault" value="true">
+                <label class="form-check-label" for="flexSwitchCheckDefault">WhatsApp</label>
+            </div>
+        </div>
+    </div>
+</form>

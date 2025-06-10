@@ -1,0 +1,36 @@
+﻿@using Selecao.Domain.Entities
+@model List<Selecao.Domain.Entities.CandidatoContato>
+@{
+    var isVisualizar = ViewContext.RouteData.Values["action"].ToString() == "Visualizar";
+    var isRemover = ViewContext.RouteData.Values["action"].ToString() == "Remover";
+}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Tipo Contato</th>
+            <th>Contato</th>
+            @if (!isVisualizar && !isRemover)
+            {
+                <th class="text-end">
+                    <button type="button" class="btn btn-outline-light text-dark" onclick="incluirContatos()">
+                        <i class="fa fa-plus me-1"></i> Adicionar
+                    </button>
+                </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var contato in Model)
+        {
+            var whats = contato.IsWhatsApp ? "<i class=\"fab fa-whatsapp\"></i>" : "";
+            <tr>
+                <td>@contato.Tipo</td>
+                <td>@contato.Contato @Html.Raw(whats)</td>
+                @if (!isVisualizar && !isRemover)
+                {
+                    <td class="text-end"><i class="fa fa-times text-danger ms-4 c-pointer" title="Excluir" onclick="removerContato('@contato.Contato','@contato.Tipo')"></i></td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>

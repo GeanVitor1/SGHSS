@@ -1,0 +1,10 @@
+﻿@model Selecao.MVC.Models.EtapaSelecaoViewModel
+
+<form id="formIncluir">
+    <div class="form-group form-group-default text-start">
+        <label>Nome</label>
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="Nome" id="nome" type="text" class="form-control text-uppercase" required />
+        <span asp-validation-for="Nome" class="text-danger"></span>
+    </div>
+</form>

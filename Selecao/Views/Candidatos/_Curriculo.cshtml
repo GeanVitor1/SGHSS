@@ -1,0 +1,185 @@
+﻿@using System.Globalization
+@using Selecao.Domain.Entities
+@model Selecao.Domain.Entities.Candidato;
+@{
+
+    var dados = "";
+
+    if (Model.DataNascimento != null && Model.DataNascimento != DateTime.MinValue)
+    {
+        int idade = DateTime.Now.Year - Model.DataNascimento.Year;
+
+        if (DateTime.Now < Model.DataNascimento.AddYears(idade))
+            idade--;
+
+        dados += $"<p><i class=\"fas fa-calendar-alt\"></i> Idade: {idade} anos</p>";
+    }
+
+    if (!string.IsNullOrWhiteSpace(Model.EstadoCivil))
+        dados += $"<p><i class=\"fas fa-user-friends\"></i> Estado Cívil: {Model.EstadoCivil}</p>";
+    
+    var endereco = !string.IsNullOrWhiteSpace(Model.Logradouro)? $"<i class=\"fas fa-map-marker-alt\"></i> Endereço: {Model.Logradouro}": "";
+
+    if (!string.IsNullOrWhiteSpace(Model.Bairro))
+        endereco += string.IsNullOrWhiteSpace(endereco) ? $"<i class=\"fas fa-map-marker-alt\"></i> Endereço: {Model.Bairro}": " - " + Model.Bairro;
+
+    if (!string.IsNullOrWhiteSpace(endereco))
+        dados += $"<p>{endereco}</p>";
+
+}
+<div class="row">
+    <div class="col-md-4 text-white bg-dark py-5">
+        <div class="d-flex justify-content-center mt-3">
+            <div class="foto-curriculo d-flex justify-content-center align-items-center position-relative">
+                <i class="fas fa-user fa-5x text-dark position-absolute top-50 start-50 translate-middle"></i>
+            </div>
+        </div>
+        <hr class="mt-3" />
+        <div style="margin-top: -18px;">
+            <h4>Dados</h4>
+            @Html.Raw(dados)
+            @foreach(var contato in Model.Contatos)
+            {
+                var contatoEscrito = "";
+                if (contato.Tipo == CandidatoContato.TelefoneFixo)
+                    contatoEscrito = $"<p><i class=\"fas fa-phone\"></i> {CandidatoContato.TelefoneFixo}: {contato.Contato}</p>";
+                else if (contato.Tipo == CandidatoContato.TelefoneCelular)
+                    contatoEscrito = $"<p><i class=\"fas fa-mobile-alt\"></i> {CandidatoContato.TelefoneCelular}: {contato.Contato}</p>";
+                else if (contato.Tipo == CandidatoContato.Email)
+                    contatoEscrito = $"<p><i class=\"fas fa-envelope\"></i> {CandidatoContato.Email}: {contato.Contato}</p>";
+                else if (contato.Tipo == CandidatoContato.TelefoneTerceiro)
+                    contatoEscrito = $"<p><i class=\"fas fa-phone-alt\"></i> {CandidatoContato.TelefoneTerceiro}: {contato.Contato}</p>";
+                else
+                    contatoEscrito = $"<p><i class=\"fas fa-info-circle\"></i> Tipo desconhecido: {contato.Contato}</p>";
+
+                @Html.Raw(contatoEscrito)
+            }
+        </div>
+    </div>
+    <!-- Esquerda: Cursos e Experiências -->
+    <div class="col-md-8 bg-white ps-3 pe-5 py-5">
+        <h1 class="mt-3">@Model.Nome</h1>
+        <div>
+            <div class="d-flex align-items-center">
+                <h4 class="me-2">Formação</h4>
+                <div class="linha flex-grow-1"></div>
+            </div>
+            <ul>
+                @foreach (var formacao in Model.Formacao.OrderBy(f => f.Id))
+                {
+                    var tituloFormacao = string.IsNullOrWhiteSpace(formacao.Area) ? formacao.Titulo : formacao.Titulo + " - " + formacao.Area;
+                    var instituicaoAno = "";
+                    if (!string.IsNullOrWhiteSpace(formacao.InstituicaoEnsino))
+                    {
+                        instituicaoAno = formacao.InstituicaoEnsino;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(instituicaoAno) && !string.IsNullOrWhiteSpace(formacao.AnoConclusao))
+                    {
+                        instituicaoAno += " - " + formacao.AnoConclusao;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(formacao.AnoConclusao))
+                    {
+                        instituicaoAno = formacao.AnoConclusao;
+                    }
+
+                    <li class="mt-3">
+                        <div>
+                            <h6><b>@tituloFormacao</b></h6>
+                            <p style="margin: -15px; margin-left: 2px;">@instituicaoAno</p>
+                            <p style="margin: -15px; margin-left: 2px;">@formacao.Descricao</p>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+        <div>
+            <div class="d-flex align-items-center">
+                <h4 class="me-2">Cursos</h4>
+                <div class="linha flex-grow-1"></div>
+            </div>
+            <ul>
+                @foreach (var curso in Model.Cursos)
+                {
+                    var instituicaoAno = "";
+                    if (!string.IsNullOrWhiteSpace(curso.InstituicaoEnsino))
+                    {
+                        instituicaoAno = curso.InstituicaoEnsino;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(instituicaoAno) && !string.IsNullOrWhiteSpace(curso.AnoConclusao))
+                    {
+                        instituicaoAno += " - " + curso.AnoConclusao;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(curso.AnoConclusao))
+                    {
+                        instituicaoAno = curso.AnoConclusao;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(instituicaoAno) && curso.DuracaoHoras != 0)
+                    {
+                        instituicaoAno += " - " + curso.DuracaoHoras + " Horas";
+                    }
+                    else if (curso.DuracaoHoras != 0)
+                    {
+                        instituicaoAno = curso.DuracaoHoras + " Horas";
+                    }
+                    <li class="mt-3">
+                        <div>
+                            <h6><b>@curso.Titulo</b></h6>
+                            <p style="margin: -15px; margin-left: 2px;">@instituicaoAno</p>
+                            <p style="margin: -15px; margin-left: 2px;">@curso.Descricao</p>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+        <div>
+            <div class="d-flex align-items-center">
+                <h4 class="me-2">Experiência</h4>
+                <div class="linha flex-grow-1"></div>
+            </div>
+            <ul>
+                @foreach (var experiencia in Model.Experiencias.OrderBy(e => e.Inicio))
+                {
+                    var tempoExperiencia = "";
+
+                    if (experiencia.Inicio != DateTime.MinValue && experiencia.Inicio != null)
+                    {
+                        tempoExperiencia = experiencia.Inicio.Value.ToString("MMMM yyyy", new CultureInfo("pt-BR"));
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(tempoExperiencia) && experiencia.Termino != DateTime.MinValue && experiencia.Termino != null)
+                    {
+                        tempoExperiencia += " - " + experiencia.Termino.Value.ToString("MMMM yyyy", new CultureInfo("pt-BR"));
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(tempoExperiencia) && !string.IsNullOrWhiteSpace(experiencia.Duracao))
+                    {
+                        tempoExperiencia += " - " + experiencia.Duracao;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(experiencia.Duracao))
+                    {
+                        tempoExperiencia = experiencia.Duracao;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(tempoExperiencia) && experiencia.TrabalhoAtual)
+                    {
+                        tempoExperiencia += " - Trabalho Atual";
+                    }
+                    else if (experiencia.TrabalhoAtual)
+                    {
+                        tempoExperiencia += " Trabalho Atual";
+                    }
+
+                    <li class="mt-3">
+                        <h6><b>@experiencia.Empregador</b></h6>
+                        <p style="margin: -15px; margin-left: 2px;">@experiencia.Cargo</p>
+                        <p style="margin: -15px; margin-left: 2px;">@tempoExperiencia</p>
+                        <p style="margin: -15px; margin-left: 2px;">@experiencia.Descricao</p>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>

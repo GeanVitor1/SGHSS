@@ -1,0 +1,188 @@
+﻿@using Selecao.Domain.Entities;
+@model Selecao.MVC.Models.SelecaoCandidatoViewModel;
+
+@{
+    ViewData["Title"] = "Incluir Candidatos";
+
+    var empregadoresAgrupados = Model.Candidatos
+        .SelectMany(c => c.Experiencias)
+        .Select(e => e.Empregador)
+        .Distinct()
+        .ToList();
+
+    var cursosDistintos = Model.Candidatos
+    .SelectMany(c => c.Cursos)
+    .Select(e => e.Titulo)
+    .Distinct()
+    .ToList();
+
+    var formacaoDistinta = Model.Candidatos
+     .SelectMany(c => c.Formacao)
+     .Select(f => new { f.Titulo, f.Area })
+     .Distinct()
+     .ToList();
+
+}
+
+<div class="d-flex justify-content-between">
+    <div class="page-header">
+        <h3 class="fw-bold mb-3">Candidatos</h3>
+        <ul class="breadcrumbs">
+            <li class="nav-home active">
+                <a asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a asp-controller="Candidatos" asp-action="Index">
+                    Seleção
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <p>Incluir Candidatos</p>
+            </li>
+        </ul>
+    </div>
+    <div>
+        <button class="btn btn-stantard" onclick="gravarInclusao()">
+            <span class="btn-label">
+                <i class="fas fa-check me-1"></i>
+            </span>
+            Gravar
+        </button>
+    </div>
+</div>
+<div class="card">
+    <form id="formIncluirCandidatos">
+        <div class="card-body">
+            <div style="width: 98%;">
+                <div class="row">
+                    <div class="col-8">
+                        <div class="border rounded d-flex flex-column p-2">
+                            <label class="text-statement">Cargo</label>
+                            <input type="hidden" asp-for="Id" />
+                            <label class="text-value">@Model.Cargo</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="border rounded d-flex flex-column p-2">
+                            <label class="text-statement">Vagas</label>
+                            <label class="text-value">@Model.Vagas</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="border rounded d-flex flex-column p-2">
+                            <label class="text-statement">Objetivo</label>
+                            <div style="min-height: 70px">
+                                <label class="text-value">@Model.Objetivo</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-9" id="candidatos">
+                        <div class="border rounded d-flex flex-column p-2 mx-tamanho-incluir-candidato-selecao">
+                            <label class="text-statement">Candidatos</label>
+                            <partial name="_Candidatos" model="Model" />
+                        </div>
+                    </div>
+                    <div class="col-3" id="filtros">
+                        <div class="border rounded d-flex flex-column p-2 mx-tamanho-incluir-candidato-selecao overflow-auto">
+                            @* <label class="text-statement">Filtros</label>
+                            <div>
+                            <div class="d-flex align-items-center mt-3">
+                            <label class="me-2">Empregadores</label>
+                            <div class="linha flex-grow-1"></div>
+                            </div>
+                            @foreach (var empregador in empregadoresAgrupados)
+                            {
+                            <div class="form-check d-flex align-items-center">
+                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" style="margin-top: -10px;" />
+                            <label class="form-check-label" for="flexCheckDefault"> @empregador </label>
+                            </div>
+                            }
+                            </div>
+                            <div>
+                            <div class="d-flex align-items-center mt-3">
+                            <label class="me-2">Cursos</label>
+                            <div class="linha flex-grow-1"></div>
+                            </div>
+                            <div>
+                            @foreach (var curso in cursosDistintos)
+                            {
+                            <div class="form-check d-flex align-items-center">
+                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" style="margin-top: -10px;" />
+                            <label class="form-check-label" for="flexCheckDefault"> @curso </label>
+                            </div>
+                            }
+                            </div>
+                            </div>
+                            <div>
+                            <div class="d-flex align-items-center mt-3">
+                            <label class="me-2">Formação</label>
+                            <div class="linha flex-grow-1"></div>
+                            </div>
+                            <div>
+                            @foreach (var formacaoComTituloArea in formacaoDistinta)
+                            {
+
+                            var formacao = formacaoComTituloArea.Titulo;
+                            if (!string.IsNullOrWhiteSpace(formacaoComTituloArea.Area))
+                            formacao += $" - {formacaoComTituloArea.Area}";
+
+                            <div class="form-check d-flex align-items-center">
+                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" style="margin-top: -10px;" />
+                            <label class="form-check-label" for="flexCheckDefault"> @formacao </label>
+                            </div>
+                            }
+                            </div>
+                            </div> *@
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal" id="configurarTabela" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Exibir Colunas</h5>
+            </div>
+            <div class="modal-body">
+                <div class="form-check d-flex align-items-center">
+                    <input class="form-check-input" type="checkbox" id="codigoCheckBox" style="margin-top: -10px;" role="button" checked />
+                    <label class="form-check-label" for="codigoCheckBox" role="button">Código</label>
+                </div>
+                <div class="form-check d-flex align-items-center">
+                    <input class="form-check-input" type="checkbox" id="nomeCheckBox" style="margin-top: -10px;" role="button" checked />
+                    <label class="form-check-label" for="nomeCheckBox" role="button">Nome</label>
+                </div>
+                <div class="form-check d-flex align-items-center">
+                    <input class="form-check-input" type="checkbox" id="idadeCheckBox" style="margin-top: -10px;" role="button" />
+                    <label class="form-check-label" for="idadeCheckBox" role="button">Idade</label>
+                </div>
+                <div class="form-check d-flex align-items-center">
+                    <input class="form-check-input" type="checkbox" id="bairroCheckBox" style="margin-top: -10px;" role="button" />
+                    <label class="form-check-label" for="bairroCheckBox" role="button">Bairro</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-stantard" onclick="configurarColunas()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Selecao/IncluirCandidatos.js"></script>
+}

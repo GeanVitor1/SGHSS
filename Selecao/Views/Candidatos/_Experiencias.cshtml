@@ -1,0 +1,61 @@
+﻿@using Selecao.Domain.Entities
+@model List<Selecao.Domain.Entities.CandidatoExperiencia>
+@{
+    var isVisualizar = ViewContext.RouteData.Values["action"].ToString() == "Visualizar";
+    var isRemover = ViewContext.RouteData.Values["action"].ToString() == "Remover";
+}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Empregador</th>
+            <th>Cargo</th>
+            <th>Duração</th>
+            <th>Inicio</th>
+            <th>Termino</th>
+            <th>Trabalho Atual</th>
+            <th>Area de Informática</th>
+            @if (!isVisualizar && !isRemover)
+            {
+                <th class="text-end">
+                    <button type="button" class="btn btn-outline-light text-dark" onclick="novaExperiencia()">
+                        <i class="fa fa-plus me-1"></i> Adicionar
+                    </button>
+                </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var experiencia in Model)
+        {
+            var inicio = "";
+            if (experiencia.Inicio.HasValue && experiencia.Inicio != DateTime.MinValue)
+                inicio = experiencia.Inicio.Value.ToString("dd/MM/yyyy");
+
+            var termino = "";
+            if (experiencia.Termino.HasValue && experiencia.Termino != DateTime.MinValue)
+                termino = experiencia.Termino.Value.ToString("dd/MM/yyyy");
+
+            var trabalhoAtual = "NÃO";
+            if (experiencia.TrabalhoAtual)
+                trabalhoAtual = "SIM";
+
+            var areaInformatica = "NÃO";
+            if (experiencia.IsInformatica)
+                areaInformatica = "SIM";
+
+            <tr>
+                <td>@experiencia.Empregador</td>
+                <td>@experiencia.Cargo</td>
+                <td>@experiencia.Duracao</td>
+                <td>@inicio</td>
+                <td>@termino</td>
+                <td>@trabalhoAtual</td>
+                <td>@areaInformatica</td>
+                @if (!isVisualizar && !isRemover)
+                {
+                    <td class="text-end"><i class="fa fa-times text-danger ms-4 c-pointer" title="Excluir" onclick="removerExperiencia('@experiencia.Empregador','@inicio','@experiencia.Cargo')"></i></td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>

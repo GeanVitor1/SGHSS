@@ -1,0 +1,46 @@
+﻿@using Selecao.Domain.Entities
+<form id="formIncluirCurso" class="text-start">
+    <div class="row">
+        <div class="col-10">
+            <div class="form-group form-group-default">
+                <label>Titulo do Curso</label>
+                <input id="Titulo" name="Titulo" type="text" class="form-control" required/>
+            </div>
+        </div>
+        
+        <div class="col-2">
+            <div class="form-group form-group-default">
+                <label>Duração em Horas</label>
+                <input id="DuracaoHoras" name="DuracaoHoras" type="number" class="form-control" min="1" max="1000" />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-6">
+            <div class="form-group form-group-default">
+                <label>Instituição</label>
+                <input id="InstituicaoEnsino" name="InstituicaoEnsino" type="text" class="form-control" />
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="form-group form-group-default">
+                <label>Area de Formação</label>
+                <input id="Area" name="Area" type="text" class="form-control"/>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="form-group form-group-default">
+                <label>Ano de Conclusão</label>
+                <input id="AnoConclusao" name="AnoConclusao" type="number" class="form-control" min="1900" max="2100" />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="form-group form-group-default">
+                <label>Descrição</label>
+                <textarea class="form-control" name="Descricao" style="resize: none;" rows="4" id="Descricao"></textarea>
+            </div>
+        </div>
+    </div>
+</form>

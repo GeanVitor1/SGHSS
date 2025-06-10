@@ -1,0 +1,208 @@
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+
+
+.overlaySpinner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    visibility: hidden;
+}
+
+.spinner {
+    border: 16px solid #f3f3f3;
+    border-top: 16px solid rgb(26, 32, 53);
+    border-radius: 50%;
+    width: 20vh;
+    height: 20vh;
+    animation: spin 2s linear infinite;
+}
+
+.loading-text {
+    margin-top: 20px;
+    color: #fff;
+    font-size: 20px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+
+
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+    position: relative;
+}
+
+.img-logo-ini {
+    filter: invert(255%) sepia(100%) saturate(80%) hue-rotate(80deg) brightness(232%) contrast(100%);
+}
+
+.gradient-custom {
+    /* fallback for old browsers */
+    background: #6a11cb;
+    /* Chrome 10-25, Safari 5.1-6 */
+    background: -webkit-linear-gradient(to bottom, rgb(26,32,53), #063970); /*, rgba(51,45,45, 1));*/
+    /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+    background: linear-gradient(to bottom,rgb(26,32,53), #063970); /*, rgba(51,45,45, 1));*/
+}
+
+.thead-sticky {
+    position: sticky;
+    top: -30px;
+    z-index: 1;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+}
+.thead-sticky-0 {
+    position: sticky;
+    top: -10px;
+    z-index: 1;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.btn-stantard {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: rgb(26,32,53) !important;
+    --bs-btn-border-color: #212529;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: black;
+    --bs-btn-hover-border-color: #373b3e;
+    --bs-btn-focus-shadow-rgb: 66,70,73;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #4d5154;
+    --bs-btn-active-border-color: #373b3e;
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #212529;
+    --bs-btn-disabled-border-color: #212529
+}
+
+.c-pointer {
+    cursor: pointer;
+}
+
+.margin-center-h {
+    margin-top: 15vh;
+}
+
+.text-container {
+    display: flex;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.text-statement {
+    font-size: 10.5px !important;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    font-weight: 600;
+    font-family: 'Public Sans', sans-serif;
+}
+
+.text-value {
+    font-size: 1rem !important;
+    letter-spacing: .06em;
+    font-family: 'Public Sans', sans-serif;
+    text-transform: uppercase;
+}
+
+.text-value-lowercase {
+    font-size: 1rem !important;
+    letter-spacing: .06em;
+    font-family: 'Public Sans', sans-serif;
+}
+
+.info-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    width: 100%;
+    animation: fadeIn 1s ease-in-out;
+}
+
+    .info-icon-wrapper h3 {
+        animation: scaleIn 0.5s ease-in-out;
+        font-weight: 600;
+        color: rgb(26,32,53) !important;
+    }
+
+.info-icon {
+    font-size: 100px;
+    color: rgb(26,32,53) !important;
+    animation: scaleIn 0.5s ease-in-out;
+}
+
+.bg-excluido {
+    background-color: #a8a8a8 !important;
+    color: black;
+}
+
+.linha {
+    height: 1px;
+    background-color: rgb(108, 117, 125);
+    margin-top: 7px;
+}
+
+.foto-curriculo {
+    width: 200px;
+    height: 200px;
+    border: 1px solid;
+    border-radius: 50%;
+    background-color: white;
+}
+
+.mx-tamanho-incluir-candidato-selecao {
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    0% {
+        transform: scale(0);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
