@@ -1,0 +1,129 @@
+﻿@{
+    string controller = "";
+    if (ViewContext.RouteData.Values.ContainsKey("controller"))
+    {
+        controller = ViewContext.RouteData.Values["controller"].ToString().ToLower();
+        switch (controller)
+        {
+            case "tiposatendimento": 
+                controller = "agendamentos"; 
+                break;
+
+            case "":
+                controller = "home";
+                break;
+            
+            case "pacientes": 
+                controller = "pacientes";
+                break;
+            case "profissionaisSaude": 
+                controller = "profissionaisSaude";
+                break;
+        }
+    }
+}
+<div class="sidebar" data-background-color="dark">
+    <div class="sidebar-logo">
+        <div class="logo-header" data-background-color="dark">
+            <a asp-controller="Home" asp-action="Index" class="logo">
+                <img src="~/img/logo.svg" alt="navbar brand" class="navbar-brand img-logo-ini" height="20" />
+            </a>
+            <div class="nav-toggle">
+                <button class="btn btn-toggle toggle-sidebar">
+                    <i class="gg-menu-right"></i>
+                </button>
+                <button class="btn btn-toggle sidenav-toggler">
+                    <i class="gg-menu-left"></i>
+                </button>
+            </div>
+            <button class="topbar-toggler more">
+                <i class="gg-more-vertical-alt"></i>
+            </button>
+        </div>
+        </div>
+    <div class="sidebar-wrapper scrollbar scrollbar-inner">
+        <div class="sidebar-content">
+            <ul class="nav nav-secondary">
+                <li class="nav-item @(controller == "home" ? "active" : "")">
+                    <a asp-controller="Home" asp-action="Index">
+                        <i class="fas fa-home"></i>
+                        <p>Início</p>
+                    </a>
+                </li>
+                <li class="nav-section">
+                    <span class="sidebar-mini-icon">
+                        <i class="fa fa-ellipsis-h"></i>
+                    </span>
+                    <h4 class="text-section">Menus</h4>
+                </li>
+                
+                
+                <li class="nav-item @(controller == "pacientes" ? "active" : "")">
+                    <a data-bs-toggle="collapse" href="#pacientes">
+                        <i class="fas fa-user-injured"></i> 
+                        <p>Pacientes</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="pacientes">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a asp-controller="Pacientes" asp-action="Index">
+                                    <span class="sub-item">Listar Pacientes</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                
+                <li class="nav-item mt-2 @(controller == "profissionaisSaude" ? "active" : "")">
+                    <a data-bs-toggle="collapse" href="#profissionaisSaude">
+                        <i class="fas fa-user-md"></i> *
+                        <p>Profissionais</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="profissionaisSaude">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a asp-controller="ProfissionaisSaude" asp-action="Index">
+                                    <span class="sub-item">Listar Profissionais</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                
+                <li class="nav-item mt-2 @(controller == "agendamentos" ? "active" : "")">
+                    <a data-bs-toggle="collapse" href="#agendamentos">
+                        <i class="fas fa-calendar-alt"></i> 
+                        <p>Agendamentos</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="agendamentos">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a asp-controller="Agendamentos" asp-action="Index">
+                                    <span class="sub-item">Listar Agendamentos</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-controller="TiposAtendimento" asp-action="Index"> 
+                                    <span class="sub-item">Tipos de Atendimento</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+               
+                <li class="nav-item mt-2 @(controller == "admin" ? "active" : "")">
+                    <a asp-controller="Admin" asp-action="Index">
+                        <i class="fas fa-user-cog"></i>
+                        <span class="sub-item">Usuários</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

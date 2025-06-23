@@ -1,0 +1,40 @@
+﻿@using SGHSSVidaPlus.Domain.Entities
+@model List<SGHSSVidaPlus.MVC.Models.HistoricoPacienteViewModel>
+@{
+    var isVisualizar = ViewContext.RouteData.Values["action"].ToString() == "Visualizar";
+    var isRemover = ViewContext.RouteData.Values["action"].ToString() == "Remover";
+}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Título</th>
+            <th>Data do Evento</th>
+            <th>Profissional Responsável</th>
+            <th>Descrição</th>
+            @if (!isVisualizar && !isRemover)
+            {
+                <th class="text-end">
+                    <button type="button" class="btn btn-outline-light text-dark" onclick="novoHistorico()">
+                        <i class="fa fa-plus me-1"></i> Adicionar
+                    </button>
+                </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var historico in Model.OrderByDescending(h => h.DataEvento))
+        {
+            var dataEventoFormatada = historico.DataEvento.HasValue ? historico.DataEvento.Value.ToString("dd/MM/yyyy") : "N/A";
+            <tr>
+                <td>@historico.Titulo</td>
+                <td>@dataEventoFormatada</td>
+                <td>@historico.ProfissionalResponsavel</td>
+                <td>@historico.Descricao</td>
+                @if (!isVisualizar && !isRemover)
+                {
+                    <td class="text-end"><i class="fa fa-times text-danger ms-4 c-pointer" title="Excluir" onclick="removerHistorico('@historico.Titulo','@historico.DataEvento')"></i></td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>

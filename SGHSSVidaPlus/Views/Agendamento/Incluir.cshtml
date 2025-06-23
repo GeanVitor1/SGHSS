@@ -1,0 +1,90 @@
+﻿@model SGHSSVidaPlus.MVC.Models.AgendamentoViewModel
+@{
+    ViewData["Title"] = "Incluir Agendamento";
+}
+
+<div class="d-flex justify-content-between">
+    <div class="page-header">
+        <h3 class="fw-bold mb-3">Agendamentos</h3>
+        <ul class="breadcrumbs">
+            <li class="nav-home active">
+                <a asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a asp-controller="Agendamentos" asp-action="Index">
+                    Agendamentos
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <p>Incluir</p>
+            </li>
+        </ul>
+    </div>
+    <div>
+        <button class="btn btn-stantard" onclick="gravarInclusao()">
+            <span class="btn-label">
+                <i class="fa fa-check me-1"></i>
+            </span>
+            Gravar
+        </button>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form id="formIncluir">
+            <div style="width: 98%;">
+                <div class="row">
+                    <div class="col-8">
+                        <div class="form-group form-group-default">
+                            <label>Descrição do Agendamento</label>
+                            <input asp-for="Descricao" id="descricao" type="text" class="form-control" required />
+                            <span asp-validation-for="Descricao" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-group form-group-default">
+                            <label>Data e Hora</label>
+                            <input asp-for="DataHoraAgendamento" id="dataHoraAgendamento" type="datetime-local" class="form-control" required />
+                            <span asp-validation-for="DataHoraAgendamento" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <div class="form-group form-group-default">
+                            <label>Profissional Responsável (ID)</label>
+                            <input asp-for="ProfissionalResponsavelId" id="profissionalResponsavelId" type="number" class="form-control" required />
+                            <span asp-validation-for="ProfissionalResponsavelId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group form-group-default">
+                            <label>Local de Atendimento</label>
+                            <input asp-for="Local" id="local" type="text" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <div class="form-group form-group-default">
+                            <label>Observações</label>
+                            <textarea asp-for="Observacoes" id="observacoes" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Agendamentos/Incluir.js"></script>
+}

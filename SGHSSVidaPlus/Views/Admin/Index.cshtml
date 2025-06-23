@@ -1,0 +1,76 @@
+﻿@model IEnumerable<SGHSSVidaPlus.MVC.Data.ApplicationUser>
+
+@{
+    ViewBag.Title = "Usuários";
+}
+
+<div class="d-flex justify-content-between">
+    <div class="page-header">
+        <h3 class="fw-bold mb-3">Usuários</h3>
+        <ul class="breadcrumbs">
+            <li class="nav-home active">
+                <a asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <p>Usuários</p>
+            </li>
+        </ul>
+    </div>
+    <div>
+        <a class="btn btn-stantard" asp-controller="Admin" asp-action="Incluir">
+            <span class="btn-label">
+                <i class="fa fa-plus me-1"></i>
+            </span>
+            Incluir
+        </a>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body">
+        <table class="table" id="tbUsuarios">
+            <thead class="text-center thead-sticky">
+                <tr>
+                    <th>Nome</th>
+                    <th>Login</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var usuario in Model.OrderBy(u => u.Nome))
+                {
+                    var ativo = usuario.Bloqueado == false ? "Ativo" : "Bloqueado";
+                    <tr>
+                        <td>@usuario.Nome</td>
+                        <td>@usuario.UserName</td>
+                        <td>@usuario.Email</td>
+                        <td class="text-center">@ativo</td>
+                        <td class="text-center">
+                            <div class="form-button-action">
+                                <a asp-action="Visualizar" asp-route-userId="@usuario.Id" title="Visualizar"><i class="fa fa-eye text-secondary c-pointer"></i></a>
+                                <a asp-action="Alterar" asp-route-userId="@usuario.Id" title="Alterar"><i class="fa fa-edit text-primary ms-4 c-pointer"></i></a>
+                                @if (usuario.Bloqueado)
+                                {
+                                    <i class="fas fa-lock-open mt-1 text-info ms-4 c-pointer" title="Desbloquear" onclick="desbloquearUser('@usuario.Id','@usuario.UserName')"></i>
+                                }
+                                else
+                                {
+                                    <i class="fa fa-lock mt-1 text-info ms-4 c-pointer" title="bloquear" onclick="bloquearUser('@usuario.Id','@usuario.UserName')"></i>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+@section Scripts {
+    <script src="~/js/Admin/Index.js"></script>
+}

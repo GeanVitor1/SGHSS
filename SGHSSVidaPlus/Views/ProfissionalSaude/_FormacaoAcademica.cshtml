@@ -1,0 +1,39 @@
+﻿@using SGHSSVidaPlus.MVC.Models
+@model List<SGHSSVidaPlus.MVC.Models.FormacaoAcademicaProfissionalSaudeViewModel>
+@{
+    var isVisualizar = ViewContext.RouteData.Values["action"].ToString() == "Visualizar";
+    var isRemover = ViewContext.RouteData.Values["action"].ToString() == "Remover";
+}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Título</th>
+            <th>Área</th>
+            <th>Instituição</th>
+            <th>Ano Conclusão</th>
+            @if (!isVisualizar && !isRemover)
+            {
+                <th class="text-end">
+                    <button type="button" class="btn btn-outline-light text-dark" onclick="novaFormacaoAcademica()">
+                        <i class="fa fa-plus me-1"></i> Adicionar
+                    </button>
+                </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var formacao in Model)
+        {
+            <tr>
+                <td>@formacao.Titulo</td>
+                <td>@formacao.Area</td>
+                <td>@formacao.InstituicaoEnsino</td>
+                <td>@formacao.AnoConclusao</td>
+                @if (!isVisualizar && !isRemover)
+                {
+                    <td class="text-end"><i class="fa fa-times text-danger ms-4 c-pointer" title="Excluir" onclick="removerFormacaoAcademica('@formacao.Titulo','@formacao.Area')"></i></td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,67 @@
+﻿@{
+    var nome = "Usuário"; 
+    if (User.Identity.IsAuthenticated)
+        nome = User.FindFirst("Nome")?.Value; 
+}
+
+<div class="main-header-logo">
+    <div class="logo-header" data-background-color="dark">
+        <a href="index.html" class="logo">
+            <img src="~/img/logo.svg" alt="navbar brand" class="navbar-brand"
+                 height="20" />
+        </a>
+        <div class="nav-toggle">
+            <button class="btn btn-toggle toggle-sidebar">
+                <i class="gg-menu-right"></i>
+            </button>
+            <button class="btn btn-toggle sidenav-toggler">
+                <i class="gg-menu-left"></i>
+            </button>
+        </div>
+        <button class="topbar-toggler more">
+            <i class="gg-more-vertical-alt"></i>
+        </button>
+    </div>
+    </div>
+<nav class="navbar navbar-header navbar-header-transparent navbar-expand-lg border-bottom" data-background-color="dark">
+    <div class="container-fluid">
+        <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
+            <li class="nav-item topbar-icon dropdown hidden-caret d-flex d-lg-none">
+                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                   aria-expanded="false" aria-haspopup="true">
+                    <i class="fa fa-search"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-search animated fadeIn">
+                    <form class="navbar-left navbar-form nav-search">
+                        <div class="input-group">
+                            <input type="text" placeholder="Buscar ..." class="form-control" /> 
+                        </div>
+                    </form>
+                </ul>
+            </li>
+
+            <li class="nav-item topbar-user dropdown hidden-caret">
+                <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#"
+                   aria-expanded="false">
+                    <span class="profile-username">
+                        <span class="fw-bold">
+                            @nome
+                        </span>
+                    </span>
+                    <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu dropdown-user animated fadeIn">
+                    <li>
+                        <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Profile">Meu Perfil</a>
+                        <form id="logoutForm" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                            <button type="submit" class="dropdown-item">
+                                Sair
+                            </button>
+                        </form>
+                    </li>
+
+                </ul>
+            </li>
+        </ul>
+    </div>
+</nav>

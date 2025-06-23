@@ -1,0 +1,108 @@
+﻿@using SGHSSVidaPlus.Domain.Entities
+@model SGHSSVidaPlus.MVC.Models.PacienteViewModel;
+
+@{
+    ViewData["Title"] = "Visualizar Paciente";
+}
+
+<div class="d-flex justify-content-between">
+    <div class="page-header">
+        <h3 class="fw-bold mb-3">Pacientes</h3>
+        <ul class="breadcrumbs">
+            <li class="nav-home active">
+                <a asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a asp-controller="Pacientes" asp-action="Index">
+                    Pacientes
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <p>Visualizar</p>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <p>@Model.Nome</p>
+            </li>
+        </ul>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-stantard">
+            <span class="btn-label">
+                <i class="fas fa-arrow-left me-1"></i>
+            </span>
+            Voltar
+        </a>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body">
+        <ul class="nav nav-tabs nav-line nav-color-secondary" id="line-tab" role="tablist">
+            <li class="nav-item"><a class="nav-link active" id="line-home-tab" data-bs-toggle="pill" href="#line-home" role="tab" aria-controls="pills-home" aria-selected="true">Geral</a></li>
+            <li class="nav-item"><a class="nav-link" id="line-contact-tab" data-bs-toggle="pill" href="#line-contact" role="tab" aria-controls="pills-contact" aria-selected="false">Contatos</a></li>
+            <li class="nav-item"><a class="nav-link" id="line-historico-tab" data-bs-toggle="pill" href="#line-historico" role="tab" aria-controls="pills-historico" aria-selected="false">Histórico</a></li>
+        </ul>
+        <div class="tab-content mt-3 mb-3 overflow-y-auto" id="line-tabContent" style="max-height: 62vh">
+            <div class="tab-pane fade show active" id="line-home" role="tabpanel" aria-labelledby="line-home-tab">
+                <div style="width: 98%;">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="border rounded d-flex flex-column p-2">
+                                <label class="text-statement">Nome</label>
+                                <label class="text-value">@Model.Nome</label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="border rounded d-flex flex-column p-2">
+                                <label class="text-statement">Estado Civil</label>
+                                <label class="text-value">@Model.EstadoCivil</label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="border rounded d-flex flex-column p-2">
+                                <label class="text-statement">Data de Nascimento</label>
+                                <label class="text-value">@Model.DataNascimento.ToString("dd/MM/yyyy")</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-8">
+                            <div class="border rounded d-flex flex-column p-2">
+                                <label class="text-statement">Endereço</label>
+                                <label class="text-value">@Model.Endereco</label>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded d-flex flex-column p-2">
+                                <label class="text-statement">CPF</label>
+                                <label class="text-value">@Model.CPF</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="line-contact" role="tabpanel" aria-labelledby="line-contact-tab">
+                <div style="width: 98%;">
+                    <div class="form-group w-75" id="contatotable">
+                        <partial name="_Contatos" model="Model.Contatos" />
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="line-historico" role="tabpanel" aria-labelledby="line-historico-tab">
+                <div class="form-group" id="historicoTable">
+                    <partial name="_Historico" model="Model.Historico" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

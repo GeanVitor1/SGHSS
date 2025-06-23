@@ -1,0 +1,33 @@
+﻿@model List<SGHSSVidaPlus.MVC.Models.AgendamentoTipoAtendimentoViewModel>
+<table class="table" id="tbTiposAtendimentoAgendados">
+    <thead>
+        <tr>
+            <th class="text-center">#</th>
+            <th>Nome do Tipo de Atendimento</th>
+            <th>Ativo</th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            <tr>
+                <td class="text-center">
+                    <input type="hidden" asp-for="@Model[i].TipoAtendimentoId" />
+                    <input type="hidden" asp-for="@Model[i].AgendamentoId" />
+                    <input type="checkbox" asp-for="@Model[i].IsSelected" id="checkbox_@Model[i].TipoAtendimentoId" />
+                </td>
+                <td><label for="checkbox_@Model[i].TipoAtendimentoId">@Model[i].TipoAtendimento.Nome</label></td>
+                <td>
+                    @if (Model[i].TipoAtendimento.Ativo)
+                    {
+                        <span>Sim</span>
+                    }
+                    else
+                    {
+                        <span>Não</span>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

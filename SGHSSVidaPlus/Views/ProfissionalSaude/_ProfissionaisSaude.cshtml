@@ -1,0 +1,42 @@
+﻿@model List<SGHSSVidaPlus.Domain.Entities.ProfissionalSaude>
+<table class="table" id="tbProfissionaisSaude">
+    <thead class="text-center thead-sticky">
+        <tr>
+            <th>Código</th>
+            <th>Nome</th>
+            <th>Cargo/Especialidade</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var profissional in Model.OrderByDescending(p => p.Id))
+        {
+            var status = profissional.Ativo == true ? "Ativo" : "Inativo";
+            var corLinha = profissional.Ativo == false ? "bg-excluido" : "";
+
+            <tr class="@corLinha">
+                <td class="@corLinha">@profissional.Id.ToString("D11")</td>
+                <td class="@corLinha">@profissional.Nome</td>
+                <td class="@corLinha">@profissional.Cargo</td>
+                <td class="@corLinha">@profissional.Email</td>
+                <td class="text-center @corLinha">@status</td>
+                <td class="text-center @corLinha">
+                    <div class="form-button-action">
+                        <a class="ms-4" asp-action="Visualizar" asp-route-id="@profissional.Id"><i class="fa fa-eye text-secondary c-pointer"></i></a>
+                        <a class="ms-4" asp-action="Editar" asp-route-id="@profissional.Id"><i class="fa fa-edit text-primary c-pointer"></i></a>
+                        @if (profissional.Ativo)
+                        {
+                            <i class="fa fa-times text-danger ms-4 c-pointer mt-1" title="Inativar" onclick="alterarStatus('@profissional.Id','@profissional.Nome','Inativar')"></i>
+                        }
+                        else
+                        {
+                            <i class="fas fa-retweet text-info ms-4 c-pointer mt-1" title="Reativar" onclick="alterarStatus('@profissional.Id','@profissional.Nome','Reativar')"></i>
+                        }
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,153 @@
+﻿@using SGHSSVidaPlus.Domain.Entities
+@model SGHSSVidaPlus.MVC.Models.PacienteViewModel;
+
+@{
+    ViewData["Title"] = "Incluir Paciente";
+}
+
+<div class="d-flex justify-content-between">
+    <div class="page-header">
+        <h3 class="fw-bold mb-3">Pacientes</h3>
+        <ul class="breadcrumbs">
+            <li class="nav-home active">
+                <a asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a asp-controller="Pacientes" asp-action="Index">
+                    Pacientes
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <p>Incluir</p>
+            </li>
+        </ul>
+    </div>
+    <div>
+        <button class="btn btn-stantard" onclick="gravarInclusao()">
+            <span class="btn-label">
+                <i class="fa fa-check me-1"></i>
+            </span>
+            Gravar
+        </button>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body">
+        <ul class="nav nav-tabs nav-line nav-color-secondary" id="line-tab" role="tablist">
+            <li class="nav-item"><a class="nav-link active" id="line-home-tab" data-bs-toggle="pill" href="#line-home" role="tab" aria-controls="pills-home" aria-selected="true">Geral</a></li>
+            <li class="nav-item"><a class="nav-link" id="line-contact-tab" data-bs-toggle="pill" href="#line-contact" role="tab" aria-controls="pills-contact" aria-selected="false">Contatos</a></li>
+            <li class="nav-item"><a class="nav-link" id="line-historico-tab" data-bs-toggle="pill" href="#line-historico" role="tab" aria-controls="pills-historico" aria-selected="false">Histórico</a></li>
+        </ul>
+        <div class="tab-content mt-3 mb-3 overflow-y-auto" id="line-tabContent" style="max-height: 62vh">
+            <div class="tab-pane fade show active" id="line-home" role="tabpanel" aria-labelledby="line-home-tab">
+                <form id="formIncluir">
+                    <div style="width: 98%;">
+                        <div class="row">
+                            <div class="col-8">
+                                <div class="form-group form-group-default">
+                                    <label>Nome</label>
+                                    <input asp-for="Nome" id="nome" type="text" class="form-control" required />
+                                    <span asp-validation-for="Nome" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-2">
+                                <div class="form-group form-group-default">
+                                    <label>Estado Civil</label>
+                                    <select class="form-select" asp-for="EstadoCivil" id="estadoCivil">
+                                        <option></option>
+                                        <option value="SOLTEIRO">SOLTEIRO</option>
+                                        <option value="CASADO">CASADO</option>
+                                        <option value="DIVORCIADO">DIVORCIADO</option>
+                                        <option value="VIUVO">VIUVO</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-2">
+                                <div class="form-group form-group-default">
+                                    <label>Data de Nascimento</label>
+                                    <input type="date" name="DataNascimento" id="dataNascimento" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-8">
+                                <div class="form-group form-group-default">
+                                    <label>Endereço</label>
+                                    <input asp-for="Endereco" id="endereco" type="text" class="form-control" />
+                                    <span asp-validation-for="Endereco" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="form-group form-group-default">
+                                    <label>CPF</label>
+                                    <input asp-for="CPF" id="cpf" type="text" class="form-control" />
+                                    <span asp-validation-for="CPF" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="tab-pane fade" id="line-contact" role="tabpanel" aria-labelledby="line-contact-tab">
+                <div style="width: 98%;">
+                    <div class="form-group w-75" id="contatotable">
+                        <partial name="_Contatos" model="Model.Contatos" /> 
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="line-historico" role="tabpanel" aria-labelledby="line-historico-tab">
+                <div class="form-group" id="historicoTable">
+                    <partial name="_Historico" model="Model.Historico" /> 
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* MODAL PARA INCLUIR NOVO CONTATO *@
+<div class="modal" id="modalNovoContato" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="dadoNovoContato">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Novo Contato</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarNovoContato()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* MODAL PARA INCLUIR NOVO REGISTRO DE HISTÓRICO *@
+<div class="modal" id="modalNovoHistorico" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="dadoNovoHistorico">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Novo Registro de Histórico</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarNovoHistorico()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Pacientes/Incluir.js"></script>
+}

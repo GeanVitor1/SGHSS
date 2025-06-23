@@ -1,0 +1,112 @@
+﻿@model SGHSSVidaPlus.MVC.Models.ProfissionalSaudeViewModel
+@{
+    ViewData["Title"] = "Visualizar Profissional de Saúde";
+}
+
+<div class="d-flex justify-content-between">
+    <div class="page-header">
+        <h3 class="fw-bold mb-3">Profissionais de Saúde</h3>
+        <ul class="breadcrumbs">
+            <li class="nav-home active">
+                <a asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a asp-controller="ProfissionaisSaude" asp-action="Index">
+                    Profissionais de Saúde
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <p>Visualizar</p>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <p>@Model.Nome</p>
+            </li>
+        </ul>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-stantard">
+            <span class="btn-label">
+                <i class="fas fa-arrow-left me-1"></i>
+            </span>
+            Voltar
+        </a>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body">
+        <ul class="nav nav-tabs nav-line nav-color-secondary" id="line-tab" role="tablist">
+            <li class="nav-item"><a class="nav-link active" id="line-home-tab" data-bs-toggle="pill" href="#line-home" role="tab" aria-controls="pills-home" aria-selected="true">Geral</a></li>
+            <li class="nav-item"><a class="nav-link" id="line-formacao-tab" data-bs-toggle="pill" href="#line-formacao" role="tab" aria-controls="pills-formacao" aria-selected="false">Formação</a></li>
+            <li class="nav-item"><a class="nav-link" id="line-cursos-tab" data-bs-toggle="pill" href="#line-cursos" role="tab" aria-controls="pills-cursos" aria-selected="false">Cursos</a></li>
+        </ul>
+        <div class="tab-content mt-3 mb-3 overflow-y-auto" id="line-tabContent" style="max-height: 62vh">
+            <div class="tab-pane fade show active" id="line-home" role="tabpanel" aria-labelledby="line-home-tab">
+                <div style="width: 98%;">
+                    <div class="row mt-3">
+                        <div class="col-6">
+                            <div class="border rounded d-flex flex-column p-2">
+                                <label class="text-statement">Nome</label>
+                                <label class="text-value">@Model.Nome</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded d-flex flex-column p-2">
+                                <label class="text-statement">Cargo</label>
+                                <label class="text-value">@Model.Cargo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-6">
+                            <div class="border rounded d-flex flex-column p-2">
+                                <label class="text-statement">Telefone</label>
+                                <label class="text-value">@Model.Telefone</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded d-flex flex-column p-2">
+                                <label class="text-statement">Email</label>
+                                <label class="text-value">@Model.Email</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-6">
+                            <div class="border rounded d-flex flex-column p-2">
+                                <label class="text-statement">Registro no Conselho</label>
+                                <label class="text-value">@Model.RegistroConselho</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-switch mt-2">
+                                <input class="form-check-input c-pointer" asp-for="Ativo" type="checkbox" role="switch" id="ativoCheck" disabled>
+                                <label class="form-check-label text-capitalize" for="ativoCheck">Ativo</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="line-formacao" role="tabpanel" aria-labelledby="line-formacao-tab">
+                <div class="form-group" id="formacaoTable">
+                    <partial name="_FormacaoAcademica" model="Model.Formacao" />
+                </div>
+            </div>
+            <div class="tab-pane fade" id="line-cursos" role="tabpanel" aria-labelledby="line-cursos-tab">
+                <div class="form-group" id="cursoTable">
+                    <partial name="_CursosCertificacoes" model="Model.Cursos" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

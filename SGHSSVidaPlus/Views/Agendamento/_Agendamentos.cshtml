@@ -1,0 +1,44 @@
+﻿@model List<SGHSSVidaPlus.Domain.Entities.Agendamento>
+<table class="table" id="tbAgendamentos">
+    <thead class="text-center thead-sticky">
+        <tr>
+            <th>Código</th>
+            <th>Descrição</th>
+            <th>Data e Hora</th>
+            <th>Profissional</th>
+            <th>Status</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var agendamento in Model.OrderByDescending(a => a.Id))
+        {
+            var status = agendamento.Encerrado ? "Encerrado" : "Aberto";
+            var corLinha = agendamento.Encerrado ? "bg-excluido" : "";
+
+            <tr class="@corLinha">
+                <td class="@corLinha">@agendamento.Id.ToString("D11")</td>
+                <td class="@corLinha">@agendamento.Descricao</td>
+                <td class="@corLinha">@agendamento.DataHoraAgendamento.ToString("dd/MM/yyyy HH:mm")</td>
+                <td class="@corLinha">@(agendamento.ProfissionalResponsavel?.Nome ?? "N/A")</td> 
+                <td class="text-center @corLinha">@status</td>
+                <td class="text-center @corLinha">
+                    <div class="form-button-action">
+                        <a class="ms-4" asp-action="Visualizar" asp-route-id="@agendamento.Id"><i class="fa fa-eye text-secondary c-pointer"></i></a>
+                        <a class="ms-4" asp-action="Editar" asp-route-id="@agendamento.Id"><i class="fa fa-edit text-primary c-pointer"></i></a>
+                        <a class="ms-4" asp-action="IncluirPacientes" asp-route-id="@agendamento.Id" title="Gerenciar Pacientes"><i class="fa fa-users text-info c-pointer"></i></a>
+                        <a class="ms-4" asp-action="IncluirTiposAtendimento" asp-route-id="@agendamento.Id" title="Gerenciar Tipos de Atendimento"><i class="fa fa-list-alt text-warning c-pointer"></i></a>
+                        @if (!agendamento.Encerrado)
+                        {
+                            <i class="fa fa-times text-danger ms-4 c-pointer mt-1" title="Encerrar" onclick="alterarStatus('@agendamento.Id','@agendamento.Descricao','Encerrar')"></i>
+                        }
+                        else
+                        {
+                            <i class="fas fa-retweet text-info ms-4 c-pointer mt-1" title="Reabrir" onclick="alterarStatus('@agendamento.Id','@agendamento.Descricao','Reabrir')"></i>
+                        }
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

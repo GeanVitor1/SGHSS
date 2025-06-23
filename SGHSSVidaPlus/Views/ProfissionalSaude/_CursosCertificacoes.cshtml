@@ -1,0 +1,41 @@
+﻿@using SGHSSVidaPlus.MVC.Models
+@model List<SGHSSVidaPlus.MVC.Models.CursosCertificacoesProfissionalSaudeViewModel>
+@{
+    var isVisualizar = ViewContext.RouteData.Values["action"].ToString() == "Visualizar";
+    var isRemover = ViewContext.RouteData.Values["action"].ToString() == "Remover";
+}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Titulo</th>
+            <th>Instituição</th>
+            <th>Área</th>
+            <th>Duração (Horas)</th>
+            <th>Ano Conclusão</th>
+            @if (!isVisualizar && !isRemover)
+            {
+                <th class="text-end">
+                    <button type="button" class="btn btn-outline-light text-dark" onclick="novoCursoCertificacao()">
+                        <i class="fa fa-plus me-1"></i> Adicionar
+                    </button>
+                </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var curso in Model)
+        {
+            <tr>
+                <td>@curso.Titulo</td>
+                <td>@curso.InstituicaoEnsino</td>
+                <td>@curso.Area</td>
+                <td>@curso.DuracaoHoras</td>
+                <td>@curso.AnoConclusao</td>
+                @if (!isVisualizar && !isRemover)
+                {
+                    <td class="text-end"><i class="fa fa-times text-danger ms-4 c-pointer" title="Excluir" onclick="removerCursoCertificacao('@curso.Titulo','@curso.DuracaoHoras','@curso.InstituicaoEnsino')"></i></td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>

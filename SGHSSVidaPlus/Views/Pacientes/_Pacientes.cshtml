@@ -1,0 +1,50 @@
+﻿@model List<SGHSSVidaPlus.Domain.Entities.Paciente>
+<table class="table" id="tbPacientes">
+    <thead class="text-center thead-sticky">
+        <tr>
+            <th>Código</th>
+            <th>Nome</th>
+            <th>Usuário Inclusão</th>
+            <th>Data Inclusão</th>
+            <th>Status</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var paciente in Model.OrderByDescending(p => p.Id))
+        {
+            var statusPaciente = paciente.Ativo == true ? "Ativo" : "Inativo";
+            var corLinha = paciente.Ativo == false ? "bg-excluido" : "";
+
+            <tr class="@corLinha">
+                <td class="@corLinha">@paciente.Id.ToString("D11")</td>
+                <td class="@corLinha">@paciente.Nome</td>
+                <td class="@corLinha">@paciente.UsuarioInclusao</td>
+                <td class="@corLinha">@paciente.DataInclusao</td>
+                <td class="text-center @corLinha">@statusPaciente</td>
+                <td class="text-center @corLinha">
+                    <div class="form-button-action">
+                        <i class="fas fa-notes-medical text-secondary mt-1 c-pointer" title="Histórico" onclick="verHistorico('@paciente.Id')"></i>
+                        <a class="ms-4" asp-action="Visualizar" asp-route-id="@paciente.Id"><i class="fa fa-eye text-secondary c-pointer"></i></a>
+                        <a class="ms-4" asp-action="Editar" asp-route-id="@paciente.Id"><i class="fa fa-edit text-primary c-pointer"></i></a>
+                        @if (!paciente.Ativo)
+                        {
+                            <i class="fas fa-retweet text-light ms-4 c-pointer mt-1" title="Reativar" onclick="alterarStatus('@paciente.Id','@paciente.Nome','Reativar')"></i>
+                        }
+                        else
+                        {
+                            <i class="fa fa-times text-danger ms-4 c-pointer mt-1" title="Inativar" onclick="alterarStatus('@paciente.Id','@paciente.Nome','Inativar')"></i>
+                        }
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="modal" id="modalHistorico" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content" id="dadoHistorico">
+        </div>
+    </div>
+</div>

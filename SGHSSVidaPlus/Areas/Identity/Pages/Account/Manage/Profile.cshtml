@@ -1,0 +1,153 @@
+﻿@page "/profile"
+@model SGHSSVidaPlus.MVC.Areas.Identity.Pages.Account.Manage.ProfileModel // <-- NAMESPACE ATUALIZADO AQUI
+@{
+    ViewData["Title"] = "Meu Perfil";
+    Layout = "/Views/Shared/_Layout.cshtml";
+    // Assumindo que 'Usuario' é um ViewModel ou entidade que você adaptou no novo projeto
+    // E que 'Permissoes' e 'Admin' existem nele
+    var tipos = (from m in Model.Usuario.Permissoes select m.Tipo).Distinct();
+    var tipoUsuario = @Model.Usuario.Admin == true ? "Administrador" : "Comum";
+}
+
+<form id="formPerfil" method="post">
+    <div class="d-flex justify-content-between">
+        <div class="page-header">
+            <h3 class="fw-bold mb-3">Usuário</h3>
+            <ul class="breadcrumbs">
+                <li class="nav-home active">
+                    <a asp-controller="Home" asp-action="Index">
+                        <i class="fas fa-home"></i>
+                    </a>
+                </li>
+                <li class="separator">
+                    <i class="icon-arrow-right"></i>
+                </li>
+                <li class="nav-item">
+                    <p>Meu Perfil</p>
+                </li>
+            </ul>
+        </div>
+        <div>
+            <button class="btn btn-stantard" onclick="gravarInclusao()">
+                <span class="btn-label">
+                    <i class="fa fa-check me-1"></i>
+                </span>
+                Gravar
+            </button>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <ul class="nav nav-tabs nav-line nav-color-secondary" id="line-tab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="line-home-tab" data-bs-toggle="pill" href="#line-home" role="tab" aria-controls="pills-home" aria-selected="true">Geral</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="line-senha-tab" data-bs-toggle="pill" href="#line-senha" role="tab" aria-controls="pills-senha" aria-selected="false">Senha</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="line-permissoes-tab" data-bs-toggle="pill" href="#line-permissoes" role="tab" aria-controls="pills-permissoes" aria-selected="false">Permissões</a>
+                </li>
+            </ul>
+            <div class="tab-content mt-3 mb-3 overflow-y-auto" id="line-tabContent" style="max-height: 62vh">
+                <div class="tab-pane fade show active" id="line-home" role="tabpanel" aria-labelledby="line-home-tab">
+                    <div style="width: 98%;">
+                        <div class="row mt-3">
+                            <div class="col-4">
+                                <div class="border rounded d-flex flex-column p-2">
+                                    <label class="text-statement">Login</label>
+                                    <label class="text-value-lowercase">@Model.Usuario.Login</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-4 mt-3">
+                                <div class="form-group form-group-default">
+                                    <label>Nome</label>
+                                    <input asp-for="InputPerfil.Nome" id="nome" type="text" class="form-control" required value="@Model.Usuario.Nome" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-4">
+                                <div class="form-group form-group-default">
+                                    <label>Email</label>
+                                    <input asp-for="InputPerfil.Email" id="email" type="text" class="form-control" required value="@Model.Usuario.Email" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-4">
+                                <div class="border rounded d-flex flex-column p-2">
+                                    <label class="text-statement">Tipo de Usuário</label>
+                                    <label class="text-value-lowercase">@tipoUsuario</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="line-senha" role="tabpanel" aria-labelledby="line-senha-tab">
+                    <div class="row" style="width: 98%;">
+                        <div class="row">
+                            <div class="col-4">
+                                <div class="form-group form-group-default">
+                                    <label>Senha Atual</label>
+                                    <input asp-for="InputSenha.OldPassword" id="email" type="password" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-4">
+                                <div class="form-group form-group-default">
+                                    <label>Nova Senha</label>
+                                    <input asp-for="InputSenha.NewPassword" id="email" type="password" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-4">
+                                <div class="form-group form-group-default">
+                                    <label>Confirmar Senha</label>
+                                    <input asp-for="InputSenha.ConfirmPassword" id="email" type="password" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="line-permissoes" role="tabpanel" aria-labelledby="line-permissoes-tab">
+                    <div class="row" style="width: 98%;">
+                        @foreach (var tipo in tipos)
+                        {
+                                var totalSecao = Model.Usuario.Permissoes.Count(m => m.Tipo == tipo);
+                                var totalSecaoSelecionado = Model.Usuario.Permissoes.Count(m => m.Tipo == tipo && m.IsSelected);
+                                <div class="col-md-2 mt-4">
+                                    <b><label class="text-uppercase">@tipo</label></b>
+                                    @for (int i = 0; i < Model.Usuario.Permissoes.Select(m => m.Tipo == tipo).Count(); i++)
+                                    {
+                                            if (Model.Usuario.Permissoes[i].Tipo == tipo)
+                                            {
+                                                    <div class="form-switch mt-2">
+                                                        <input type="hidden" asp-for="@Model.Usuario.Permissoes[i].Tipo" />
+                                                        <input type="hidden" asp-for="@Model.Usuario.Permissoes[i].Valor" />
+                                                        <input class="form-check-input c-pointer" asp-for="@Model.Usuario.Permissoes[i].IsSelected" type="checkbox" role="switch" id="checkbox_@i" disabled>
+                                                        <label class="text-capitalize" for="checkbox_@i">@Model.Usuario.Permissoes[i].Valor</label>
+                                                    </div>
+                                            }
+                                    }
+                                </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+@section Scripts {
+    @if (!ViewData.ModelState.IsValid)
+    {
+        var erros = string.Join(" . ", ViewData.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                <script>
+                    mensagem.error('@erros', "", 10);
+                </script>
+    }
+}

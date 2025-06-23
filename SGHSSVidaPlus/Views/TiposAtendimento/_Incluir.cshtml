@@ -1,0 +1,12 @@
+﻿@model SGHSSVidaPlus.MVC.Models.TipoAtendimentoViewModel
+<form id="formIncluir" class="text-start">
+    <input type="hidden" asp-for="Id" />
+    <div class="form-group form-group-default mt-3">
+        <label>Nome</label>
+        <input id="nome" name="Nome" type="text" class="form-control" required asp-for="Nome" />
+    </div>
+    <div class="form-switch mt-2">
+        <input class="form-check-input c-pointer" type="checkbox" name="Status" role="switch" id="ativoCheck" asp-for="Ativo">
+        <label class="form-check-label c-pointer" for="ativoCheck">Ativo</label>
+    </div>
+</form>

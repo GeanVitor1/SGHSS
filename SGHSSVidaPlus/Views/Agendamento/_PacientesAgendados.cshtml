@@ -1,0 +1,30 @@
+﻿@model List<SGHSSVidaPlus.MVC.Models.AgendamentoPacienteViewModel>
+<table class="table" id="tbPacientesAgendados">
+    <thead>
+        <tr>
+            <th class="text-center">#</th>
+            <th>Nome do Paciente</th>
+            <th>Data de Nascimento</th>
+            <th>CPF</th>
+            <th>Compareceu</th>
+            <th>Atendimento Finalizado</th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            <tr>
+                <td class="text-center">
+                    <input type="hidden" asp-for="@Model[i].PacienteId" />
+                    <input type="hidden" asp-for="@Model[i].AgendamentoId" />
+                    <input type="checkbox" asp-for="@Model[i].IsSelected" id="checkbox_@Model[i].PacienteId" />
+                </td>
+                <td><label for="checkbox_@Model[i].PacienteId">@Model[i].Paciente.Nome</label></td>
+                <td>@Model[i].Paciente.DataNascimento.ToString("dd/MM/yyyy")</td>
+                <td>@Model[i].Paciente.CPF</td>
+                <td><input type="checkbox" asp-for="@Model[i].Compareceu" id="compareceu_@Model[i].PacienteId" /></td>
+                <td><input type="checkbox" asp-for="@Model[i].AtendimentoFinalizado" id="finalizado_@Model[i].PacienteId" /></td>
+            </tr>
+        }
+    </tbody>
+</table>

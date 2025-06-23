@@ -1,0 +1,76 @@
+﻿@model List<SGHSSVidaPlus.Domain.Entities.ProfissionalSaude>
+@{
+    ViewData["Title"] = "Profissionais de Saúde";
+}
+
+<div class="d-flex justify-content-between">
+    <div class="page-header">
+        <h3 class="fw-bold mb-3">Profissionais de Saúde</h3>
+        <ul class="breadcrumbs">
+            <li class="nav-home active">
+                <a asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <p>Profissionais de Saúde</p>
+            </li>
+        </ul>
+    </div>
+    <div>
+        <a class="btn btn-stantard" asp-controller="ProfissionaisSaude" asp-action="Incluir">
+            <span class="btn-label">
+                <i class="fa fa-plus me-1"></i>
+            </span>
+            Incluir
+        </a>
+    </div>
+</div>
+<div class="card">
+    <form id="filtrosProfissionaisSaude">
+        <div class="card-body row">
+            <div class="col-2">
+                <div class="form-group form-group-default">
+                    <label>Código</label>
+                    <input name="Id" id="codigo" type="text" class="form-control" />
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="form-group form-group-default">
+                    <label>Nome</label>
+                    <input id="nome" name="Nome" type="text" class="form-control" />
+                </div>
+            </div>
+            <div class="col-2">
+                <div class="form-group form-group-default">
+                    <label>Cargo/Especialidade</label>
+                    <input id="cargo" name="Cargo" type="text" class="form-control" />
+                </div>
+            </div>
+            <div class="col-2">
+                <div class="form-group form-group-default">
+                    <label>Status</label>
+                    <select class="form-select" id="formGroupDefaultSelect" name="Ativo">
+                        <option>Todos</option>
+                        <option value="true" selected>Ativo</option>
+                        <option value="false">Inativo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-2 pt-2 text-end">
+                <button type="reset" class="btn btn-danger">Limpar</button>
+                <button type="submit" class="btn btn-stantard">Filtrar</button>
+            </div>
+        </div>
+    </form>
+    <div class="card-body overflow-auto" style="max-height: 62vh" id="tableProfissionaisSaude">
+        <partial name="_ProfissionaisSaude" model="@Model" />
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/ProfissionaisSaude/Index.js"></script>
+}
