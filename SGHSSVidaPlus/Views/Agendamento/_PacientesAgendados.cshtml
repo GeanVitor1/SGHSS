@@ -20,7 +20,8 @@
                     <input type="checkbox" asp-for="@Model[i].IsSelected" id="checkbox_@Model[i].PacienteId" />
                 </td>
                 <td><label for="checkbox_@Model[i].PacienteId">@Model[i].Paciente.Nome</label></td>
-                <td>@Model[i].Paciente.DataNascimento.ToString("dd/MM/yyyy")</td>
+                @* CORREÇÃO AQUI: Verifica se DataNascimento tem valor antes de formatar *@
+                <td>@(Model[i].Paciente.DataNascimento.HasValue ? Model[i].Paciente.DataNascimento.Value.ToString("dd/MM/yyyy") : "N/A")</td>
                 <td>@Model[i].Paciente.CPF</td>
                 <td><input type="checkbox" asp-for="@Model[i].Compareceu" id="compareceu_@Model[i].PacienteId" /></td>
                 <td><input type="checkbox" asp-for="@Model[i].AtendimentoFinalizado" id="finalizado_@Model[i].PacienteId" /></td>

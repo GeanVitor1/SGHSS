@@ -71,7 +71,8 @@
                         <div class="col-2">
                             <div class="border rounded d-flex flex-column p-2">
                                 <label class="text-statement">Data de Nascimento</label>
-                                <label class="text-value">@Model.DataNascimento.ToString("dd/MM/yyyy")</label>
+                                @* CORREÇÃO AQUI: Verifica se DataNascimento tem valor antes de formatar *@
+                                <label class="text-value">@(Model.DataNascimento.HasValue? Model.DataNascimento.Value.ToString("dd/MM/yyyy") : "N/A")</label>
                             </div>
                         </div>
                     </div>

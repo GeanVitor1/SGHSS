@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding; // Necessário para ModelStateDictionary
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -182,13 +182,24 @@ namespace SGHSSVidaPlus.MVC.Controllers
         {
             try
             {
+                // NOVO: Ignora a validação para UsuarioInclusao no ModelState
+                ModelState.Remove("UsuarioInclusao");
+
+                if (!ModelState.IsValid)
+                {
+                    var erros = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    TempData.Put("contatos-paciente", pacienteViewModel.Contatos);
+                    TempData.Put("historico-paciente", pacienteViewModel.Historico);
+                    return Json(new { resultado = "falha", mensagem = string.Join(" ", erros) });
+                }
+
                 var paciente = _mapper.Map<Paciente>(pacienteViewModel);
                 paciente.UsuarioInclusao = User.Identity.Name;
                 paciente.DataInclusao = DateTime.Now;
                 paciente.Ativo = true;
 
-                paciente.Contatos = _mapper.Map<List<PacienteContato>>(TempData.Get<List<PacienteContatoViewModel>>("contatos-paciente"));
-                paciente.Historico = _mapper.Map<List<HistoricoPaciente>>(TempData.Get<List<HistoricoPacienteViewModel>>("historico-paciente"));
+                paciente.Contatos = _mapper.Map<List<PacienteContato>>(TempData.Get<List<PacienteContatoViewModel>>("contatos-paciente") ?? new List<PacienteContatoViewModel>());
+                paciente.Historico = _mapper.Map<List<HistoricoPaciente>>(TempData.Get<List<HistoricoPacienteViewModel>>("historico-paciente") ?? new List<HistoricoPacienteViewModel>());
 
                 var resultado = await _pacienteService.Incluir(paciente);
 
@@ -258,9 +269,19 @@ namespace SGHSSVidaPlus.MVC.Controllers
         {
             try
             {
+                // CORREÇÃO AQUI: Ignora a validação para UsuarioInclusao no ModelState
+                ModelState.Remove("UsuarioInclusao"); // <-- ADICIONADO AQUI
+
+                if (!ModelState.IsValid)
+                {
+                    var erros = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    TempData.Put("contatos-paciente", pacienteViewModel.Contatos);
+                    TempData.Put("historico-paciente", pacienteViewModel.Historico);
+                    return Json(new { resultado = "falha", mensagem = string.Join(" ", erros) });
+                }
+
                 var paciente = _mapper.Map<Paciente>(pacienteViewModel);
 
-                // CORREÇÃO AQUI: Garante que as listas sejam não-nulas antes de passar para o serviço
                 var contatosViewModelFromTempData = TempData.Get<List<PacienteContatoViewModel>>("contatos-paciente") ?? new List<PacienteContatoViewModel>();
                 paciente.Contatos = _mapper.Map<List<PacienteContato>>(contatosViewModelFromTempData);
 

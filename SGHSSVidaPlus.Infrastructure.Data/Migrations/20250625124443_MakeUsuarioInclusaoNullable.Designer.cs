@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SGHSSVidaPlus.Infrastructure.Data.Context;
 
@@ -11,9 +12,11 @@ using SGHSSVidaPlus.Infrastructure.Data.Context;
 namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(HospitalDbContext))]
-    partial class HospitalDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250625124443_MakeUsuarioInclusaoNullable")]
+    partial class MakeUsuarioInclusaoNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -199,12 +202,14 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Descricao")
+                        .IsRequired()
                         .HasColumnType("varchar(4000)");
 
                     b.Property<int>("PacienteId")
                         .HasColumnType("int");
 
                     b.Property<string>("ProfissionalResponsavel")
+                        .IsRequired()
                         .HasColumnType("varchar(100)");
 
                     b.Property<string>("Titulo")
@@ -273,9 +278,6 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                     b.Property<string>("Contato")
                         .IsRequired()
                         .HasColumnType("varchar(200)");
-
-                    b.Property<bool>("IsWhatsApp")
-                        .HasColumnType("bit");
 
                     b.Property<int>("PacienteId")
                         .HasColumnType("int");

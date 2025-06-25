@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SGHSSVidaPlus.Domain.Interfaces.Repository; // Namespace ajustado
-using SGHSSVidaPlus.Infrastructure.Data.Context; // Namespace ajustado
+using SGHSSVidaPlus.Domain.Interfaces.Repository;
+using SGHSSVidaPlus.Infrastructure.Data.Context;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Linq; // Para LINQ
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -26,14 +26,27 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Repositories
             await _context.SaveChangesAsync();
         }
 
+        // CORREÇÃO AQUI: MÉTODO ALTERAR MAIS ROBUSTO PARA LISTAS ANINHADAS
         public virtual async Task Alterar(TEntity entity)
         {
-            _dbSet.Attach(entity);
-            _context.Entry(entity).State = EntityState.Modified;
+            
+            var entry = _context.Entry(entity);
+            if (entry.State == EntityState.Detached)
+            {
+                _dbSet.Attach(entity);
+                entry.State = EntityState.Modified;
+            }
+            else if (entry.State == EntityState.Unchanged)
+            {
+                entry.State = EntityState.Modified; // Se não foi modificada, marque para forçar o SaveChanges
+            }
+
+           
+
             await _context.SaveChangesAsync();
         }
 
-        public async Task Excluir(int id) // Usando int, como nos seus IDs
+        public async Task Excluir(int id)
         {
             var entity = _dbSet.Find(id);
             if (entity != null)
@@ -56,7 +69,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Repositories
             return await _dbSet.ToListAsync();
         }
 
-        public virtual async Task<TEntity> ObterPorId(int id) // Usando int, como nos seus IDs
+        public virtual async Task<TEntity> ObterPorId(int id)
         {
             return await _dbSet.FindAsync(id);
         }

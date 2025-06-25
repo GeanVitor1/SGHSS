@@ -8,7 +8,8 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Mappings
     {
         public void Configure(EntityTypeBuilder<HistoricoPaciente> builder)
         {
-            builder.Property(hp => hp.Titulo).IsRequired().HasColumnType("varchar(200)");
+            builder.Property(hp => hp.Titulo).IsRequired().HasColumnType("varchar(200)"); // Título é Required
+            // CORREÇÃO AQUI: NÃO USAR .IsRequired() para Descricao e ProfissionalResponsavel
             builder.Property(hp => hp.Descricao).HasColumnType("varchar(4000)");
             builder.Property(hp => hp.ProfissionalResponsavel).HasColumnType("varchar(100)");
 

@@ -61,6 +61,7 @@
                                 <div class="form-group form-group-default">
                                     <label>Nome</label>
                                     <input type="hidden" asp-for="Id" />
+                                    <input type="hidden" asp-for="Ativo" />
                                     <input asp-for="Nome" id="nome" type="text" class="form-control" required />
                                     <span asp-validation-for="Nome" class="text-danger"></span>
                                 </div>
@@ -80,7 +81,9 @@
                             <div class="col-2">
                                 <div class="form-group form-group-default">
                                     <label>Data de Nascimento</label>
-                                    <input type="date" asp-for="DataNascimento" id="dataNascimento" class="form-control" lang="en-US" />
+                                    @* CORREÇÃO AQUI: Formata para yyyy-MM-dd para input type="date" *@
+                                    <input type="date" asp-for="DataNascimento" id="dataNascimento" class="form-control"
+                                           value="@(Model.DataNascimento.HasValue && Model.DataNascimento.Value != DateTime.MinValue ? Model.DataNascimento.Value.ToString("yyyy-MM-dd") : "")" />
                                 </div>
                             </div>
                         </div>

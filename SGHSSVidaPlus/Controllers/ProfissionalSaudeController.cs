@@ -1,159 +1,210 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SGHSSVidaPlus.Domain.Entities; // Namespace atualizado
-using SGHSSVidaPlus.Domain.ExtensionsParams; // Namespace atualizado
-using SGHSSVidaPlus.Domain.Interfaces.Repository; // Namespace atualizado
-using SGHSSVidaPlus.Domain.Interfaces.Service; // Namespace atualizado
-using SGHSSVidaPlus.MVC.Additional; // Para TempDataAdditional e ClaimsAuthorizeAttribute
-using SGHSSVidaPlus.MVC.Models; // Namespace atualizado
-using System; // Para DateTime
-using System.Collections.Generic; // Para List
-using System.Linq; // Para LINQ
-using System.Threading.Tasks; // Para Task
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewEngines;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using SGHSSVidaPlus.Domain.Entities;
+using SGHSSVidaPlus.Domain.ExtensionsParams;
+using SGHSSVidaPlus.Domain.Interfaces.Repository;
+using SGHSSVidaPlus.Domain.Interfaces.Service;
+using SGHSSVidaPlus.MVC.Additional;
+using SGHSSVidaPlus.MVC.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.IO;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
-namespace SGHSSVidaPlus.MVC.Controllers // Namespace atualizado
+namespace SGHSSVidaPlus.MVC.Controllers
 {
     [Authorize]
-    public class ProfissionalSaudeController : Controller // Nome da classe atualizado
+    public class ProfissionalSaudeController : Controller
     {
-        private readonly IProfissionalSaudeService _profissionalSaudeService; // Serviço injetado
-        private readonly IProfissionalSaudeRepository _profissionalSaudeRepository; // Repositório injetado
+        private readonly IProfissionalSaudeService _profissionalSaudeService;
+        private readonly IProfissionalSaudeRepository _profissionalSaudeRepository;
         private readonly IMapper _mapper;
 
-        public ProfissionalSaudeController(IProfissionalSaudeService profissionalSaudeService, IProfissionalSaudeRepository profissionalSaudeRepository, IMapper mapper)
+        private readonly ICompositeViewEngine _viewEngine;
+        private readonly ITempDataProvider _tempDataProvider;
+        private readonly IServiceProvider _serviceProvider;
+
+        public ProfissionalSaudeController(IProfissionalSaudeService profissionalSaudeService, IProfissionalSaudeRepository profissionalSaudeRepository, IMapper mapper,
+                                           ICompositeViewEngine viewEngine, ITempDataProvider tempDataProvider, IServiceProvider serviceProvider)
         {
             _profissionalSaudeService = profissionalSaudeService;
             _profissionalSaudeRepository = profissionalSaudeRepository;
             _mapper = mapper;
+            _viewEngine = viewEngine;
+            _tempDataProvider = tempDataProvider;
+            _serviceProvider = serviceProvider;
         }
 
-        [ClaimsAuthorize("profissional_saude", "visualizar")] // Claim atualizada
-        public async Task<ActionResult> Index() => View(await _profissionalSaudeRepository.BuscarProfissionais(new ProfissionalSaudeParams() { Ativo = true })); // Parâmetro atualizado
+        // Método auxiliar RenderPartialViewToString (não mostrado aqui, mas está no seu arquivo)
+        private async Task<string> RenderPartialViewToString(string viewName, object model)
+        {
+            var actionContext = new ActionContext(HttpContext, RouteData, ControllerContext.ActionDescriptor);
+            var viewResult = _viewEngine.FindView(actionContext, viewName, false);
+            if (viewResult.View == null)
+            {
+                throw new ArgumentNullException($"Partial View '{viewName}' cannot be found by the View Engine.");
+            }
+            using (var writer = new StringWriter())
+            {
+                var viewContext = new ViewContext(
+                    actionContext,
+                    viewResult.View,
+                    new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary()) { Model = model },
+                    new TempDataDictionary(actionContext.HttpContext, _tempDataProvider),
+                    writer,
+                    new HtmlHelperOptions()
+                );
+                await viewResult.View.RenderAsync(viewContext);
+                return writer.GetStringBuilder().ToString();
+            }
+        }
 
-        public async Task<IActionResult> BuscarProfissionais([FromQuery] ProfissionalSaudeParams parametros) => PartialView("_ProfissionaisSaude", await _profissionalSaudeRepository.BuscarProfissionais(parametros)); // Parâmetros e view atualizados
 
-        [ClaimsAuthorize("profissional_saude", "incluir")] // Claim atualizada
+        [ClaimsAuthorize("profissional_saude", "visualizar")]
+        public async Task<ActionResult> Index() => View(await _profissionalSaudeRepository.BuscarProfissionais(new ProfissionalSaudeParams() { Ativo = true }));
+
+        public async Task<IActionResult> BuscarProfissionais([FromQuery] ProfissionalSaudeParams parametros) => PartialView("_ProfissionaisSaude", await _profissionalSaudeRepository.BuscarProfissionais(parametros));
+
+        [ClaimsAuthorize("profissional_saude", "incluir")]
         public ActionResult Incluir()
         {
-            // Limpa TempData para as listas do profissional
             TempData.Remove("formacao-profissional");
             TempData.Remove("cursos-profissional");
-
-            return View();
+            // CORREÇÃO AQUI: Passa uma nova instância de ProfissionalSaudeViewModel para a View
+            return View(new ProfissionalSaudeViewModel());
         }
 
-        public IActionResult TelaNovaFormacaoAcademica() => PartialView("_NovaFormacaoAcademica"); // Nova partial
+        public IActionResult TelaNovaFormacaoAcademica() => PartialView("_NovaFormacaoAcademica");
 
         [HttpPost]
-        public IActionResult IncluirFormacaoAcademica(FormacaoAcademicaProfissionalSaudeViewModel formacaoAdicionar) // ViewModel atualizado
+        public IActionResult IncluirFormacaoAcademica(FormacaoAcademicaProfissionalSaudeViewModel formacaoAdicionar)
         {
             if (string.IsNullOrWhiteSpace(formacaoAdicionar.Titulo))
-                return Json(new { mensagem = "O título da formação é obrigatório" });
+                return Json(new { resultado = "falha", mensagem = "O título da formação é obrigatório" });
 
-            var formacoes = TempData.Get<List<FormacaoAcademicaProfissionalSaudeViewModel>>("formacao-profissional") ?? new List<FormacaoAcademicaProfissionalSaudeViewModel>(); // Tipo atualizado
+            var formacoes = TempData.Get<List<FormacaoAcademicaProfissionalSaudeViewModel>>("formacao-profissional") ?? new List<FormacaoAcademicaProfissionalSaudeViewModel>();
 
             if (formacoes.Any(f => f.Titulo == formacaoAdicionar.Titulo && f.InstituicaoEnsino == formacaoAdicionar.InstituicaoEnsino))
             {
                 TempData.Put("formacao-profissional", formacoes);
-                return Json(new { mensagem = "A formação informada já foi adicionada" });
+                return Json(new { resultado = "falha", mensagem = "A formação informada já foi adicionada" });
             }
 
             formacoes.Add(formacaoAdicionar);
             TempData.Put("formacao-profissional", formacoes);
-            return PartialView("_FormacaoAcademica", formacoes); // Partial atualizado
+
+            var partialHtml = RenderPartialViewToString("_FormacaoAcademica", formacoes).Result; // .Result para pegar o valor do Task (sincrono aqui para simplificar)
+            return Json(new { resultado = "sucesso", mensagem = "Formação acadêmica adicionada com sucesso.", partialHtml = partialHtml });
         }
 
         [HttpPost]
-        public IActionResult RemoverFormacaoAcademica(string titulo, string instituicao) // Parâmetros atualizados
+        public IActionResult RemoverFormacaoAcademica(string titulo, string instituicao)
         {
-            var formacoes = TempData.Get<List<FormacaoAcademicaProfissionalSaudeViewModel>>("formacao-profissional") ?? new List<FormacaoAcademicaProfissionalSaudeViewModel>(); // Tipo atualizado
-            formacoes.Remove(formacoes.FirstOrDefault(f => f.Titulo == titulo && f.InstituicaoEnsino == instituicao)); // Comparação atualizada
+            var formacoes = TempData.Get<List<FormacaoAcademicaProfissionalSaudeViewModel>>("formacao-profissional") ?? new List<FormacaoAcademicaProfissionalSaudeViewModel>();
+            formacoes.Remove(formacoes.FirstOrDefault(f => f.Titulo == titulo && f.InstituicaoEnsino == instituicao));
             TempData.Put("formacao-profissional", formacoes);
-            return PartialView("_FormacaoAcademica", formacoes); // Partial atualizado
+
+            var partialHtml = RenderPartialViewToString("_FormacaoAcademica", formacoes).Result;
+            return Json(new { resultado = "sucesso", mensagem = "Formação removida com sucesso.", partialHtml = partialHtml });
         }
 
-        public IActionResult TelaNovoCursoCertificacao() => PartialView("_NovoCursoCertificacao"); // Nova partial
+        public IActionResult TelaNovoCursoCertificacao() => PartialView("_NovoCursoCertificacao");
 
         [HttpPost]
-        public IActionResult IncluirCursoCertificacao(CursosCertificacoesProfissionalSaudeViewModel cursoAdicionar) // ViewModel atualizado
+        public IActionResult IncluirCursoCertificacao(CursosCertificacoesProfissionalSaudeViewModel cursoAdicionar)
         {
             if (string.IsNullOrWhiteSpace(cursoAdicionar.Titulo))
-                return Json(new { mensagem = "O título do curso é obrigatório" });
+                return Json(new { resultado = "falha", mensagem = "O título do curso é obrigatório" });
 
-            var cursos = TempData.Get<List<CursosCertificacoesProfissionalSaudeViewModel>>("cursos-profissional") ?? new List<CursosCertificacoesProfissionalSaudeViewModel>(); // Tipo atualizado
-
+            var cursos = TempData.Get<List<CursosCertificacoesProfissionalSaudeViewModel>>("cursos-profissional") ?? new List<CursosCertificacoesProfissionalSaudeViewModel>();
             if (cursos.Any(c => c.Titulo == cursoAdicionar.Titulo && c.InstituicaoEnsino == cursoAdicionar.InstituicaoEnsino && c.DuracaoHoras == cursoAdicionar.DuracaoHoras))
             {
                 TempData.Put("cursos-profissional", cursos);
-                return Json(new { mensagem = "O curso/certificação informado(a) já foi adicionado(a)" });
+                return Json(new { resultado = "falha", mensagem = "O curso/certificação informado(a) já foi adicionado(a)" });
             }
 
             cursos.Add(cursoAdicionar);
             TempData.Put("cursos-profissional", cursos);
-            return PartialView("_CursosCertificacoes", cursos); // Partial atualizado
+
+            var partialHtml = RenderPartialViewToString("_CursosCertificacoes", cursos).Result;
+            return Json(new { resultado = "sucesso", mensagem = "Curso/Certificação adicionado(a) com sucesso.", partialHtml = partialHtml });
         }
 
         [HttpPost]
-        public IActionResult RemoverCursoCertificacao(string titulo, double duracaoHoras, string instituicao) // Parâmetros atualizados
+        public IActionResult RemoverCursoCertificacao(string titulo, double duracaoHoras, string instituicao)
         {
-            var cursos = TempData.Get<List<CursosCertificacoesProfissionalSaudeViewModel>>("cursos-profissional") ?? new List<CursosCertificacoesProfissionalSaudeViewModel>(); // Tipo atualizado
-            cursos.Remove(cursos.FirstOrDefault(c => c.Titulo == titulo && c.DuracaoHoras == duracaoHoras && c.InstituicaoEnsino == instituicao)); // Comparação atualizada
+            var cursos = TempData.Get<List<CursosCertificacoesProfissionalSaudeViewModel>>("cursos-profissional") ?? new List<CursosCertificacoesProfissionalSaudeViewModel>();
+            cursos.Remove(cursos.FirstOrDefault(c => c.Titulo == titulo && c.DuracaoHoras == duracaoHoras && c.InstituicaoEnsino == instituicao));
             TempData.Put("cursos-profissional", cursos);
-            return PartialView("_CursosCertificacoes", cursos); // Partial atualizado
+
+            var partialHtml = RenderPartialViewToString("_CursosCertificacoes", cursos).Result;
+            return Json(new { resultado = "sucesso", mensagem = "Curso/Certificação removido(a) com sucesso!", partialHtml = partialHtml });
         }
 
-
         [HttpPost]
-        public async Task<JsonResult> Incluir(ProfissionalSaudeViewModel profissionalSaudeViewModel) // ViewModel atualizado
+        public async Task<JsonResult> Incluir(ProfissionalSaudeViewModel profissionalSaudeViewModel)
         {
             try
             {
-                var profissional = _mapper.Map<ProfissionalSaude>(profissionalSaudeViewModel); // Entidade atualizada
+                if (!ModelState.IsValid)
+                {
+                    var erros = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    TempData.Put("formacao-profissional", profissionalSaudeViewModel.Formacao);
+                    TempData.Put("cursos-profissional", profissionalSaudeViewModel.Cursos);
+                    return Json(new { resultado = "falha", mensagem = string.Join(" ", erros) });
+                }
 
+                var profissional = _mapper.Map<ProfissionalSaude>(profissionalSaudeViewModel);
                 profissional.UsuarioInclusao = User.Identity.Name;
                 profissional.DataInclusao = DateTime.Now;
+                profissional.Ativo = true;
 
-                // Mapeia listas de ViewModels para Entidades
-                profissional.Formacao = _mapper.Map<List<FormacaoAcademicaProfissionalSaude>>(TempData.Get<List<FormacaoAcademicaProfissionalSaudeViewModel>>("formacao-profissional")); // Tipo atualizado
-                profissional.Cursos = _mapper.Map<List<CursosCertificacoesProfissionalSaude>>(TempData.Get<List<CursosCertificacoesProfissionalSaudeViewModel>>("cursos-profissional")); // Tipo atualizado
+                // CORREÇÃO AQUI
+                var formacoesViewModel = TempData.Get<List<FormacaoAcademicaProfissionalSaudeViewModel>>("formacao-profissional")
+                                         ?? new List<FormacaoAcademicaProfissionalSaudeViewModel>();
+                profissional.Formacao = _mapper.Map<List<FormacaoAcademicaProfissionalSaude>>(formacoesViewModel);
 
-                var resultado = await _profissionalSaudeService.Incluir(profissional); // Serviço e entidade atualizados
+                var cursosViewModel = TempData.Get<List<CursosCertificacoesProfissionalSaudeViewModel>>("cursos-profissional")
+                                      ?? new List<CursosCertificacoesProfissionalSaudeViewModel>();
+                profissional.Cursos = _mapper.Map<List<CursosCertificacoesProfissionalSaude>>(cursosViewModel);
+
+                var resultado = await _profissionalSaudeService.Incluir(profissional);
 
                 if (!resultado.Valido)
                 {
-                    // Se falhar, coloca as listas de volta no TempData para a View
                     TempData.Put("formacao-profissional", _mapper.Map<List<FormacaoAcademicaProfissionalSaudeViewModel>>(profissional.Formacao));
                     TempData.Put("cursos-profissional", _mapper.Map<List<CursosCertificacoesProfissionalSaudeViewModel>>(profissional.Cursos));
-
-                    return Json(new
-                    {
-                        resultado = "falha",
-                        mensagem = string.Join(" ", resultado.Mensagens)
-                    });
+                    return Json(new { resultado = "falha", mensagem = string.Join(" ", resultado.Mensagens) });
                 }
 
-                TempData["success"] = "Profissional de Saúde Incluído com Sucesso!";
+                TempData["success"] = "Profissional de saúde incluído com sucesso!";
                 return Json(new { resultado = "sucesso" });
             }
             catch (Exception e)
             {
-                return Json(new { resultado = "falha", mensagem = string.Join(" ", e.Message) });
+                return Json(new { resultado = "falha", mensagem = "Erro inesperado: " + e.Message });
             }
         }
 
 
-        [ClaimsAuthorize("profissional_saude", "alterar")] // Claim atualizada
+        [ClaimsAuthorize("profissional_saude", "alterar")]
         public async Task<IActionResult> Editar(int id)
         {
-            // Limpa TempData antes de carregar novos dados
             TempData.Remove("formacao-profissional");
             TempData.Remove("cursos-profissional");
 
             var profissional = (await _profissionalSaudeRepository.BuscarProfissionais(new ProfissionalSaudeParams()
             {
                 Id = id,
-                IncluirFormacaoCursos = true // Parâmetro atualizado
+                IncluirFormacaoCursos = true
             })).FirstOrDefault();
 
             if (profissional == null)
@@ -162,62 +213,86 @@ namespace SGHSSVidaPlus.MVC.Controllers // Namespace atualizado
                 return RedirectToAction("Index");
             }
 
-            // Mapeia listas de Entidades para ViewModels antes de colocar no TempData
             TempData.Put("formacao-profissional", _mapper.Map<List<FormacaoAcademicaProfissionalSaudeViewModel>>(profissional.Formacao));
             TempData.Put("cursos-profissional", _mapper.Map<List<CursosCertificacoesProfissionalSaudeViewModel>>(profissional.Cursos));
 
-            return View(_mapper.Map<ProfissionalSaudeViewModel>(profissional)); // ViewModel atualizado
+            return View(_mapper.Map<ProfissionalSaudeViewModel>(profissional));
         }
 
         [HttpPost]
-        public async Task<JsonResult> Editar(ProfissionalSaudeViewModel profissionalSaudeViewModel) // ViewModel atualizado
+        public async Task<JsonResult> Editar(ProfissionalSaudeViewModel profissionalSaudeViewModel)
         {
             try
             {
-                var profissional = _mapper.Map<ProfissionalSaude>(profissionalSaudeViewModel); // Entidade atualizada
+                if (!ModelState.IsValid)
+                {
+                    var erros = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    TempData.Put("formacao-profissional", profissionalSaudeViewModel.Formacao);
+                    TempData.Put("cursos-profissional", profissionalSaudeViewModel.Cursos);
+                    return Json(new { resultado = "falha", mensagem = string.Join(" ", erros) });
+                }
 
-                // Mapeia listas de ViewModels para Entidades
-                profissional.Formacao = _mapper.Map<List<FormacaoAcademicaProfissionalSaude>>(TempData.Get<List<FormacaoAcademicaProfissionalSaudeViewModel>>("formacao-profissional"));
-                profissional.Cursos = _mapper.Map<List<CursosCertificacoesProfissionalSaude>>(TempData.Get<List<CursosCertificacoesProfissionalSaudeViewModel>>("cursos-profissional"));
+                var profissional = _mapper.Map<ProfissionalSaude>(profissionalSaudeViewModel);
 
-                var resultado = await _profissionalSaudeService.Editar(profissional); // Serviço e entidade atualizados
+                var formacaoViewModelFromTempData = TempData.Get<List<FormacaoAcademicaProfissionalSaudeViewModel>>("formacao-profissional") ?? new List<FormacaoAcademicaProfissionalSaudeViewModel>();
+                profissional.Formacao = _mapper.Map<List<FormacaoAcademicaProfissionalSaude>>(formacaoViewModelFromTempData);
+
+                var cursosViewModelFromTempData = TempData.Get<List<CursosCertificacoesProfissionalSaudeViewModel>>("cursos-profissional") ?? new List<CursosCertificacoesProfissionalSaudeViewModel>();
+                profissional.Cursos = _mapper.Map<List<CursosCertificacoesProfissionalSaude>>(cursosViewModelFromTempData);
+
+                var resultado = await _profissionalSaudeService.Editar(profissional);
 
                 if (!resultado.Valido)
                 {
-                    // Se falhar, coloca as listas de volta no TempData para a View
                     TempData.Put("formacao-profissional", _mapper.Map<List<FormacaoAcademicaProfissionalSaudeViewModel>>(profissional.Formacao));
                     TempData.Put("cursos-profissional", _mapper.Map<List<CursosCertificacoesProfissionalSaudeViewModel>>(profissional.Cursos));
-
-                    return Json(new
-                    {
-                        resultado = "falha",
-                        mensagem = string.Join(" ", resultado.Mensagens)
-                    });
+                    return Json(new { resultado = "falha", mensagem = string.Join(" ", resultado.Mensagens) });
                 }
                 ;
 
-                TempData["success"] = "Profissional de Saúde Editado com Sucesso!";
+                TempData["success"] = "Profissional de saúde editado com sucesso!";
                 return Json(new { resultado = "sucesso" });
+            }
+            catch (DbUpdateException ex)
+            {
+                var innerException = ex.InnerException as SqlException;
+                if (innerException != null)
+                {
+                    if (innerException.Number == 2601 || innerException.Number == 2627)
+                    {
+                        return Json(new { resultado = "falha", mensagem = "Já existe um registro com os dados informados." });
+                    }
+                    else if (innerException.Number == 515)
+                    {
+                        return Json(new { resultado = "falha", mensagem = "Um campo obrigatório não foi preenchido. Verifique os dados do profissional, formação e cursos." });
+                    }
+                    else
+                    {
+                        return Json(new { resultado = "falha", mensagem = $"Erro no banco de dados: {innerException.Message}" });
+                    }
+                }
+                return Json(new { resultado = "falha", mensagem = "Ocorreu um erro ao salvar os dados. Detalhes: " + ex.Message });
             }
             catch (Exception e)
             {
-                return Json(new { resultado = "falha", mensagem = string.Join(" ", e.Message) });
+                return Json(new { resultado = "falha", mensagem = "Ocorreu um erro inesperado ao editar o profissional de saúde: " + e.Message });
             }
         }
+
 
         [HttpPost]
         public async Task<JsonResult> AlterarStatus(int id)
         {
             try
             {
-                var profissional = (await _profissionalSaudeRepository.ObterPorId(id)); // Entidade atualizada
+                var profissional = (await _profissionalSaudeRepository.ObterPorId(id));
 
                 if (profissional == null)
-                    return Json(new { resultado = "falha", mensagem = "Profissional de saúde não encontrado" });
+                    return Json(new { resultado = "falha", mensagem = "Profissional não encontrado" });
 
-                profissional.Ativo = !profissional.Ativo; // Inverte o status atual
+                profissional.Ativo = !profissional.Ativo;
 
-                var resultado = await _profissionalSaudeService.AlterarStatus(profissional); // Serviço e entidade atualizados
+                var resultado = await _profissionalSaudeService.AlterarStatus(profissional);
 
                 if (!resultado.Valido)
                     return Json(new { resultado = "falha", mensagem = string.Join(" ", resultado.Mensagens) });

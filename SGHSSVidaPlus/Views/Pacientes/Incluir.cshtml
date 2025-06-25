@@ -99,18 +99,22 @@
             <div class="tab-pane fade" id="line-contact" role="tabpanel" aria-labelledby="line-contact-tab">
                 <div style="width: 98%;">
                     <div class="form-group w-75" id="contatotable">
-                        <partial name="_Contatos" model="Model.Contatos" /> 
+                        <partial name="_Contatos" model="Model.Contatos" />
                     </div>
                 </div>
             </div>
             <div class="tab-pane fade" id="line-historico" role="tabpanel" aria-labelledby="line-historico-tab">
                 <div class="form-group" id="historicoTable">
-                    <partial name="_Historico" model="Model.Historico" /> 
+                    <partial name="_Historico" model="Model.Historico" />
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/Pacientes/Incluir.js"></script>
+}
 
 @* MODAL PARA INCLUIR NOVO CONTATO *@
 <div class="modal" id="modalNovoContato" tabindex="-1">
@@ -147,7 +151,3 @@
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script src="~/js/Pacientes/Incluir.js"></script>
-}

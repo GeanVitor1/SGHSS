@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SGHSSVidaPlus.Domain.Entities;
-using SGHSSVidaPlus.Domain.ExtensionsParams;
+using SGHSSVidaPlus.Domain.ExtensionsParams; // <-- CORRIGIDO AQUI (SEM O UNDERSCORE)
 using SGHSSVidaPlus.Domain.Interfaces.Repository;
 using SGHSSVidaPlus.Infrastructure.Data.Context;
 using System;
@@ -18,7 +18,6 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Repositories
         {
             var query = _context.Pacientes.AsQueryable();
 
-            // CORREÇÃO CRÍTICA AQUI: ADICIONANDO OS INCLUDES
             if (parametros.IncluirContatosHistorico)
             {
                 query = query
@@ -41,7 +40,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Repositories
             if (parametros.DataNascimentoInicio != DateTime.MinValue && parametros.DataNascimentoFim != DateTime.MinValue)
             {
                 parametros.DataNascimentoFim = parametros.DataNascimentoFim.Date.AddDays(1).AddTicks(-1);
-                query = query.Where(p => p.DataNascimento >= parametros.DataNascimentoInicio && parametros.DataNascimento <= parametros.DataNascimentoFim);
+                query = query.Where(p => p.DataNascimento >= parametros.DataNascimentoInicio && p.DataNascimento <= parametros.DataNascimentoFim);
             }
 
             if (!string.IsNullOrWhiteSpace(parametros.Endereco))

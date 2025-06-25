@@ -48,7 +48,7 @@
                 <div class="form-group form-group-default">
                     <label>Status</label>
                     <select class="form-select" id="formGroupDefaultSelect" name="Ativo">
-                        <option value="">Todos</option> // Já envia valor vazio/nulo
+                        <option value="">Todos</option>
                         <option value="true" selected>Ativo</option>
                         <option value="false">Inativo</option>
                     </select>
@@ -80,3 +80,11 @@
 @section Scripts {
     <script src="~/js/Pacientes/Index.js"></script>
 }
+
+@* MODAL PARA EXIBIR DETALHES DO HISTÓRICO - ESTE MODAL DEVE ESTAR AQUI *@
+<div class="modal" id="modalHistorico" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content" id="dadoHistorico">
+        </div>
+    </div>
+</div>

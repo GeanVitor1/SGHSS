@@ -1,14 +1,15 @@
 ﻿@using System.Globalization
 @using SGHSSVidaPlus.Domain.Entities
-@model SGHSSVidaPlus.Domain.Entities.Paciente;
+@model SGHSSVidaPlus.MVC.Models.PacienteViewModel; 
 @{
     var dados = "";
 
-    if (Model.DataNascimento != DateTime.MinValue)
+    // CORREÇÃO AQUI: Verifica se DataNascimento tem valor antes de usá-la
+    if (Model.DataNascimento.HasValue && Model.DataNascimento.Value != DateTime.MinValue)
     {
-        int idade = DateTime.Now.Year - Model.DataNascimento.Year;
+        int idade = DateTime.Now.Year - Model.DataNascimento.Value.Year; // ACESSO AO .Value.Year
 
-        if (DateTime.Now < Model.DataNascimento.AddYears(idade))
+        if (DateTime.Now < Model.DataNascimento.Value.AddYears(idade)) // ACESSO AO .Value.AddYears
             idade--;
 
         dados += $"<p><i class=\"fas fa-calendar-alt\"></i> Idade: {idade} anos</p>";
@@ -16,7 +17,7 @@
 
     if (!string.IsNullOrWhiteSpace(Model.EstadoCivil))
         dados += $"<p><i class=\"fas fa-user-friends\"></i> Estado Cívil: {Model.EstadoCivil}</p>";
-
+    
     if (!string.IsNullOrWhiteSpace(Model.CPF))
         dados += $"<p><i class=\"fas fa-id-card\"></i> CPF: {Model.CPF}</p>";
 
@@ -37,7 +38,7 @@
             <h4>Dados</h4>
             @Html.Raw(dados)
             <h4>Contatos</h4>
-            @foreach (var contato in Model.Contatos)
+            @foreach(var contato in Model.Contatos)
             {
                 var contatoEscrito = "";
                 if (contato.Tipo == "Telefone Fixo")
@@ -68,13 +69,13 @@
                     @foreach (var historico in Model.Historico.OrderByDescending(h => h.DataEvento))
                     {
                         var dataEventoFormatada = historico.DataEvento.HasValue ? historico.DataEvento.Value.ToString("dd/MM/yyyy") : "N/A";
-
+                        
                         <li class="mt-3">
                             <div>
                                 <h6><b>@historico.Titulo</b></h6>
                                 <p style="margin: -15px; margin-left: 2px;">Data: @dataEventoFormatada</p>
-                                <p style="margin: -15px; margin-left: 2px;">Profissional: @historico.ProfissionalResponsavel</p>
-                                <p style="margin: -15px; margin-left: 2px;">@historico.Descricao</p>
+                                <p style="margin: -15px; margin-left: 2px;">Profissional: @(historico.ProfissionalResponsavel ?? "N/A")</p>
+                                <p style="margin: -15px; margin-left: 2px;">Descrição: @(historico.Descricao ?? "N/A")</p>
                             </div>
                         </li>
                     }

@@ -16,8 +16,8 @@
             case "pacientes": 
                 controller = "pacientes";
                 break;
-            case "profissionaisSaude": 
-                controller = "profissionaisSaude";
+            case "profissionalSaude": 
+                controller = "profissionalSaude";
                 break;
         }
     }
@@ -76,7 +76,7 @@
                 </li>
 
                 
-                <li class="nav-item mt-2 @(controller == "profissionaisSaude" ? "active" : "")">
+                <li class="nav-item mt-2 @(controller == "profissionalSaude" ? "active" : "")">
                     <a data-bs-toggle="collapse" href="#profissionaisSaude">
                         <i class="fas fa-user-md"></i> *
                         <p>Profissionais</p>
@@ -85,7 +85,7 @@
                     <div class="collapse" id="profissionaisSaude">
                         <ul class="nav nav-collapse">
                             <li>
-                                <a asp-controller="ProfissionaisSaude" asp-action="Index">
+                                <a asp-controller="ProfissionalSaude" asp-action="Index">
                                     <span class="sub-item">Listar Profissionais</span>
                                 </a>
                             </li>

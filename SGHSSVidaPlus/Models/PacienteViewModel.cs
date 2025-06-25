@@ -1,32 +1,39 @@
-﻿using SGHSSVidaPlus.Domain.Entities; // Namespace da entidade atualizado
-using System.ComponentModel.DataAnnotations; // Mantido para validações
-using System; // Para DateTime
-using System.Collections.Generic; // Para List
+﻿using SGHSSVidaPlus.Domain.Entities; // Namespace da entidade
+using System.ComponentModel.DataAnnotations;
+using System;
+using System.Collections.Generic;
 
-namespace SGHSSVidaPlus.MVC.Models // Namespace do projeto MVC atualizado
+namespace SGHSSVidaPlus.MVC.Models // Namespace do projeto MVC
 {
-    public class PacienteViewModel // Nome da classe atualizado
+    public class PacienteViewModel
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "É Necessário informar o nome do paciente")] // Mensagem atualizada
+        [Required(ErrorMessage = "É Necessário informar o nome do paciente.")]
         public string Nome { get; set; }
-        public DateTime DataNascimento { get; set; }
-        public string CPF { get; set; } // Adicionado CPF
-        public string Endereco { get; set; } // Logradouro e Bairro combinados em Endereco
+
+        [Required(ErrorMessage = "É Necessário informar a data de nascimento.")]
+        [DataType(DataType.Date)]
+        public DateTime? DataNascimento { get; set; }
+
+        [Required(ErrorMessage = "É Necessário informar o CPF.")]
+        public string CPF { get; set; }
+
+        [Required(ErrorMessage = "É Necessário informar o endereço.")]
+        public string Endereco { get; set; }
+
+        [Required(ErrorMessage = "É Necessário informar o estado civil.")]
         public string EstadoCivil { get; set; }
-        public bool Ativo { get; set; } // Substitui Selecionado e Banido
-        public string UsuarioInclusao { get; set; }
+
+        public bool Ativo { get; set; }
+
+        // CORREÇÃO AQUI: UsuarioInclusao como string? (anulável) para corresponder à entidade e tratar nulls
+        public string? UsuarioInclusao { get; set; }
 
         [DataType(DataType.Date)]
         public DateTime DataInclusao { get; set; }
 
-        // Relacionamentos com ViewModels aninhados (baseados nas entidades auxiliares)
         public List<PacienteContatoViewModel> Contatos { get; set; } = new List<PacienteContatoViewModel>();
-        public List<HistoricoPacienteViewModel> Historico { get; set; } = new List<HistoricoPacienteViewModel>(); // Substitui Experiencias
-
-        // Removidos: Formacao e Cursos, pois agora pertencem a ProfissionalSaude
-        // public List<FormacaoAcademicaProfissionalSaudeViewModel> Formacao { get; set; } = new List<FormacaoAcademicaProfissionalSaudeViewModel>();
-        // public List<CursosCertificacoesProfissionalSaudeViewModel> Cursos { get; set; } = new List<CursosCertificacoesProfissionalSaudeViewModel>();
+        public List<HistoricoPacienteViewModel> Historico { get; set; } = new List<HistoricoPacienteViewModel>();
     }
 }

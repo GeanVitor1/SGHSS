@@ -15,7 +15,8 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Context
         public HospitalDbContext(DbContextOptions<HospitalDbContext> options) : base(options)
         {
             ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-            ChangeTracker.AutoDetectChangesEnabled = false;
+            // CORREÇÃO CRÍTICA AQUI: Habilitar AutoDetectChangesEnabled para salvar coleções
+            ChangeTracker.AutoDetectChangesEnabled = true; // <-- MUDANÇA AQUI: DE FALSE PARA TRUE
 
             var sqlServerOptionsExtensions = options.FindExtension<SqlServerOptionsExtension>();
             if (sqlServerOptionsExtensions != null)
@@ -27,8 +28,8 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Context
         public DbSet<HistoricoPaciente> HistoricoPacientes { get; set; }
 
         public DbSet<ProfissionalSaude> ProfissionaisSaude { get; set; }
-        public DbSet<FormacaoAcademicaProfissionalSaude> FormacoesAcademicasProfissionaisSaude { get; set; }
-        public DbSet<CursosCertificacoesProfissionalSaude> CursosCertificacoesProfissionaisSaude { get; set; }
+        public DbSet<FormacaoAcademicaProfissionalSaude> FormacoesAcademicasProfissionalSaude { get; set; }
+        public DbSet<CursosCertificacoesProfissionalSaude> CursosCertificacoesProfissionalSaude { get; set; }
 
         public DbSet<Agendamento> Agendamentos { get; set; }
         public DbSet<AgendamentoPaciente> AgendamentosPacientes { get; set; }

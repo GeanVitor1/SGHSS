@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SGHSSVidaPlus.Infrastructure.Data.Context;
 
@@ -11,9 +12,11 @@ using SGHSSVidaPlus.Infrastructure.Data.Context;
 namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(HospitalDbContext))]
-    partial class HospitalDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250625150606_MakeHistoricoStringPropertiesNullable")]
+    partial class MakeHistoricoStringPropertiesNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

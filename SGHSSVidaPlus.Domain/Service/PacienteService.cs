@@ -39,6 +39,7 @@ namespace SGHSSVidaPlus.Application.Services
                 paciente.UsuarioInclusao = "Sistema";
 
                 await _pacienteRepository.Incluir(paciente);
+
                 result.Mensagens.Add("Paciente incluído com sucesso.");
             }
 
@@ -62,8 +63,7 @@ namespace SGHSSVidaPlus.Application.Services
 
             if (result.Valido)
             {
-                // Busca o paciente existente com as listas incluídas para comparação
-                // Isso é essencial para que o EF Core rastreie as mudanças nas coleções
+                // Busca o paciente existente COM AS LISTAS incluídas para comparação. ESSENCIAL!
                 var pacienteExistente = (await _pacienteRepository.BuscarPacientes(new PacienteParams { Id = paciente.Id, IncluirContatosHistorico = true })).FirstOrDefault();
                 if (pacienteExistente == null)
                 {
@@ -78,7 +78,7 @@ namespace SGHSSVidaPlus.Application.Services
                 pacienteExistente.Endereco = paciente.Endereco;
                 pacienteExistente.CPF = paciente.CPF;
                 pacienteExistente.EstadoCivil = paciente.EstadoCivil;
-                pacienteExistente.Ativo = paciente.Ativo;
+                pacienteExistente.Ativo = paciente.Ativo; // Atualiza o status Ativo com o valor vindo da UI
 
                 // --- LÓGICA PARA ATUALIZAR LISTAS ANINHADAS (CONTATOS) ---
                 // Itens a remover: Estão no DB (pacienteExistente.Contatos), mas não na lista atual da UI (paciente.Contatos)
@@ -87,7 +87,7 @@ namespace SGHSSVidaPlus.Application.Services
                     .ToList();
                 foreach (var c in contatosParaRemover)
                 {
-                    pacienteExistente.Contatos.Remove(c); // Remove do objeto rastreado
+                    pacienteExistente.Contatos.Remove(c); // Remove do objeto rastreado pelo EF
                 }
 
                 // Itens a adicionar: Estão na lista atual da UI (paciente.Contatos), mas não no DB
@@ -96,7 +96,7 @@ namespace SGHSSVidaPlus.Application.Services
                     .ToList();
                 foreach (var c in contatosParaAdicionar)
                 {
-                    c.PacienteId = pacienteExistente.Id; // Garante FK
+                    c.PacienteId = pacienteExistente.Id; // Garante a FK para o novo item
                     pacienteExistente.Contatos.Add(c); // Adiciona ao objeto rastreado
                 }
 
@@ -112,16 +112,17 @@ namespace SGHSSVidaPlus.Application.Services
 
                 // Itens a adicionar: Estão na lista atual da UI (paciente.Historico), mas não no DB
                 var historicosParaAdicionar = paciente.Historico
-                    .Where(hUi => !pacienteExistente.Historico.Any(hDb => hDb.Titulo == hUi.Titulo && hUi.DataEvento == hUi.DataEvento))
+                    .Where(hUi => !pacienteExistente.Historico.Any(hDb => hDb.Titulo == hUi.Titulo && hDb.DataEvento == hUi.DataEvento))
                     .ToList();
                 foreach (var h in historicosParaAdicionar)
                 {
-                    h.PacienteId = pacienteExistente.Id; // Garante FK
+                    h.PacienteId = pacienteExistente.Id; // Garante a FK para o novo item
                     pacienteExistente.Historico.Add(h);
                 }
 
-                // Salva todas as alterações no objeto pacienteExistente (que o EF Core está rastreando)
-                await _pacienteRepository.Alterar(pacienteExistente); // Isso dispara o SaveChangesAsync
+                // Salva todas as alterações no objeto pacienteExistente (que o EF Core está rastreando).
+                // Isso inclui as propriedades de nível superior e as adições/remoções nas coleções.
+                await _pacienteRepository.Alterar(pacienteExistente);
 
                 result.Mensagens.Add("Paciente editado com sucesso.");
             }

@@ -63,10 +63,9 @@ function alterarStatus(pacienteId, nomePaciente, acao) { // Parâmetros atualizad
     });
 }
 
-// Função para visualizar histórico (antigo curriculo)
-function verHistorico(pacienteId) { // Renomeado para verHistorico
-    $.get(`/Pacientes/BuscarHistorico?id=${pacienteId}`, function (data) { // URL atualizada
-        $("#dadoHistorico").html(data); // ID do div de dados atualizado
-        $("#modalHistorico").modal("show"); // ID do modal atualizado
+function verHistorico(pacienteId) {
+    $.get(`/Pacientes/BuscarHistorico?id=${pacienteId}`, function (data) {
+        $("#dadoHistorico").html(data);
+        $("#modalHistorico").modal("show");
     });
 }

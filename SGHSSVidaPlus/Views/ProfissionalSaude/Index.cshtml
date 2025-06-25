@@ -21,7 +21,7 @@
         </ul>
     </div>
     <div>
-        <a class="btn btn-stantard" asp-controller="ProfissionaisSaude" asp-action="Incluir">
+        <a class="btn btn-stantard" asp-controller="ProfissionalSaude" asp-action="Incluir">
             <span class="btn-label">
                 <i class="fa fa-plus me-1"></i>
             </span>
@@ -30,7 +30,7 @@
     </div>
 </div>
 <div class="card">
-    <form id="filtrosProfissionaisSaude">
+    <form id="filtrosProfissionalSaude">
         <div class="card-body row">
             <div class="col-2">
                 <div class="form-group form-group-default">
@@ -67,10 +67,10 @@
         </div>
     </form>
     <div class="card-body overflow-auto" style="max-height: 62vh" id="tableProfissionaisSaude">
-        <partial name="_ProfissionaisSaude" model="@Model" />
+        <partial name="_ProfissionalSaude" model="@Model" />
     </div>
 </div>
 
 @section Scripts {
-    <script src="~/js/ProfissionaisSaude/Index.js"></script>
+    <script src="~/js/ProfissionalSaude/Index.js"></script>
 }

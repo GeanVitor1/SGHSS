@@ -1,9 +1,4 @@
-$(document).ready(function () {
-    // Funções de inicialização de DataTable ou outros componentes específicos da página
-});
-
-// Funções para carregar e exibir os modais de inclusão de item (replicadas para Edição)
-// Ou você pode refatorar para um arquivo JS compartilhado.
+// Funções para carregar e exibir os modais de inclusão de item
 function novaFormacaoAcademica() {
     $.get("/ProfissionaisSaude/TelaNovaFormacaoAcademica", function (data) {
         $("#modalNovaFormacaoAcademica .modal-body").html(data);
@@ -26,7 +21,7 @@ function salvarNovaFormacaoAcademica() {
     $.post("/ProfissionaisSaude/IncluirFormacaoAcademica", formData, function (response) {
         if (response.resultado === "sucesso") {
             $("#modalNovaFormacaoAcademica").modal("hide");
-            $.get("/ProfissionaisSaude/ObterFormacoesAcademicaProfissionalSaude", function (partialHtml) {
+            $.get("/ProfissionaisSaude/ObterFormacoesAcademicaProfissionalSaude", function (partialHtml) { // Nova ação GET no Controller
                 $("#formacaoTable").html(partialHtml);
             });
             form[0].reset();
@@ -46,7 +41,7 @@ function salvarNovoCursoCertificacao() {
     $.post("/ProfissionaisSaude/IncluirCursoCertificacao", formData, function (response) {
         if (response.resultado === "sucesso") {
             $("#modalNovoCursoCertificacao").modal("hide");
-            $.get("/ProfissionaisSaude/ObterCursosCertificacoesProfissionalSaude", function (partialHtml) {
+            $.get("/ProfissionaisSaude/ObterCursosCertificacoesProfissionalSaude", function (partialHtml) { // Nova ação GET no Controller
                 $("#cursoTable").html(partialHtml);
             });
             form[0].reset();
@@ -59,11 +54,11 @@ function salvarNovoCursoCertificacao() {
     });
 }
 
-// Funções para remover itens das listas (replicadas para Edição)
+// Funções para remover itens das listas (chamadas de dentro das partials)
 function removerFormacaoAcademica(titulo, instituicao) {
     Swal.fire({
         title: "Remover Formação?",
-        text: `Deseja remover a formação "${titulo}" da "${instituicao}"?`,
+        text: Deseja remover a formação "${titulo}" da "${instituicao}"?,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -103,7 +98,7 @@ function removerFormacaoAcademica(titulo, instituicao) {
 function removerCursoCertificacao(titulo, duracaoHoras, instituicao) {
     Swal.fire({
         title: "Remover Curso?",
-        text: `Deseja remover o curso "${titulo}" (${duracaoHoras}h) da "${instituicao}"?`,
+        text: Deseja remover o curso "${titulo}"(${ duracaoHoras }h) da "${instituicao}"?,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -140,25 +135,25 @@ function removerCursoCertificacao(titulo, duracaoHoras, instituicao) {
     });
 }
 
-// Função principal para gravar edição do profissional
-function gravarEdicao() {
-    var form = $("#formEditar");
+// Função principal para gravar inclusão do profissional
+function gravarInclusao() {
+    var form = $("#formIncluir");
     var formData = form.serialize();
 
     if (form[0].checkValidity()) {
         if (typeof showOverlay === 'function') showOverlay(".wrapper");
 
         $.ajax({
-            url: "/ProfissionaisSaude/Editar",
+            url: "/ProfissionaisSaude/Incluir",
             method: "POST",
             data: formData,
             success: function (data) {
                 if (typeof hideOverlay === 'function') hideOverlay(".wrapper");
                 if (data.resultado === "sucesso") {
-                    mensagem.success(data.mensagem || "Profissional de saúde editado com sucesso!", "", 10);
+                    mensagem.success(data.mensagem || "Profissional de saúde incluído com sucesso!", "", 10);
                     setTimeout(function () { location.href = "/ProfissionaisSaude/Index"; }, 1500);
                 } else {
-                    mensagem.error(data.mensagem || "Erro ao editar profissional de saúde.", "", 10);
+                    mensagem.error(data.mensagem || "Erro ao incluir profissional de saúde.", "", 10);
                 }
             },
             error: function () {

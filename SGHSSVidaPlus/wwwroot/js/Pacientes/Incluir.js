@@ -15,11 +15,10 @@ function novoHistorico() {
 
 // Funções para salvar os dados adicionados nos modais
 function salvarNovoContato() {
-    var form = $("#formIncluirContato");
-    var contatoData = form.serialize();
+    var form = $("#formIncluirContato"); // ID do formulário dentro da partial _NovoContato
+    var contatoData = form.serialize(); // Serializa todos os campos do formulário
 
     $.post("/Pacientes/IncluirContato", contatoData, function (response) {
-        // A resposta agora contém { resultado: "sucesso", mensagem: "...", partialHtml: "..." }
         if (response && response.resultado && response.resultado.toLowerCase() === "sucesso") {
             $("#modalNovoContato").modal("hide"); // Fecha o modal
             $("#contatotable").html(response.partialHtml); // ATUALIZA A TABELA COM O HTML RECEBIDO NO JSON
@@ -36,8 +35,8 @@ function salvarNovoContato() {
 }
 
 function salvarNovoHistorico() {
-    var form = $("#formIncluirHistorico");
-    var historicoData = form.serialize();
+    var form = $("#formIncluirHistorico"); // ID do formulário dentro da partial _NovoHistorico
+    var historicoData = form.serialize(); // Serializa todos os campos do formulário
 
     $.post("/Pacientes/IncluirHistorico", historicoData, function (response) {
         if (response && response.resultado && response.resultado.toLowerCase() === "sucesso") {
@@ -53,25 +52,25 @@ function salvarNovoHistorico() {
     });
 }
 
-// ... (restante das funções do Incluir.js, como gravarInclusao, que não foram alteradas)
+// Função para gravar os dados gerais do paciente
 function gravarInclusao() {
-    var form = $("#formIncluir");
-    var formData = form.serialize();
+    var form = $("#formIncluir"); // O formulário principal da View
+    var formData = form.serialize(); // Serializa todos os campos do formulário principal
 
-    if (form[0].checkValidity()) {
-        if (typeof showOverlay === 'function') showOverlay(".wrapper");
+    if (form[0].checkValidity()) { // Verifica a validação do formulário HTML5
+        if (typeof showOverlay === 'function') showOverlay(".wrapper"); // Assume showOverlay está definido globalmente
 
         $.ajax({
-            url: "/Pacientes/Incluir",
+            url: "/Pacientes/Incluir", // URL do controlador Pacientes, método Incluir (POST)
             method: "POST",
-            data: formData,
+            data: formData, // Envia os dados do formulário
             success: function (data) {
-                if (typeof hideOverlay === 'function') hideOverlay(".wrapper");
+                if (typeof hideOverlay === 'function') hideOverlay(".wrapper"); // Assume hideOverlay está definido globalmente
                 if (data.resultado === "sucesso") {
-                    mensagem.success(data.mensagem || "Paciente incluído com sucesso!", "", 10);
-                    setTimeout(function () { location.href = "/Pacientes/Index"; }, 1500);
+                    mensagem.success(data.mensagem || "Paciente incluído com sucesso!", "", 10); // Mensagem de sucesso
+                    setTimeout(function () { location.href = "/Pacientes/Index"; }, 1500); // Redireciona para a Index após 1.5s
                 } else {
-                    mensagem.error(data.mensagem || "Erro ao incluir paciente.", "", 10);
+                    mensagem.error(data.mensagem || "Erro ao incluir paciente.", "", 10); // Mensagem de erro
                 }
             },
             error: function () {
@@ -80,6 +79,6 @@ function gravarInclusao() {
             }
         });
     } else {
-        form[0].reportValidity();
+        form[0].reportValidity(); // Mostra os erros de validação HTML5
     }
 }
