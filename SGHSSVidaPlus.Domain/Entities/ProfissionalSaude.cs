@@ -7,16 +7,20 @@ namespace SGHSSVidaPlus.Domain.Entities
     public class ProfissionalSaude
     {
         public int Id { get; set; }
-        public string Nome { get; set; } 
-        public string Cargo { get; set; } 
-        public string Telefone { get; set; } 
-        public string Email { get; set; } 
-        public bool Ativo { get; set; } 
-        public string UsuarioInclusao { get; set; }
+        public string Nome { get; set; }
+        public string Cargo { get; set; }
+        public string? EspecialidadeCargo { get; set; } // string?
+        public string? Telefone { get; set; }
+        public string? Email { get; set; }
+        public string? RegistroConselho { get; set; }
+        public bool Ativo { get; set; }
+
+        public string? UsuarioInclusao { get; set; } // string?
+
         public DateTime DataInclusao { get; set; }
-        public List<Agendamento> AgendamentosRealizados { get; set; }
-        public List<FormacaoAcademicaProfissionalSaude> Formacao { get; set; }
-        public List<CursosCertificacoesProfissionalSaude> Cursos { get; set; }
+        public List<Agendamento> AgendamentosRealizados { get; set; } = new List<Agendamento>();
+        public List<FormacaoAcademicaProfissionalSaude> Formacao { get; set; } = new List<FormacaoAcademicaProfissionalSaude>();
+        public List<CursosCertificacoesProfissionalSaude> Cursos { get; set; } = new List<CursosCertificacoesProfissionalSaude>();
     }
 
     // Classe para a Formação Acadêmica do Profissional

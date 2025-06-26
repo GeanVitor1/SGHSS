@@ -1,4 +1,8 @@
-// Funções para carregar e exibir os modais de inclusão de item
+$(document).ready(function () {
+    // Nenhuma inicialização específica de DataTable aqui, a menos que a partial use.
+});
+
+// Funções para carregar e exibir os modais de inclusão de item (replicadas do Incluir.js)
 function novaFormacaoAcademica() {
     $.get("/ProfissionaisSaude/TelaNovaFormacaoAcademica", function (data) {
         $("#modalNovaFormacaoAcademica .modal-body").html(data);
@@ -13,21 +17,21 @@ function novoCursoCertificacao() {
     });
 }
 
-// Funções para salvar os dados adicionados nos modais
+// Funções para salvar os dados adicionados nos modais (replicadas do Incluir.js)
 function salvarNovaFormacaoAcademica() {
     var form = $("#formIncluirFormacaoAcademica");
     var formData = form.serialize();
 
     $.post("/ProfissionaisSaude/IncluirFormacaoAcademica", formData, function (response) {
-        if (response.resultado === "sucesso") {
+        if (response && response.resultado && response.resultado.toLowerCase() === "sucesso") {
             $("#modalNovaFormacaoAcademica").modal("hide");
-            $.get("/ProfissionaisSaude/ObterFormacoesAcademicaProfissionalSaude", function (partialHtml) { // Nova ação GET no Controller
+            $.get("/ProfissionaisSaude/ObterFormacoesAcademicaProfissionalSaude", function (partialHtml) {
                 $("#formacaoTable").html(partialHtml);
             });
             form[0].reset();
             mensagem.success(response.mensagem || "Formação acadêmica adicionada com sucesso!", "", 10);
         } else {
-            mensagem.error(response.mensagem || "Erro ao adicionar formação acadêmica.", "", 10);
+            mensagem.error(response && response.mensagem ? response.mensagem : "Erro desconhecido ao adicionar formação acadêmica.", "", 10);
         }
     }).fail(function (jqXHR) {
         mensagem.error("Erro ao salvar formação acadêmica: " + jqXHR.responseText, "", 10);
@@ -39,26 +43,26 @@ function salvarNovoCursoCertificacao() {
     var formData = form.serialize();
 
     $.post("/ProfissionaisSaude/IncluirCursoCertificacao", formData, function (response) {
-        if (response.resultado === "sucesso") {
+        if (response && response.resultado && response.resultado.toLowerCase() === "sucesso") {
             $("#modalNovoCursoCertificacao").modal("hide");
-            $.get("/ProfissionaisSaude/ObterCursosCertificacoesProfissionalSaude", function (partialHtml) { // Nova ação GET no Controller
+            $.get("/ProfissionaisSaude/ObterCursosCertificacoesProfissionalSaude", function (partialHtml) {
                 $("#cursoTable").html(partialHtml);
             });
             form[0].reset();
             mensagem.success(response.mensagem || "Curso/Certificação adicionado(a) com sucesso!", "", 10);
         } else {
-            mensagem.error(response.mensagem || "Erro ao adicionar curso/certificação.", "", 10);
+            mensagem.error(response && response.mensagem ? response.mensagem : "Erro desconhecido ao adicionar curso/certificação.", "", 10);
         }
     }).fail(function (jqXHR) {
         mensagem.error("Erro ao salvar curso/certificação: " + jqXHR.responseText, "", 10);
     });
 }
 
-// Funções para remover itens das listas (chamadas de dentro das partials)
+// Funções para remover itens das listas (replicadas do Incluir.js)
 function removerFormacaoAcademica(titulo, instituicao) {
     Swal.fire({
         title: "Remover Formação?",
-        text: Deseja remover a formação "${titulo}" da "${instituicao}"?,
+        text: `Deseja remover a formação "${titulo}" da "${instituicao}"?`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -98,7 +102,7 @@ function removerFormacaoAcademica(titulo, instituicao) {
 function removerCursoCertificacao(titulo, duracaoHoras, instituicao) {
     Swal.fire({
         title: "Remover Curso?",
-        text: Deseja remover o curso "${titulo}"(${ duracaoHoras }h) da "${instituicao}"?,
+        text: `Deseja remover o curso "${titulo}" (${duracaoHoras}h) da "${instituicao}"?`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -135,25 +139,25 @@ function removerCursoCertificacao(titulo, duracaoHoras, instituicao) {
     });
 }
 
-// Função principal para gravar inclusão do profissional
-function gravarInclusao() {
-    var form = $("#formIncluir");
+// Função principal para gravar edição do profissional
+function gravarEdicao() {
+    var form = $("#formEditar"); // ID do formulário principal da View
     var formData = form.serialize();
 
     if (form[0].checkValidity()) {
         if (typeof showOverlay === 'function') showOverlay(".wrapper");
 
         $.ajax({
-            url: "/ProfissionaisSaude/Incluir",
+            url: "/ProfissionaisSaude/Editar", // URL do controlador ProfissionaisSaude, método Editar (POST)
             method: "POST",
             data: formData,
             success: function (data) {
                 if (typeof hideOverlay === 'function') hideOverlay(".wrapper");
                 if (data.resultado === "sucesso") {
-                    mensagem.success(data.mensagem || "Profissional de saúde incluído com sucesso!", "", 10);
+                    mensagem.success(data.mensagem || "Profissional de saúde editado com sucesso!", "", 10);
                     setTimeout(function () { location.href = "/ProfissionaisSaude/Index"; }, 1500);
                 } else {
-                    mensagem.error(data.mensagem || "Erro ao incluir profissional de saúde.", "", 10);
+                    mensagem.error(data.mensagem || "Erro ao editar profissional de saúde.", "", 10);
                 }
             },
             error: function () {

@@ -1,58 +1,60 @@
-// === Incluir.js Corrigido e Funcionando ===
-
-// Abrir modal para nova formação acadêmica
+// Funções para carregar e exibir os modais de inclusão de item
 function novaFormacaoAcademica() {
-    $.get("/ProfissionalSaude/TelaNovaFormacaoAcademica", function (html) {
-        $("#modalNovaFormacaoAcademica .modal-body").html(html);
+    $.get("/ProfissionaisSaude/TelaNovaFormacaoAcademica", function (data) {
+        $("#modalNovaFormacaoAcademica .modal-body").html(data);
         $("#modalNovaFormacaoAcademica").modal("show");
     });
 }
 
-// Abrir modal para novo curso/certificação
 function novoCursoCertificacao() {
-    $.get("/ProfissionalSaude/TelaNovoCursoCertificacao", function (html) {
-        $("#modalNovoCursoCertificacao .modal-body").html(html);
+    $.get("/ProfissionaisSaude/TelaNovoCursoCertificacao", function (data) {
+        $("#modalNovoCursoCertificacao .modal-body").html(data);
         $("#modalNovoCursoCertificacao").modal("show");
     });
 }
 
-// Salvar formação acadêmica
+// Funções para salvar os dados adicionados nos modais
 function salvarNovaFormacaoAcademica() {
     var form = $("#formIncluirFormacaoAcademica");
     var formData = form.serialize();
 
-    $.post("/ProfissionalSaude/IncluirFormacaoAcademica", formData, function (response) {
-        if (response.resultado === "sucesso") {
+    $.post("/ProfissionaisSaude/IncluirFormacaoAcademica", formData, function (response) {
+        if (response && response.resultado && response.resultado.toLowerCase() === "sucesso") {
             $("#modalNovaFormacaoAcademica").modal("hide");
-            $("#formacaoTable").html(response.partialHtml);
-            mensagem.success(response.mensagem, "", 10);
+            $.get("/ProfissionaisSaude/ObterFormacoesAcademicaProfissionalSaude", function (partialHtml) {
+                $("#formacaoTable").html(partialHtml);
+            });
+            form[0].reset();
+            mensagem.success(response.mensagem || "Formação acadêmica adicionada com sucesso!", "", 10);
         } else {
-            mensagem.error(response.mensagem, "", 10);
+            mensagem.error(response && response.mensagem ? response.mensagem : "Erro desconhecido ao adicionar formação acadêmica.", "", 10);
         }
-    }).fail(function () {
-        mensagem.error("Erro ao salvar formação acadêmica.", "", 10);
+    }).fail(function (jqXHR) {
+        mensagem.error("Erro ao salvar formação acadêmica: " + jqXHR.responseText, "", 10);
     });
 }
 
-// Salvar curso/certificação
 function salvarNovoCursoCertificacao() {
     var form = $("#formIncluirCursoCertificacao");
     var formData = form.serialize();
 
-    $.post("/ProfissionalSaude/IncluirCursoCertificacao", formData, function (response) {
-        if (response.resultado === "sucesso") {
+    $.post("/ProfissionaisSaude/IncluirCursoCertificacao", formData, function (response) {
+        if (response && response.resultado && response.resultado.toLowerCase() === "sucesso") {
             $("#modalNovoCursoCertificacao").modal("hide");
-            $("#cursoTable").html(response.partialHtml);
-            mensagem.success(response.mensagem, "", 10);
+            $.get("/ProfissionaisSaude/ObterCursosCertificacoesProfissionalSaude", function (partialHtml) {
+                $("#cursoTable").html(partialHtml);
+            });
+            form[0].reset();
+            mensagem.success(response.mensagem || "Curso/Certificação adicionado(a) com sucesso!", "", 10);
         } else {
-            mensagem.error(response.mensagem, "", 10);
+            mensagem.error(response && response.mensagem ? response.mensagem : "Erro desconhecido ao adicionar curso/certificação.", "", 10);
         }
-    }).fail(function () {
-        mensagem.error("Erro ao salvar curso/certificação.", "", 10);
+    }).fail(function (jqXHR) {
+        mensagem.error("Erro ao salvar curso/certificação: " + jqXHR.responseText, "", 10);
     });
 }
 
-// Remover formação
+// Funções para remover itens das listas (chamadas de dentro das partials)
 function removerFormacaoAcademica(titulo, instituicao) {
     Swal.fire({
         title: "Remover Formação?",
@@ -65,19 +67,34 @@ function removerFormacaoAcademica(titulo, instituicao) {
         cancelButtonText: "Cancelar"
     }).then((result) => {
         if (result.isConfirmed) {
-            $.post("/ProfissionalSaude/RemoverFormacaoAcademica", { titulo, instituicao }, function (response) {
-                if (response.resultado === "sucesso") {
-                    $("#formacaoTable").html(response.partialHtml);
-                    mensagem.success(response.mensagem, "", 10);
-                } else {
-                    mensagem.error(response.mensagem, "", 10);
+            $.ajax({
+                url: '/ProfissionaisSaude/RemoverFormacaoAcademica',
+                method: 'POST',
+                data: { titulo: titulo, instituicao: instituicao },
+                beforeSend: function () {
+                    if (typeof showOverlay === 'function') showOverlay(".wrapper");
+                },
+                success: function (response) {
+                    if (response.resultado === "sucesso") {
+                        mensagem.success(response.mensagem || "Formação removida com sucesso!", "", 10);
+                        $.get("/ProfissionaisSaude/ObterFormacoesAcademicaProfissionalSaude", function (partialHtml) {
+                            $("#formacaoTable").html(partialHtml);
+                        });
+                    } else {
+                        mensagem.error(response.mensagem || "Erro ao remover formação.", "", 10);
+                    }
+                },
+                complete: function () {
+                    if (typeof hideOverlay === 'function') hideOverlay(".wrapper");
+                },
+                error: function () {
+                    mensagem.error("Erro na comunicação ao remover formação.", "", 10);
                 }
             });
         }
     });
 }
 
-// Remover curso
 function removerCursoCertificacao(titulo, duracaoHoras, instituicao) {
     Swal.fire({
         title: "Remover Curso?",
@@ -90,33 +107,59 @@ function removerCursoCertificacao(titulo, duracaoHoras, instituicao) {
         cancelButtonText: "Cancelar"
     }).then((result) => {
         if (result.isConfirmed) {
-            $.post("/ProfissionalSaude/RemoverCursoCertificacao", { titulo, duracaoHoras, instituicao }, function (response) {
-                if (response.resultado === "sucesso") {
-                    $("#cursoTable").html(response.partialHtml);
-                    mensagem.success(response.mensagem, "", 10);
-                } else {
-                    mensagem.error(response.mensagem, "", 10);
+            $.ajax({
+                url: '/ProfissionaisSaude/RemoverCursoCertificacao',
+                method: 'POST',
+                data: { titulo: titulo, duracaoHoras: duracaoHoras, instituicao: instituicao },
+                beforeSend: function () {
+                    if (typeof showOverlay === 'function') showOverlay(".wrapper");
+                },
+                success: function (response) {
+                    if (response.resultado === "sucesso") {
+                        mensagem.success(response.mensagem || "Curso/Certificação removido(a) com sucesso!", "", 10);
+                        $.get("/ProfissionaisSaude/ObterCursosCertificacoesProfissionalSaude", function (partialHtml) {
+                            $("#cursoTable").html(partialHtml);
+                        });
+                    } else {
+                        mensagem.error(response.mensagem || "Erro ao remover curso/certificação.", "", 10);
+                    }
+                },
+                complete: function () {
+                    if (typeof hideOverlay === 'function') hideOverlay(".wrapper");
+                },
+                error: function () {
+                    mensagem.error("Erro na comunicação ao remover curso/certificação.", "", 10);
                 }
             });
         }
     });
 }
 
-// Gravar inclusão do profissional
+// Função principal para gravar inclusão do profissional
 function gravarInclusao() {
     var form = $("#formIncluir");
     var formData = form.serialize();
 
     if (form[0].checkValidity()) {
-        $.post("/ProfissionalSaude/Incluir", formData, function (data) {
-            if (data.resultado === "sucesso") {
-                mensagem.success("Profissional incluído com sucesso!", "", 10);
-                setTimeout(() => window.location.href = "/ProfissionalSaude/Index", 1500);
-            } else {
-                mensagem.error(data.mensagem, "", 10);
+        if (typeof showOverlay === 'function') showOverlay(".wrapper");
+
+        $.ajax({
+            url: "/ProfissionaisSaude/Incluir",
+            method: "POST",
+            data: formData,
+            success: function (data) {
+                if (typeof hideOverlay === 'function') hideOverlay(".wrapper");
+                if (data.resultado === "sucesso") {
+                    mensagem.success(data.mensagem || "Profissional de saúde incluído com sucesso!", "", 10);
+                    setTimeout(function () { location.href = "/ProfissionaisSaude/Index"; }, 1500);
+                } else {
+                    mensagem.error(data.mensagem || "Erro ao incluir profissional de saúde.", "", 10);
+                }
+            },
+            error: function () {
+                if (typeof hideOverlay === 'function') hideOverlay(".wrapper");
+                mensagem.error("Erro na comunicação com o servidor.", "", 10);
             }
-        }).fail(function () {
-            mensagem.error("Erro ao incluir profissional.", "", 10);
         });
     } else {
         form[0].reportValidity();

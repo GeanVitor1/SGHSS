@@ -91,12 +91,12 @@
             </div>
             <div class="tab-pane fade" id="line-formacao" role="tabpanel" aria-labelledby="line-formacao-tab">
                 <div class="form-group" id="formacaoTable">
-                    <partial name="_FormacaoAcademica" model="Model.Formacao" /> 
+                    <partial name="_FormacaoAcademica" model="Model.Formacao" />
                 </div>
             </div>
             <div class="tab-pane fade" id="line-cursos" role="tabpanel" aria-labelledby="line-cursos-tab">
                 <div class="form-group" id="cursoTable">
-                    <partial name="_CursosCertificacoes" model="Model.Cursos" /> 
+                    <partial name="_CursosCertificacoes" model="Model.Cursos" />
                 </div>
             </div>
         </div>
@@ -106,3 +106,39 @@
 @section Scripts {
     <script src="~/js/ProfissionalSaude/Incluir.js"></script>
 }
+
+@* MODAL PARA INCLUIR NOVA FORMAÇÃO ACADÊMICA *@
+<div class="modal" id="modalNovaFormacaoAcademica" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="dadoNovaFormacaoAcademica">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Nova Formação Acadêmica</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarNovaFormacaoAcademica()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* MODAL PARA INCLUIR NOVO CURSO/CERTIFICAÇÃO *@
+<div class="modal" id="modalNovoCursoCertificacao" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="dadoNovoCursoCertificacao">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Novo Curso/Certificação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarNovoCursoCertificacao()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>

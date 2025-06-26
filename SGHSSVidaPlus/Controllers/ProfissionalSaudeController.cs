@@ -5,19 +5,15 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using SGHSSVidaPlus.Domain.Entities;
 using SGHSSVidaPlus.Domain.ExtensionsParams;
 using SGHSSVidaPlus.Domain.Interfaces.Repository;
 using SGHSSVidaPlus.Domain.Interfaces.Service;
 using SGHSSVidaPlus.MVC.Additional;
 using SGHSSVidaPlus.MVC.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.IO;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Data.SqlClient;
+using System.Runtime.Intrinsics.X86;
 
 namespace SGHSSVidaPlus.MVC.Controllers
 {
@@ -43,7 +39,6 @@ namespace SGHSSVidaPlus.MVC.Controllers
             _serviceProvider = serviceProvider;
         }
 
-        // Método auxiliar RenderPartialViewToString (não mostrado aqui, mas está no seu arquivo)
         private async Task<string> RenderPartialViewToString(string viewName, object model)
         {
             var actionContext = new ActionContext(HttpContext, RouteData, ControllerContext.ActionDescriptor);
@@ -67,7 +62,6 @@ namespace SGHSSVidaPlus.MVC.Controllers
             }
         }
 
-
         [ClaimsAuthorize("profissional_saude", "visualizar")]
         public async Task<ActionResult> Index() => View(await _profissionalSaudeRepository.BuscarProfissionais(new ProfissionalSaudeParams() { Ativo = true }));
 
@@ -78,7 +72,6 @@ namespace SGHSSVidaPlus.MVC.Controllers
         {
             TempData.Remove("formacao-profissional");
             TempData.Remove("cursos-profissional");
-            // CORREÇÃO AQUI: Passa uma nova instância de ProfissionalSaudeViewModel para a View
             return View(new ProfissionalSaudeViewModel());
         }
 
@@ -91,7 +84,6 @@ namespace SGHSSVidaPlus.MVC.Controllers
                 return Json(new { resultado = "falha", mensagem = "O título da formação é obrigatório" });
 
             var formacoes = TempData.Get<List<FormacaoAcademicaProfissionalSaudeViewModel>>("formacao-profissional") ?? new List<FormacaoAcademicaProfissionalSaudeViewModel>();
-
             if (formacoes.Any(f => f.Titulo == formacaoAdicionar.Titulo && f.InstituicaoEnsino == formacaoAdicionar.InstituicaoEnsino))
             {
                 TempData.Put("formacao-profissional", formacoes);
@@ -101,7 +93,7 @@ namespace SGHSSVidaPlus.MVC.Controllers
             formacoes.Add(formacaoAdicionar);
             TempData.Put("formacao-profissional", formacoes);
 
-            var partialHtml = RenderPartialViewToString("_FormacaoAcademica", formacoes).Result; // .Result para pegar o valor do Task (sincrono aqui para simplificar)
+            var partialHtml = RenderPartialViewToString("_FormacaoAcademica", formacoes).Result;
             return Json(new { resultado = "sucesso", mensagem = "Formação acadêmica adicionada com sucesso.", partialHtml = partialHtml });
         }
 
@@ -154,6 +146,10 @@ namespace SGHSSVidaPlus.MVC.Controllers
         {
             try
             {
+                // CORREÇÃO AQUI: Ignorar validação para UsuarioInclusao e EspecialidadeCargo
+                ModelState.Remove("UsuarioInclusao");
+                ModelState.Remove("EspecialidadeCargo"); // Adicionado para EspecialidadeCargo
+
                 if (!ModelState.IsValid)
                 {
                     var erros = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
@@ -167,14 +163,8 @@ namespace SGHSSVidaPlus.MVC.Controllers
                 profissional.DataInclusao = DateTime.Now;
                 profissional.Ativo = true;
 
-                // CORREÇÃO AQUI
-                var formacoesViewModel = TempData.Get<List<FormacaoAcademicaProfissionalSaudeViewModel>>("formacao-profissional")
-                                         ?? new List<FormacaoAcademicaProfissionalSaudeViewModel>();
-                profissional.Formacao = _mapper.Map<List<FormacaoAcademicaProfissionalSaude>>(formacoesViewModel);
-
-                var cursosViewModel = TempData.Get<List<CursosCertificacoesProfissionalSaudeViewModel>>("cursos-profissional")
-                                      ?? new List<CursosCertificacoesProfissionalSaudeViewModel>();
-                profissional.Cursos = _mapper.Map<List<CursosCertificacoesProfissionalSaude>>(cursosViewModel);
+                profissional.Formacao = _mapper.Map<List<FormacaoAcademicaProfissionalSaude>>(TempData.Get<List<FormacaoAcademicaProfissionalSaudeViewModel>>("formacao-profissional") ?? new List<FormacaoAcademicaProfissionalSaudeViewModel>()); // Corrigido o default para ViewModel
+                profissional.Cursos = _mapper.Map<List<CursosCertificacoesProfissionalSaude>>(TempData.Get<List<CursosCertificacoesProfissionalSaudeViewModel>>("cursos-profissional") ?? new List<CursosCertificacoesProfissionalSaudeViewModel>()); // Corrigido o default para ViewModel
 
                 var resultado = await _profissionalSaudeService.Incluir(profissional);
 
@@ -184,16 +174,36 @@ namespace SGHSSVidaPlus.MVC.Controllers
                     TempData.Put("cursos-profissional", _mapper.Map<List<CursosCertificacoesProfissionalSaudeViewModel>>(profissional.Cursos));
                     return Json(new { resultado = "falha", mensagem = string.Join(" ", resultado.Mensagens) });
                 }
+                ;
 
                 TempData["success"] = "Profissional de saúde incluído com sucesso!";
                 return Json(new { resultado = "sucesso" });
             }
+            catch (DbUpdateException ex)
+            {
+                var innerException = ex.InnerException as SqlException;
+                if (innerException != null)
+                {
+                    if (innerException.Number == 2601 || innerException.Number == 2627)
+                    {
+                        return Json(new { resultado = "falha", mensagem = "Já existe um registro com os dados informados." });
+                    }
+                    else if (innerException.Number == 515)
+                    {
+                        return Json(new { resultado = "falha", mensagem = "Um campo obrigatório não foi preenchido. Verifique os dados do profissional, formação e cursos." });
+                    }
+                    else
+                    {
+                        return Json(new { resultado = "falha", mensagem = $"Erro no banco de dados: {innerException.Message}" });
+                    }
+                }
+                return Json(new { resultado = "falha", mensagem = "Ocorreu um erro ao salvar os dados. Detalhes: " + ex.Message });
+            }
             catch (Exception e)
             {
-                return Json(new { resultado = "falha", mensagem = "Erro inesperado: " + e.Message });
+                return Json(new { resultado = "falha", mensagem = "Ocorreu um erro inesperado ao incluir o profissional de saúde: " + e.Message });
             }
         }
-
 
         [ClaimsAuthorize("profissional_saude", "alterar")]
         public async Task<IActionResult> Editar(int id)
@@ -224,6 +234,9 @@ namespace SGHSSVidaPlus.MVC.Controllers
         {
             try
             {
+                ModelState.Remove("UsuarioInclusao");
+                ModelState.Remove("EspecialidadeCargo");
+
                 if (!ModelState.IsValid)
                 {
                     var erros = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
@@ -303,6 +316,26 @@ namespace SGHSSVidaPlus.MVC.Controllers
             {
                 return Json(new { resultado = "falha", mensagem = string.Join(" ", e.Message) });
             }
+        }
+
+        [ClaimsAuthorize("profissional_saude", "visualizar")]
+        public async Task<IActionResult> Visualizar(int id)
+        {
+            var profissional = (await _profissionalSaudeRepository.BuscarProfissionais(new ProfissionalSaudeParams()
+            {
+                Id = id,
+                IncluirFormacaoCursos = true
+            })).FirstOrDefault();
+
+            if (profissional == null)
+            {
+                TempData["error"] = "Profissional não encontrado.";
+                return RedirectToAction("Index");
+            }
+
+            var viewModel = _mapper.Map<ProfissionalSaudeViewModel>(profissional);
+
+            return View(viewModel); // você vai precisar criar a View Visualizar.cshtml também
         }
     }
 }
