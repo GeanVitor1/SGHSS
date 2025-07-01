@@ -159,6 +159,21 @@ namespace SGHSSVidaPlus.MVC.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[] { "a2dfa1e2-b1d5-4a8e-a9b0-a3e7e0e7a1e2", "14173c6f-f402-46ca-80e6-fd0609a8cf97", "admin", "ADMIN" });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUsers",
+                columns: new[] { "Id", "AccessFailedCount", "Admin", "Bloqueado", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "Nome", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
+                values: new object[] { "b743329b-2839-4d64-968b-f417b7b9f847", 0, true, false, "206ce6e4-3e5a-486b-8c48-4b51aaff0a6b", "admin@sghssvidaplus.com.br", true, false, null, "Administrador Master", "ADMIN@SGHSSVIDAPLUS.COM.BR", "ADMIN", "AQAAAAIAAYagAAAAEFoW7bcKT1r7R4sJpN7vCF8ANJZHUXeYcitqB4bkDU6npgWMBo9msg3Tk+JfKiiDUA==", null, false, "7a0be62c-a414-4d65-94d1-a5ab372a3a14", false, "admin" });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUserRoles",
+                columns: new[] { "RoleId", "UserId" },
+                values: new object[] { "a2dfa1e2-b1d5-4a8e-a9b0-a3e7e0e7a1e2", "b743329b-2839-4d64-968b-f417b7b9f847" });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",

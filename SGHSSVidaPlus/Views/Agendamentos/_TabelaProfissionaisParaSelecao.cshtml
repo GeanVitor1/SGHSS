@@ -1,0 +1,54 @@
+﻿@model List<SGHSSVidaPlus.MVC.Models.ProfissionalSaudeViewModel>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Cargo</th>
+                <th>Especialidade</th>
+                <th>Registro</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var profissional in Model)
+                {
+                    <tr class="selectable-row" data-id="@profissional.Id" data-nome="@profissional.Nome">
+                        <td>@profissional.Id</td>
+                        <td>@profissional.Nome</td>
+                        <td>@(string.IsNullOrEmpty(profissional.Cargo) ? "-" : profissional.Cargo)</td>
+                        <td>@(string.IsNullOrEmpty(profissional.EspecialidadeCargo) ? "-" : profissional.EspecialidadeCargo)</td>
+                        <td>@(string.IsNullOrEmpty(profissional.RegistroConselho) ? "-" : profissional.RegistroConselho)</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5" class="text-center">Nenhum profissional encontrado.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Adiciona evento de clique nas linhas da tabela APÓS o carregamento da Partial View
+    // Usamos delegação de eventos para garantir que funcione para linhas adicionadas dinamicamente
+    $(document).ready(function () {
+        $('#tabelaProfissionaisContainer').on('click', '.selectable-row', function () {
+            $('#tabelaProfissionaisContainer .selectable-row').removeClass('table-primary'); // Remove seleção anterior
+            $(this).addClass('table-primary'); // Adiciona classe para destacar
+
+            // Armazena a seleção globalmente para ser usada pelo botão "Selecionar"
+            window.selectedProfissional = {
+                id: $(this).data('id'),
+                nome: $(this).data('nome')
+            };
+            $('#btnSelecionarProfissional').prop('disabled', false); // Habilita o botão Selecionar
+        });
+    });
+</script>

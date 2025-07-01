@@ -12,8 +12,8 @@ using SGHSSVidaPlus.Infrastructure.Data.Context;
 namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(HospitalDbContext))]
-    [Migration("20250623123307_InitialHospitalSetup")]
-    partial class InitialHospitalSetup
+    [Migration("20250627172349_InitialIdentitySetup")]
+    partial class InitialIdentitySetup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -202,14 +202,12 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Descricao")
-                        .IsRequired()
                         .HasColumnType("varchar(4000)");
 
                     b.Property<int>("PacienteId")
                         .HasColumnType("int");
 
                     b.Property<string>("ProfissionalResponsavel")
-                        .IsRequired()
                         .HasColumnType("varchar(100)");
 
                     b.Property<string>("Titulo")
@@ -257,7 +255,6 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<string>("UsuarioInclusao")
-                        .IsRequired()
                         .HasColumnType("varchar(30)");
 
                     b.HasKey("Id");
@@ -279,6 +276,9 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                     b.Property<string>("Contato")
                         .IsRequired()
                         .HasColumnType("varchar(200)");
+
+                    b.Property<bool>("IsWhatsApp")
+                        .HasColumnType("bit");
 
                     b.Property<int>("PacienteId")
                         .HasColumnType("int");
@@ -313,19 +313,22 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
-                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("EspecialidadeCargo")
                         .HasColumnType("varchar(100)");
 
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasColumnType("varchar(200)");
 
+                    b.Property<string>("RegistroConselho")
+                        .HasColumnType("varchar(50)");
+
                     b.Property<string>("Telefone")
-                        .IsRequired()
                         .HasColumnType("varchar(20)");
 
                     b.Property<string>("UsuarioInclusao")
-                        .IsRequired()
                         .HasColumnType("varchar(30)");
 
                     b.HasKey("Id");

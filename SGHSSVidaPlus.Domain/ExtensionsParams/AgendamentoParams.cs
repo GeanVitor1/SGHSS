@@ -28,6 +28,10 @@ namespace SGHSSVidaPlus.Domain.ExtensionsParams
         public int PacienteId { get; set; } = 0; // Para filtrar agendamentos de um paciente específico
 
         public int TotalRegistros { get; set; } = 10;
+
+        public bool IncluirProfissional { get; set; } // << ADICIONE ESTA LINHA
+        public bool IncluirPaciente { get; set; }    // << ADICIONE ESTA LINHA
+
     }
 
 }

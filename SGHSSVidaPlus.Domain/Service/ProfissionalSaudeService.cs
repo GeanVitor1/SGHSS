@@ -59,10 +59,13 @@ namespace SGHSSVidaPlus.Application.Services
                 result.Valido = false;
                 result.Mensagens.Add("O nome do profissional de saúde é obrigatório para edição.");
             }
+            // ... outras validações para propriedades escalares ...
 
             if (result.Valido)
             {
-                var profissionalExistente = await _profissionalSaudeRepository.ObterPorId(profissionalSaude.Id);
+                // 1. Obter o profissional existente do banco de dados COM suas coleções
+                var profissionalExistente = await _profissionalSaudeRepository.ObterProfissionalComColecoes(profissionalSaude.Id);
+
                 if (profissionalExistente == null)
                 {
                     result.Valido = false;
@@ -70,14 +73,90 @@ namespace SGHSSVidaPlus.Application.Services
                     return result;
                 }
 
+                // 2. Atualizar propriedades escalares
                 profissionalExistente.Nome = profissionalSaude.Nome;
                 profissionalExistente.Cargo = profissionalSaude.Cargo;
                 profissionalExistente.Telefone = profissionalSaude.Telefone;
                 profissionalExistente.Email = profissionalSaude.Email;
-                // Formacao e Cursos podem ser mais complexos para editar aqui, dependendo da regra de negócio
-                // Por simplicidade, estamos apenas atualizando os campos diretos.
+                profissionalExistente.RegistroConselho = profissionalSaude.RegistroConselho; // Se aplicável
+                                                                                             // Não altere UsuarioInclusao ou DataInclusao aqui, a menos que seja intencional.
+                                                                                             // profissionalExistente.Ativo = profissionalSaude.Ativo; // Se a alteração de status for feita por outro método ou campo.
 
+                // 3. Sincronizar Formações Acadêmicas
+                // Remover as formações que não estão mais na lista enviada
+                foreach (var formacaoExistente in profissionalExistente.Formacao.ToList()) // .ToList() para evitar modificação durante iteração
+                {
+                    if (!profissionalSaude.Formacao.Any(nf =>
+                        nf.Titulo == formacaoExistente.Titulo &&
+                        nf.InstituicaoEnsino == formacaoExistente.InstituicaoEnsino)) // Assumindo Título e Instituição como chaves para identificar uma formação
+                    {
+                        profissionalExistente.Formacao.Remove(formacaoExistente);
+                    }
+                }
+
+                // Adicionar ou atualizar formações
+                foreach (var novaFormacao in profissionalSaude.Formacao)
+                {
+                    var formacaoExistente = profissionalExistente.Formacao.FirstOrDefault(f =>
+                        f.Titulo == novaFormacao.Titulo &&
+                        f.InstituicaoEnsino == novaFormacao.InstituicaoEnsino);
+
+                    if (formacaoExistente == null)
+                    {
+                        // Nova formação, adicione
+                        profissionalExistente.Formacao.Add(novaFormacao);
+                    }
+                    else
+                    {
+                        // Formação existente, atualize as propriedades que podem mudar
+                        formacaoExistente.Area = novaFormacao.Area;
+                        formacaoExistente.AnoConclusao = novaFormacao.AnoConclusao;
+                        // ... outras propriedades da formação ...
+                    }
+                }
+
+                // 4. Sincronizar Cursos e Certificações (lógica similar)
+                foreach (var cursoExistente in profissionalExistente.Cursos.ToList())
+                {
+                    if (!profissionalSaude.Cursos.Any(nc =>
+                        nc.Titulo == cursoExistente.Titulo &&
+                        nc.InstituicaoEnsino == cursoExistente.InstituicaoEnsino &&
+                        nc.DuracaoHoras == cursoExistente.DuracaoHoras)) // Assumindo estes como chaves para identificar um curso
+                    {
+                        profissionalExistente.Cursos.Remove(cursoExistente);
+                    }
+                }
+
+                foreach (var novoCurso in profissionalSaude.Cursos)
+                {
+                    var cursoExistente = profissionalExistente.Cursos.FirstOrDefault(c =>
+                        c.Titulo == novoCurso.Titulo &&
+                        c.InstituicaoEnsino == novoCurso.InstituicaoEnsino &&
+                        c.DuracaoHoras == novoCurso.DuracaoHoras);
+
+                    if (cursoExistente == null)
+                    {
+                        // Novo curso, adicione
+                        profissionalExistente.Cursos.Add(novoCurso);
+                    }
+                    else
+                    {
+                        // Curso existente, atualize as propriedades que podem mudar
+                        // (Seus cursos têm DuracaoHoras, então verifique se há outras propriedades a atualizar)
+                        // cursoExistente.AlgumaOutraPropriedade = novoCurso.AlgumaOutraPropriedade;
+                    }
+                }
+
+                // 5. Salvar as mudanças
+                // O método Alterar do RepositoryBase deve chamar _context.SaveChanges()
+                // Se o RepositoryBase.Alterar apenas faz um _context.Entry(entity).State = EntityState.Modified;,
+                // ele precisará ser mais inteligente ou você precisará chamar SaveChanges no serviço
+                // após manipular as coleções, se o contexto for compartilhado.
+                // Dada a estrutura do seu RepositoryBase (que não foi fornecido, mas é comum),
+                // a simples chamada de Alterar(profissionalExistente) após as manipulações das coleções
+                // fará com que o EF rastreie as mudanças e as salve.
                 await _profissionalSaudeRepository.Alterar(profissionalExistente);
+
                 result.Mensagens.Add("Profissional de saúde editado com sucesso.");
             }
 

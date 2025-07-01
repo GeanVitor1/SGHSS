@@ -46,11 +46,23 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                     b.Property<bool>("Encerrado")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Local")
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Observacoes")
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("PacienteId")
+                        .HasColumnType("int");
+
                     b.Property<int>("ProfissionalResponsavelId")
                         .HasColumnType("int");
 
-                    b.Property<string>("UsuarioEncerramento")
+                    b.Property<string>("Status")
                         .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("UsuarioEncerramento")
                         .HasColumnType("varchar(30)");
 
                     b.Property<string>("UsuarioInclusao")
@@ -58,6 +70,8 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                         .HasColumnType("varchar(30)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PacienteId");
 
                     b.HasIndex("ProfissionalResponsavelId");
 
@@ -150,7 +164,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 
                     b.HasIndex("ProfissionalSaudeId");
 
-                    b.ToTable("CursosCertificacoesProfissionaisSaude", (string)null);
+                    b.ToTable("CursosCertificacoesProfissionalSaude", (string)null);
                 });
 
             modelBuilder.Entity("SGHSSVidaPlus.Domain.Entities.FormacaoAcademicaProfissionalSaude", b =>
@@ -164,6 +178,10 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                     b.Property<string>("AnoConclusao")
                         .IsRequired()
                         .HasColumnType("varchar(6)");
+
+                    b.Property<string>("Area")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("Descricao")
                         .IsRequired()
@@ -184,7 +202,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 
                     b.HasIndex("ProfissionalSaudeId");
 
-                    b.ToTable("FormacoesAcademicasProfissionaisSaude", (string)null);
+                    b.ToTable("FormacoesAcademicasProfissionalSaude", (string)null);
                 });
 
             modelBuilder.Entity("SGHSSVidaPlus.Domain.Entities.HistoricoPaciente", b =>
@@ -330,7 +348,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ProfissionaisSaude", (string)null);
+                    b.ToTable("ProfissionalSaude", (string)null);
                 });
 
             modelBuilder.Entity("SGHSSVidaPlus.Domain.Entities.TipoAtendimento", b =>
@@ -362,11 +380,18 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("SGHSSVidaPlus.Domain.Entities.Agendamento", b =>
                 {
+                    b.HasOne("SGHSSVidaPlus.Domain.Entities.Paciente", "Paciente")
+                        .WithMany()
+                        .HasForeignKey("PacienteId")
+                        .IsRequired();
+
                     b.HasOne("SGHSSVidaPlus.Domain.Entities.ProfissionalSaude", "ProfissionalResponsavel")
                         .WithMany("AgendamentosRealizados")
                         .HasForeignKey("ProfissionalResponsavelId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Paciente");
 
                     b.Navigation("ProfissionalResponsavel");
                 });

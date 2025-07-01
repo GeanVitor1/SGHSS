@@ -27,7 +27,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Context
         public DbSet<PacienteContato> PacienteContatos { get; set; }
         public DbSet<HistoricoPaciente> HistoricoPacientes { get; set; }
 
-        public DbSet<ProfissionalSaude> ProfissionaisSaude { get; set; }
+        public DbSet<ProfissionalSaude> ProfissionalSaude { get; set; }
         public DbSet<FormacaoAcademicaProfissionalSaude> FormacoesAcademicasProfissionalSaude { get; set; }
         public DbSet<CursosCertificacoesProfissionalSaude> CursosCertificacoesProfissionalSaude { get; set; }
 

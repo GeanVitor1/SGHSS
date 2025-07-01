@@ -1,0 +1,54 @@
+﻿@model List<SGHSSVidaPlus.MVC.Models.PacienteViewModel>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Data Nascimento</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var paciente in Model)
+                {
+                    <tr class="selectable-row" data-id="@paciente.Id" data-nome="@paciente.Nome">
+                        <td>@paciente.Id</td>
+                        <td>@paciente.Nome</td>
+                        <td>@(string.IsNullOrEmpty(paciente.CPF) ? "-" : paciente.CPF)</td>
+                        <td>
+                            @* CORREÇÃO DEFINITIVA: Usando interpolação de strings para formatar a data *@
+                            @(paciente.DataNascimento == default(DateTime) ? "-" : $"{paciente.DataNascimento:dd/MM/yyyy}")
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" class="text-center">Nenhum paciente encontrado.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Adiciona evento de clique nas linhas da tabela APÓS o carregamento da Partial View
+    $(document).ready(function () {
+        $('#tabelaPacientesContainer').on('click', '.selectable-row', function () {
+            $('#tabelaPacientesContainer .selectable-row').removeClass('table-primary'); // Remove seleção anterior
+            $(this).addClass('table-primary'); // Adiciona classe para destacar
+
+            // Armazena a seleção globalmente para ser usada pelo botão "Selecionar"
+            window.selectedPaciente = {
+                id: $(this).data('id'),
+                nome: $(this).data('nome')
+            };
+            $('#btnSelecionarPaciente').prop('disabled', false); // Habilita o botão Selecionar
+        });
+    });
+</script>

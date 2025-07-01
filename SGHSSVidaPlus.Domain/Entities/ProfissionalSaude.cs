@@ -27,15 +27,16 @@ namespace SGHSSVidaPlus.Domain.Entities
     public class FormacaoAcademicaProfissionalSaude
     {
         public int Id { get; set; }
-        public string Titulo { get; set; } 
+        public string Titulo { get; set; }
+        public string Area { get; set; } // <<< VOCÊ PRECISA ADICIONAR ESTA LINHA AQUI!
         public string InstituicaoEnsino { get; set; }
-        public string AnoConclusao { get; set; } 
-        public string Descricao { get; set; } 
+        public string AnoConclusao { get; set; }
+        public string Descricao { get; set; }
 
         // Foreign Key e propriedade de navegação para ProfissionalSaude
         [JsonIgnore]
-        public ProfissionalSaude ProfissionalSaude { get; set; }
         public int ProfissionalSaudeId { get; set; }
+        public ProfissionalSaude ProfissionalSaude { get; set; }
     }
 
     // Classe para Cursos e Certificações do Profissional 

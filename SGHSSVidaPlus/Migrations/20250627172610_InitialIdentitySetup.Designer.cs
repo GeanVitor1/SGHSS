@@ -12,7 +12,7 @@ using SGHSSVidaPlus.MVC.Data;
 namespace SGHSSVidaPlus.MVC.Migrations
 {
     [DbContext(typeof(SGHSSVidaPlusIdentityContext))]
-    [Migration("20250623123556_InitialIdentitySetup")]
+    [Migration("20250627172610_InitialIdentitySetup")]
     partial class InitialIdentitySetup
     {
         /// <inheritdoc />
@@ -50,6 +50,15 @@ namespace SGHSSVidaPlus.MVC.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "a2dfa1e2-b1d5-4a8e-a9b0-a3e7e0e7a1e2",
+                            ConcurrencyStamp = "14173c6f-f402-46ca-80e6-fd0609a8cf97",
+                            Name = "admin",
+                            NormalizedName = "ADMIN"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -137,6 +146,13 @@ namespace SGHSSVidaPlus.MVC.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "b743329b-2839-4d64-968b-f417b7b9f847",
+                            RoleId = "a2dfa1e2-b1d5-4a8e-a9b0-a3e7e0e7a1e2"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
@@ -231,6 +247,27 @@ namespace SGHSSVidaPlus.MVC.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "b743329b-2839-4d64-968b-f417b7b9f847",
+                            AccessFailedCount = 0,
+                            Admin = true,
+                            Bloqueado = false,
+                            ConcurrencyStamp = "206ce6e4-3e5a-486b-8c48-4b51aaff0a6b",
+                            Email = "admin@sghssvidaplus.com.br",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            Nome = "Administrador Master",
+                            NormalizedEmail = "ADMIN@SGHSSVIDAPLUS.COM.BR",
+                            NormalizedUserName = "ADMIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFoW7bcKT1r7R4sJpN7vCF8ANJZHUXeYcitqB4bkDU6npgWMBo9msg3Tk+JfKiiDUA==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "7a0be62c-a414-4d65-94d1-a5ab372a3a14",
+                            TwoFactorEnabled = false,
+                            UserName = "admin"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

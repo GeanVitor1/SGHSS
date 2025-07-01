@@ -18,7 +18,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Mappings
                    .WithMany(ps => ps.Cursos)
                    .HasForeignKey(c => c.ProfissionalSaudeId);
 
-            builder.ToTable("CursosCertificacoesProfissionaisSaude");
+            builder.ToTable("CursosCertificacoesProfissionalSaude");
         }
     }
 }

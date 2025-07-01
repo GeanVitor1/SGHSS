@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialHospitalSetup : Migration
+    public partial class InitialIdentitySetup : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -23,7 +23,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                     Endereco = table.Column<string>(type: "varchar(500)", nullable: false),
                     EstadoCivil = table.Column<string>(type: "varchar(20)", nullable: false),
                     Ativo = table.Column<bool>(type: "bit", nullable: false),
-                    UsuarioInclusao = table.Column<string>(type: "varchar(30)", nullable: false),
+                    UsuarioInclusao = table.Column<string>(type: "varchar(30)", nullable: true),
                     DataInclusao = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -39,10 +39,12 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Nome = table.Column<string>(type: "varchar(200)", nullable: false),
                     Cargo = table.Column<string>(type: "varchar(100)", nullable: false),
-                    Telefone = table.Column<string>(type: "varchar(20)", nullable: false),
-                    Email = table.Column<string>(type: "varchar(100)", nullable: false),
+                    EspecialidadeCargo = table.Column<string>(type: "varchar(100)", nullable: true),
+                    Telefone = table.Column<string>(type: "varchar(20)", nullable: true),
+                    Email = table.Column<string>(type: "varchar(100)", nullable: true),
+                    RegistroConselho = table.Column<string>(type: "varchar(50)", nullable: true),
                     Ativo = table.Column<bool>(type: "bit", nullable: false),
-                    UsuarioInclusao = table.Column<string>(type: "varchar(30)", nullable: false),
+                    UsuarioInclusao = table.Column<string>(type: "varchar(30)", nullable: true),
                     DataInclusao = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -73,9 +75,9 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Titulo = table.Column<string>(type: "varchar(200)", nullable: false),
-                    Descricao = table.Column<string>(type: "varchar(4000)", nullable: false),
+                    Descricao = table.Column<string>(type: "varchar(4000)", nullable: true),
                     DataEvento = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    ProfissionalResponsavel = table.Column<string>(type: "varchar(100)", nullable: false),
+                    ProfissionalResponsavel = table.Column<string>(type: "varchar(100)", nullable: true),
                     PacienteId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -96,6 +98,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Contato = table.Column<string>(type: "varchar(200)", nullable: false),
                     Tipo = table.Column<string>(type: "varchar(50)", nullable: false),
+                    IsWhatsApp = table.Column<bool>(type: "bit", nullable: false),
                     PacienteId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>

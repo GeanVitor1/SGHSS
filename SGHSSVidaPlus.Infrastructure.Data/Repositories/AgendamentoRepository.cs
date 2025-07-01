@@ -16,15 +16,24 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Repositories
 
         public async Task<List<Agendamento>> BuscarAgendamentos(AgendamentoParams parametros)
         {
-            var query = _context.Agendamentos.AsQueryable();
+            var query = _context.Agendamentos.AsQueryable(); // Assumindo que a DbSet é Agendamentos
 
-            // Inclui PacientesAgendados e TiposAtendimento se o parâmetro for verdadeiro
-            if (parametros.IncluirPacientesTiposAtendimento) // <-- Este é o nome correto no AgendamentoParams
+            if (parametros.IncluirProfissional)
+            {
+                query = query.Include(a => a.ProfissionalResponsavel); // Supondo que a propriedade de navegação é ProfissionalResponsavel
+            }
+
+            if (parametros.IncluirPaciente)
+            {
+                query = query.Include(a => a.Paciente); // Supondo que a propriedade de navegação é Paciente
+            }
+
+            if (parametros.IncluirPacientesTiposAtendimento)
             {
                 query = query.Include(a => a.PacientesAgendados)
-                             .ThenInclude(ap => ap.Paciente) // Para incluir os dados do Paciente na ligação
+                             .ThenInclude(ap => ap.Paciente) // Para incluir os dados do Paciente na lista de AgendamentoPaciente
                              .Include(a => a.TiposAtendimento)
-                             .ThenInclude(ata => ata.TipoAtendimento); // Para incluir os dados do TipoAtendimento na ligação
+                             .ThenInclude(att => att.TipoAtendimento); // Para incluir os dados do TipoAtendimento na lista de AgendamentoTipoAtendimento
             }
 
             // Filtro por Id

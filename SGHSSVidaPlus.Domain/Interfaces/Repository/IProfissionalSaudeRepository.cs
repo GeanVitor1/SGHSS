@@ -6,8 +6,11 @@ using System.Threading.Tasks;
 
 namespace SGHSSVidaPlus.Domain.Interfaces.Repository
 {
+    // SGHSSVidaPlus.Domain.Interfaces.Repository/IProfissionalSaudeRepository.cs
     public interface IProfissionalSaudeRepository : IRepositoryBase<ProfissionalSaude>
     {
-        Task<List<ProfissionalSaude>> BuscarProfissionais(ProfissionalSaudeParams parametros);
+        Task<List<ProfissionalSaude>> BuscarProfissional(ProfissionalSaudeParams parametros);
+        // Novo método para obter por ID com as coleções incluídas
+        Task<ProfissionalSaude> ObterProfissionalComColecoes(int id);
     }
 }

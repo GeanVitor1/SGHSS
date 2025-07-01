@@ -12,7 +12,7 @@ function gravarInativacao(profissionalId) {
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
-                url: '/ProfissionaisSaude/AlterarStatus', // Reutiliza a ação AlterarStatus
+                url: '/ProfissionalSaude/AlterarStatus', // Reutiliza a ação AlterarStatus
                 method: 'POST',
                 data: { id: profissionalId, ativo: false }, // Passa o ID e o status desejado
                 beforeSend: function () {
@@ -21,7 +21,7 @@ function gravarInativacao(profissionalId) {
                 success: function (data) {
                     if (data.resultado === "sucesso") {
                         mensagem.success(data.mensagem || "Profissional de saúde inativado com sucesso!", "", 10);
-                        setTimeout(function () { location.href = "/ProfissionaisSaude/Index"; }, 1500);
+                        setTimeout(function () { location.href = "/ProfissionalSaude/Index"; }, 1500);
                     } else {
                         mensagem.error(data.mensagem || "Erro ao inativar profissional de saúde.", "", 10);
                     }

@@ -18,7 +18,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Mappings
             builder.Property(ps => ps.RegistroConselho).HasColumnType("varchar(50)");
             builder.Property(ps => ps.UsuarioInclusao).HasColumnType("varchar(30)");
 
-            builder.ToTable("ProfissionaisSaude");
+            builder.ToTable("ProfissionalSaude");
         }
     }
 }

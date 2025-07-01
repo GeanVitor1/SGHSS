@@ -21,23 +21,30 @@ var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+// Contexto principal do Hospital, só pra dados da app mesmo
 builder.Services.AddDbContext<HospitalDbContext>(options =>
     options.UseSqlServer(connectionString)
 );
 
+// Contexto do Identity
 builder.Services.AddDbContext<SGHSSVidaPlusMVCContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(
+        connectionString,
+        sqlOptions => sqlOptions.MigrationsAssembly("SGHSSVidaPlus.Infrastructure.Data") // Migrations vão pra Infrastructure.Data
+    )
+);
 
-// CORREÇÃO AQUI: Adicionado options.ClaimsIdentity.RoleClaimType
+// Configura Identity com ApplicationUser e roles (AGORA APENAS UMA VEZ)
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
-    // Garante que o RoleManager adicione claims de tipo ClaimTypes.Role ao principal do usuário
-    options.ClaimsIdentity.RoleClaimType = ClaimTypes.Role; // <-- ADIÇÃO CRÍTICA AQUI
+    options.ClaimsIdentity.RoleClaimType = ClaimTypes.Role; // Importante para roles funcionarem direito
 })
 .AddRoles<IdentityRole>()
-.AddEntityFrameworkStores<SGHSSVidaPlusMVCContext>()
+.AddEntityFrameworkStores<SGHSSVidaPlusMVCContext>()  // Liga Identity com seu contexto
 .AddDefaultTokenProviders();
+
+// A SEGUNDA CHAMADA FOI REMOVIDA DAQUI, POIS ERA A CAUSA DO ERRO.
 
 builder.Services.AddAutoMapper(typeof(SGHSSVidaPlus.MVC.Configurations.AutoMapperConfig));
 

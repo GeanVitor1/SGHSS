@@ -1,16 +1,16 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System; // Para DateTime
 
-namespace SGHSSVidaPlus.MVC.Models // Namespace atualizado
+namespace SGHSSVidaPlus.MVC.Models
 {
-    public class TipoAtendimentoViewModel // Nome da classe atualizado
+    public class TipoAtendimentoViewModel
     {
         public int Id { get; set; }
-
-        [Required(ErrorMessage = "É Necessário informar o nome do tipo de atendimento")] // Mensagem atualizada
-        public string Nome { get; set; }
-        public bool Ativo { get; set; } // Substitui Status
-        public string UsuarioInclusao { get; set; }
-        public DateTime DataInclusao { get; set; }
+        public int AgendamentoId { get; set; }
+        public int TipoAtendimentoId { get; set; }
+        public string Nome { get; set; } // Provavelmente você precisa desta propriedade também, já que usa Model[i].TipoAtendimento.Nome
+        public bool Ativo { get; set; } // <-- Adicione esta linha!
+        public TipoAtendimentoViewModel? TipoAtendimento { get; set; } // Pode ser redundante ou indicar uma estrutura complexa
+        public bool IsSelected { get; set; }
     }
 }

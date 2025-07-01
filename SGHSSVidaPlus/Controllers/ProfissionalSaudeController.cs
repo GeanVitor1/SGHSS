@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿// CÓDIGO ORIGINAL RESTAURADO
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -63,9 +64,9 @@ namespace SGHSSVidaPlus.MVC.Controllers
         }
 
         [ClaimsAuthorize("profissional_saude", "visualizar")]
-        public async Task<ActionResult> Index() => View(await _profissionalSaudeRepository.BuscarProfissionais(new ProfissionalSaudeParams() { Ativo = true }));
+        public async Task<ActionResult> Index() => View(await _profissionalSaudeRepository.BuscarProfissional(new ProfissionalSaudeParams() { Ativo = true }));
 
-        public async Task<IActionResult> BuscarProfissionais([FromQuery] ProfissionalSaudeParams parametros) => PartialView("_ProfissionaisSaude", await _profissionalSaudeRepository.BuscarProfissionais(parametros));
+        public async Task<IActionResult> BuscarProfissional([FromQuery] ProfissionalSaudeParams parametros) => PartialView("_ProfissionalSaude", await _profissionalSaudeRepository.BuscarProfissional(parametros));
 
         [ClaimsAuthorize("profissional_saude", "incluir")]
         public ActionResult Incluir()
@@ -141,77 +142,13 @@ namespace SGHSSVidaPlus.MVC.Controllers
             return Json(new { resultado = "sucesso", mensagem = "Curso/Certificação removido(a) com sucesso!", partialHtml = partialHtml });
         }
 
-        [HttpPost]
-        public async Task<JsonResult> Incluir(ProfissionalSaudeViewModel profissionalSaudeViewModel)
-        {
-            try
-            {
-                // CORREÇÃO AQUI: Ignorar validação para UsuarioInclusao e EspecialidadeCargo
-                ModelState.Remove("UsuarioInclusao");
-                ModelState.Remove("EspecialidadeCargo"); // Adicionado para EspecialidadeCargo
-
-                if (!ModelState.IsValid)
-                {
-                    var erros = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-                    TempData.Put("formacao-profissional", profissionalSaudeViewModel.Formacao);
-                    TempData.Put("cursos-profissional", profissionalSaudeViewModel.Cursos);
-                    return Json(new { resultado = "falha", mensagem = string.Join(" ", erros) });
-                }
-
-                var profissional = _mapper.Map<ProfissionalSaude>(profissionalSaudeViewModel);
-                profissional.UsuarioInclusao = User.Identity.Name;
-                profissional.DataInclusao = DateTime.Now;
-                profissional.Ativo = true;
-
-                profissional.Formacao = _mapper.Map<List<FormacaoAcademicaProfissionalSaude>>(TempData.Get<List<FormacaoAcademicaProfissionalSaudeViewModel>>("formacao-profissional") ?? new List<FormacaoAcademicaProfissionalSaudeViewModel>()); // Corrigido o default para ViewModel
-                profissional.Cursos = _mapper.Map<List<CursosCertificacoesProfissionalSaude>>(TempData.Get<List<CursosCertificacoesProfissionalSaudeViewModel>>("cursos-profissional") ?? new List<CursosCertificacoesProfissionalSaudeViewModel>()); // Corrigido o default para ViewModel
-
-                var resultado = await _profissionalSaudeService.Incluir(profissional);
-
-                if (!resultado.Valido)
-                {
-                    TempData.Put("formacao-profissional", _mapper.Map<List<FormacaoAcademicaProfissionalSaudeViewModel>>(profissional.Formacao));
-                    TempData.Put("cursos-profissional", _mapper.Map<List<CursosCertificacoesProfissionalSaudeViewModel>>(profissional.Cursos));
-                    return Json(new { resultado = "falha", mensagem = string.Join(" ", resultado.Mensagens) });
-                }
-                ;
-
-                TempData["success"] = "Profissional de saúde incluído com sucesso!";
-                return Json(new { resultado = "sucesso" });
-            }
-            catch (DbUpdateException ex)
-            {
-                var innerException = ex.InnerException as SqlException;
-                if (innerException != null)
-                {
-                    if (innerException.Number == 2601 || innerException.Number == 2627)
-                    {
-                        return Json(new { resultado = "falha", mensagem = "Já existe um registro com os dados informados." });
-                    }
-                    else if (innerException.Number == 515)
-                    {
-                        return Json(new { resultado = "falha", mensagem = "Um campo obrigatório não foi preenchido. Verifique os dados do profissional, formação e cursos." });
-                    }
-                    else
-                    {
-                        return Json(new { resultado = "falha", mensagem = $"Erro no banco de dados: {innerException.Message}" });
-                    }
-                }
-                return Json(new { resultado = "falha", mensagem = "Ocorreu um erro ao salvar os dados. Detalhes: " + ex.Message });
-            }
-            catch (Exception e)
-            {
-                return Json(new { resultado = "falha", mensagem = "Ocorreu um erro inesperado ao incluir o profissional de saúde: " + e.Message });
-            }
-        }
-
         [ClaimsAuthorize("profissional_saude", "alterar")]
         public async Task<IActionResult> Editar(int id)
         {
             TempData.Remove("formacao-profissional");
             TempData.Remove("cursos-profissional");
 
-            var profissional = (await _profissionalSaudeRepository.BuscarProfissionais(new ProfissionalSaudeParams()
+            var profissional = (await _profissionalSaudeRepository.BuscarProfissional(new ProfissionalSaudeParams()
             {
                 Id = id,
                 IncluirFormacaoCursos = true
@@ -321,7 +258,7 @@ namespace SGHSSVidaPlus.MVC.Controllers
         [ClaimsAuthorize("profissional_saude", "visualizar")]
         public async Task<IActionResult> Visualizar(int id)
         {
-            var profissional = (await _profissionalSaudeRepository.BuscarProfissionais(new ProfissionalSaudeParams()
+            var profissional = (await _profissionalSaudeRepository.BuscarProfissional(new ProfissionalSaudeParams()
             {
                 Id = id,
                 IncluirFormacaoCursos = true

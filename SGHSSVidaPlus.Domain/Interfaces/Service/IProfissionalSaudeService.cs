@@ -10,5 +10,6 @@ namespace SGHSSVidaPlus.Domain.Interfaces.Service
         Task<OperationResult> Incluir(ProfissionalSaude profissionalSaude);
         Task<OperationResult> Editar(ProfissionalSaude profissionalSaude);
         Task<OperationResult> AlterarStatus(ProfissionalSaude profissionalSaude); // Para ativar/inativar o profissional
+
     }
 }

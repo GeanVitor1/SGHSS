@@ -4,50 +4,73 @@ $(document).ready(function () {
 
 // Funções para carregar e exibir os modais de inclusão de item (replicadas do Incluir.js)
 function novaFormacaoAcademica() {
-    $.get("/ProfissionaisSaude/TelaNovaFormacaoAcademica", function (data) {
+    var profissionalSaudeId = $("#profissionalSaudeId").val(); // Pega o ID do profissional
+    $.get("/ProfissionalSaude/TelaNovaFormacaoAcademica?profissionalSaudeId=" + profissionalSaudeId, function (data) {
         $("#modalNovaFormacaoAcademica .modal-body").html(data);
         $("#modalNovaFormacaoAcademica").modal("show");
     });
 }
 
 function novoCursoCertificacao() {
-    $.get("/ProfissionaisSaude/TelaNovoCursoCertificacao", function (data) {
+    $.get("/ProfissionalSaude/TelaNovoCursoCertificacao", function (data) {
         $("#modalNovoCursoCertificacao .modal-body").html(data);
         $("#modalNovoCursoCertificacao").modal("show");
     });
 }
 
-// Funções para salvar os dados adicionados nos modais (replicadas do Incluir.js)
+// Funções para salvar os dados adicionados nos modais
 function salvarNovaFormacaoAcademica() {
     var form = $("#formIncluirFormacaoAcademica");
     var formData = form.serialize();
 
-    $.post("/ProfissionaisSaude/IncluirFormacaoAcademica", formData, function (response) {
+    $.post("/ProfissionalSaude/IncluirFormacaoAcademica", formData, function (response) {
         if (response && response.resultado && response.resultado.toLowerCase() === "sucesso") {
             $("#modalNovaFormacaoAcademica").modal("hide");
-            $.get("/ProfissionaisSaude/ObterFormacoesAcademicaProfissionalSaude", function (partialHtml) {
-                $("#formacaoTable").html(partialHtml);
-            });
-            form[0].reset();
+
+            // Verifica se o backend retornou o HTML completo e atualizado da tabela
+            // Esta é a parte crucial para manter os dados antigos.
+            if (response.partialHtml) {
+                $("#formacaoTable").html(response.partialHtml); // Substitui o conteúdo da tabela pelo HTML COMPLETO
+            } else {
+                // Fallback: Se o backend não retornar o partialHtml,
+                // faz uma nova requisição GET para obter a tabela completa.
+                // Idealmente, o backend SEMPRE deve retornar partialHtml no POST de inclusão.
+                $.get("/ProfissionalSaude/ObterFormacoesAcademicaProfissionalSaude", function (partialHtml) {
+                    $("#formacaoTable").html(partialHtml);
+                });
+            }
+
+            form[0].reset(); // Limpa o formulário do modal
             mensagem.success(response.mensagem || "Formação acadêmica adicionada com sucesso!", "", 10);
+
         } else {
+            // Exibe mensagem de erro se a operação não for bem-sucedida
             mensagem.error(response && response.mensagem ? response.mensagem : "Erro desconhecido ao adicionar formação acadêmica.", "", 10);
         }
     }).fail(function (jqXHR) {
+        // Captura erros de comunicação ou erros HTTP do servidor
         mensagem.error("Erro ao salvar formação acadêmica: " + jqXHR.responseText, "", 10);
     });
 }
+
 
 function salvarNovoCursoCertificacao() {
     var form = $("#formIncluirCursoCertificacao");
     var formData = form.serialize();
 
-    $.post("/ProfissionaisSaude/IncluirCursoCertificacao", formData, function (response) {
+    $.post("/ProfissionalSaude/IncluirCursoCertificacao", formData, function (response) {
         if (response && response.resultado && response.resultado.toLowerCase() === "sucesso") {
             $("#modalNovoCursoCertificacao").modal("hide");
-            $.get("/ProfissionaisSaude/ObterCursosCertificacoesProfissionalSaude", function (partialHtml) {
-                $("#cursoTable").html(partialHtml);
-            });
+            // Verifica se o backend retornou o HTML da tabela
+            if (response.partialHtml) {
+                $("#cursoTable").html(response.partialHtml); // ATUALIZA A TABELA COM O HTML RECEBIDO NO JSON
+            } else {
+                // Caso o backend não retorne, mantém o $.get como fallback,
+                // mas a ideia é que o backend sempre retorne o HTML.
+                $.get("/ProfissionalSaude/ObterCursosCertificacoesProfissionalSaude", function (partialHtml) {
+                    $("#cursoTable").html(partialHtml);
+                });
+            }
             form[0].reset();
             mensagem.success(response.mensagem || "Curso/Certificação adicionado(a) com sucesso!", "", 10);
         } else {
@@ -72,7 +95,7 @@ function removerFormacaoAcademica(titulo, instituicao) {
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
-                url: '/ProfissionaisSaude/RemoverFormacaoAcademica',
+                url: '/ProfissionalSaude/RemoverFormacaoAcademica',
                 method: 'POST',
                 data: { titulo: titulo, instituicao: instituicao },
                 beforeSend: function () {
@@ -81,7 +104,7 @@ function removerFormacaoAcademica(titulo, instituicao) {
                 success: function (response) {
                     if (response.resultado === "sucesso") {
                         mensagem.success(response.mensagem || "Formação removida com sucesso!", "", 10);
-                        $.get("/ProfissionaisSaude/ObterFormacoesAcademicaProfissionalSaude", function (partialHtml) {
+                        $.get("/ProfissionalSaude/ObterFormacoesAcademicaProfissionalSaude", function (partialHtml) {
                             $("#formacaoTable").html(partialHtml);
                         });
                     } else {
@@ -112,7 +135,7 @@ function removerCursoCertificacao(titulo, duracaoHoras, instituicao) {
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
-                url: '/ProfissionaisSaude/RemoverCursoCertificacao',
+                url: '/ProfissionalSaude/RemoverCursoCertificacao',
                 method: 'POST',
                 data: { titulo: titulo, duracaoHoras: duracaoHoras, instituicao: instituicao },
                 beforeSend: function () {
@@ -121,7 +144,7 @@ function removerCursoCertificacao(titulo, duracaoHoras, instituicao) {
                 success: function (response) {
                     if (response.resultado === "sucesso") {
                         mensagem.success(response.mensagem || "Curso/Certificação removido(a) com sucesso!", "", 10);
-                        $.get("/ProfissionaisSaude/ObterCursosCertificacoesProfissionalSaude", function (partialHtml) {
+                        $.get("/ProfissionalSaude/ObterCursosCertificacoesProfissionalSaude", function (partialHtml) {
                             $("#cursoTable").html(partialHtml);
                         });
                     } else {
@@ -148,14 +171,14 @@ function gravarEdicao() {
         if (typeof showOverlay === 'function') showOverlay(".wrapper");
 
         $.ajax({
-            url: "/ProfissionaisSaude/Editar", // URL do controlador ProfissionaisSaude, método Editar (POST)
+            url: "/ProfissionalSaude/Editar", // URL do controlador ProfissionaisSaude, método Editar (POST)
             method: "POST",
             data: formData,
             success: function (data) {
                 if (typeof hideOverlay === 'function') hideOverlay(".wrapper");
                 if (data.resultado === "sucesso") {
                     mensagem.success(data.mensagem || "Profissional de saúde editado com sucesso!", "", 10);
-                    setTimeout(function () { location.href = "/ProfissionaisSaude/Index"; }, 1500);
+                    setTimeout(function () { location.href = "/ProfissionalSaude/Index"; }, 1500);
                 } else {
                     mensagem.error(data.mensagem || "Erro ao editar profissional de saúde.", "", 10);
                 }

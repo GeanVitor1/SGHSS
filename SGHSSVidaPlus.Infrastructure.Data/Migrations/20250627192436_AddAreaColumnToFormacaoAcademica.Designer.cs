@@ -12,8 +12,8 @@ using SGHSSVidaPlus.Infrastructure.Data.Context;
 namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(HospitalDbContext))]
-    [Migration("20250625145823_FinalPacienteEntityAdjustments")]
-    partial class FinalPacienteEntityAdjustments
+    [Migration("20250627192436_AddAreaColumnToFormacaoAcademica")]
+    partial class AddAreaColumnToFormacaoAcademica
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -153,7 +153,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 
                     b.HasIndex("ProfissionalSaudeId");
 
-                    b.ToTable("CursosCertificacoesProfissionaisSaude", (string)null);
+                    b.ToTable("CursosCertificacoesProfissionalSaude", (string)null);
                 });
 
             modelBuilder.Entity("SGHSSVidaPlus.Domain.Entities.FormacaoAcademicaProfissionalSaude", b =>
@@ -167,6 +167,10 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                     b.Property<string>("AnoConclusao")
                         .IsRequired()
                         .HasColumnType("varchar(6)");
+
+                    b.Property<string>("Area")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("Descricao")
                         .IsRequired()
@@ -187,7 +191,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 
                     b.HasIndex("ProfissionalSaudeId");
 
-                    b.ToTable("FormacoesAcademicasProfissionaisSaude", (string)null);
+                    b.ToTable("FormacoesAcademicasProfissionalSaude", (string)null);
                 });
 
             modelBuilder.Entity("SGHSSVidaPlus.Domain.Entities.HistoricoPaciente", b =>
@@ -313,24 +317,27 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
-                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("EspecialidadeCargo")
                         .HasColumnType("varchar(100)");
 
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasColumnType("varchar(200)");
 
+                    b.Property<string>("RegistroConselho")
+                        .HasColumnType("varchar(50)");
+
                     b.Property<string>("Telefone")
-                        .IsRequired()
                         .HasColumnType("varchar(20)");
 
                     b.Property<string>("UsuarioInclusao")
-                        .IsRequired()
                         .HasColumnType("varchar(30)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("ProfissionaisSaude", (string)null);
+                    b.ToTable("ProfissionalSaude", (string)null);
                 });
 
             modelBuilder.Entity("SGHSSVidaPlus.Domain.Entities.TipoAtendimento", b =>

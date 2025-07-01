@@ -14,9 +14,9 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Repositories
     {
         public ProfissionalSaudeRepository(HospitalDbContext context) : base(context) { }
 
-        public async Task<List<ProfissionalSaude>> BuscarProfissionais(ProfissionalSaudeParams parametros)
+        public async Task<List<ProfissionalSaude>> BuscarProfissional(ProfissionalSaudeParams parametros)
         {
-            var query = _context.ProfissionaisSaude.AsQueryable();
+            var query = _context.ProfissionalSaude.AsQueryable();
 
             if (parametros.IncluirFormacaoCursos)
             {
@@ -67,6 +67,14 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Repositories
                 query = query.Take(parametros.TotalRegistros);
 
             return await query.ToListAsync();
+        }
+
+        public async Task<ProfissionalSaude> ObterProfissionalComColecoes(int id)
+        {
+            return await _context.ProfissionalSaude
+           .Include(ps => ps.Formacao)
+           .Include(ps => ps.Cursos)
+           .FirstOrDefaultAsync(ps => ps.Id == id);
         }
     }
 }

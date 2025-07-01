@@ -1,6 +1,6 @@
 $(document).ready(function () {
     // Inicialização da tabela DataTable
-    $('#tbProfissionaisSaude').DataTable({ // ID da tabela atualizado
+    $('#tbProfissionalSaude').DataTable({ // ID da tabela atualizado
         "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json" },
         "ordering": false,
         "paging": false,
@@ -8,13 +8,13 @@ $(document).ready(function () {
     });
 
     // Submissão do formulário de filtros via AJAX
-    $("#filtrosProfissionaisSaude").submit(function (event) { // ID do formulário de filtros atualizado
+    $("#filtrosProfissionalSaude").submit(function (event) { // ID do formulário de filtros atualizado
         event.preventDefault(); // Impede a submissão padrão do formulário
         var formData = $(this).serialize(); // Coleta os dados do formulário de filtros
 
-        $.get("/ProfissionaisSaude/BuscarProfissionais", formData, function (data) { // URL atualizada
-            $("#tableProfissionaisSaude").html(data); // Atualiza a partial view da tabela (ID atualizado)
-            $('#tbProfissionaisSaude').DataTable({ // Re-inicializa o DataTable após atualizar o HTML (ID atualizado)
+        $.get("/ProfissionalSaude/BuscarProfissionais", formData, function (data) { // URL atualizada
+            $("#tbProfissionalSaude").html(data); // Atualiza a partial view da tabela (ID atualizado)
+            $('#ProfissionalSaude').DataTable({ // Re-inicializa o DataTable após atualizar o HTML (ID atualizado)
                 "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json" },
                 "ordering": false,
                 "paging": false,
@@ -38,7 +38,7 @@ function alterarStatus(profissionalId, nomeProfissional, acao) { // Parâmetros a
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
-                url: '/ProfissionaisSaude/AlterarStatus', // URL do método no controlador ProfissionaisSaude
+                url: '/ProfissionalSaude/AlterarStatus', // URL do método no controlador ProfissionaisSaude
                 method: 'POST',
                 data: { id: profissionalId }, // Passa o ID do profissional
                 beforeSend: function () {
