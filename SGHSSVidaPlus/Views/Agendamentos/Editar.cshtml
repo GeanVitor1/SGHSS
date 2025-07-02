@@ -35,31 +35,32 @@
         </ul>
     </div>
     <div>
-        <button class="btn btn-stantard" onclick="gravarEdicao()">
+        <button type="button" class="btn btn-primary" onclick="gravarEdicao()">
             <span class="btn-label">
                 <i class="fa fa-check me-1"></i>
             </span>
             Gravar
         </button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
     </div>
 </div>
 <div class="card">
     <div class="card-body">
-        <form id="formEditar">
+        <form id="formEditar" method="post" asp-action="Editar" asp-controller="Agendamentos">
             <input type="hidden" asp-for="Id" />
             <div style="width: 98%;">
                 <div class="row">
                     <div class="col-8">
                         <div class="form-group form-group-default">
-                            <label>Descrição do Agendamento</label>
-                            <input asp-for="Descricao" id="descricao" type="text" class="form-control" required />
+                            <label asp-for="Descricao">Descrição do Agendamento</label>
+                            <input asp-for="Descricao" type="text" class="form-control" required />
                             <span asp-validation-for="Descricao" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="col-4">
                         <div class="form-group form-group-default">
-                            <label>Data e Hora</label>
-                            <input asp-for="DataHoraAgendamento" id="dataHoraAgendamento" type="datetime-local" class="form-control" required />
+                            <label asp-for="DataHoraAgendamento">Data e Hora</label>
+                            <input asp-for="DataHoraAgendamento" type="datetime-local" class="form-control" required />
                             <span asp-validation-for="DataHoraAgendamento" class="text-danger"></span>
                         </div>
                     </div>
@@ -67,23 +68,70 @@
                 <div class="row mt-2">
                     <div class="col-6">
                         <div class="form-group form-group-default">
-                            <label>Profissional Responsável (ID)</label>
-                            <input asp-for="ProfissionalResponsavelId" id="profissionalResponsavelId" type="number" class="form-control" required />
+                            <label>Profissional Responsável</label>
+                            <div class="input-group">
+                                <input type="hidden" asp-for="ProfissionalResponsavelId" />
+                                <input id="ProfissionalResponsavelNomeDisplay" type="text" class="form-control" readonly
+                                       value="@(Model.ProfissionalResponsavel != null ? Model.ProfissionalResponsavel.Nome : string.Empty)" />
+                                <div class="input-group-append">
+                                    
+                                    <button id="ProfissionalSearchBtn" class="btn btn-primary" type="button" data-toggle="modal"
+                                            data-target="#modalProfissionais" data-ajax-url="@Url.Action("ObterProfissionaisParaSelecao", "Agendamentos")">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
                             <span asp-validation-for="ProfissionalResponsavelId" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="form-group form-group-default">
-                            <label>Local de Atendimento</label>
-                            <input asp-for="Local" id="local" type="text" class="form-control" />
+                            <label asp-for="Local">Local de Atendimento</label>
+                            <input asp-for="Local" type="text" class="form-control" />
+                            <span asp-validation-for="Local" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <div class="form-group form-group-default">
+                            <label>Paciente</label>
+                            <div class="input-group">
+                                <input type="hidden" asp-for="PacienteId" />
+                                <input id="PacienteNomeDisplay" type="text" class="form-control" readonly
+                                       value="@(Model.Paciente != null ? Model.Paciente.Nome : string.Empty)" />
+                                <div class="input-group-append">
+                                    
+                                    <button id="PacienteSearchBtn" class="btn btn-primary" type="button" data-toggle="modal"
+                                            data-target="#modalPacientes" data-ajax-url="@Url.Action("ObterPacientesParaSelecao", "Agendamentos")">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <span asp-validation-for="PacienteId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group form-group-default">
+                            <label asp-for="Status">Status do Agendamento</label>
+                            <select asp-for="Status" class="form-control" required>
+                                <option value="">Selecione...</option>
+                                <option value="Agendado">Agendado</option>
+                                <option value="Confirmado">Confirmado</option>
+                                <option value="Em Atendimento">Em Atendimento</option>
+                                <option value="Finalizado">Finalizado</option>
+                                <option value="Cancelado">Cancelado</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
                         </div>
                     </div>
                 </div>
                 <div class="row mt-2">
                     <div class="col-12">
                         <div class="form-group form-group-default">
-                            <label>Observações</label>
-                            <textarea asp-for="Observacoes" id="observacoes" class="form-control" rows="3"></textarea>
+                            <label asp-for="Observacoes">Observações</label>
+                            <textarea asp-for="Observacoes" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Observacoes" class="text-danger"></span>
                         </div>
                     </div>
                 </div>
@@ -92,6 +140,52 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalProfissionais" tabindex="-1" role="dialog" aria-labelledby="modalProfissionaisLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalProfissionaisLabel">Selecionar Profissional</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="tabelaProfissionaisContainer">
+                    <p class="text-center">Carregando profissionais...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalPacientes" tabindex="-1" role="dialog" aria-labelledby="modalPacientesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalPacientesLabel">Selecionar Paciente</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="tabelaPacientesContainer">
+                    <p class="text-center">Carregando pacientes...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
-    <script src="~/js/Agendamentos/Editar.js"></script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    @* Certifique-se de que Moment.js, jQuery e Bootstrap JS estão carregados antes deste script *@
+    <script src="~/js/Agendamentos/editar.js"></script>
 }

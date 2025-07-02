@@ -25,53 +25,28 @@ namespace SGHSSVidaPlus.Application.Services
             _profissionalSaudeRepository = profissionalSaudeRepository;
         }
 
+        // AgendamentoService.cs - Método Incluir
         public async Task<OperationResult> Incluir(Agendamento agendamento)
         {
             var result = new OperationResult();
 
-            if (string.IsNullOrWhiteSpace(agendamento.Descricao))
-            {
-                result.Valido = false;
-                result.Mensagens.Add("A descrição do agendamento é obrigatória.");
-            }
-            if (agendamento.DataHoraAgendamento == default(DateTime))
-            {
-                result.Valido = false;
-                result.Mensagens.Add("A data e hora do agendamento são obrigatórias.");
-            }
-            if (agendamento.ProfissionalResponsavelId <= 0)
-            {
-                result.Valido = false;
-                result.Mensagens.Add("É necessário informar o profissional responsável pelo agendamento.");
-            }
+            // ... outras validações
 
-            // Valida se o profissional responsável existe
-            var profissional = await _profissionalSaudeRepository.ObterPorId(agendamento.ProfissionalResponsavelId);
-            if (profissional == null)
+            // Valida se o PacienteId principal foi informado
+            if (agendamento.PacienteId <= 0)
             {
                 result.Valido = false;
-                result.Mensagens.Add("Profissional responsável não encontrado.");
-            }
-
-            // Valida se há pelo menos um paciente e se eles existem
-            if (agendamento.PacientesAgendados == null || !agendamento.PacientesAgendados.Any())
-            {
-                result.Valido = false;
-                result.Mensagens.Add("O agendamento deve ter pelo menos um paciente associado.");
+                result.Mensagens.Add("O agendamento deve ter um paciente associado.");
             }
             else
             {
-                foreach (var ap in agendamento.PacientesAgendados)
+                var paciente = await _pacienteRepository.ObterPorId(agendamento.PacienteId);
+                if (paciente == null)
                 {
-                    var paciente = await _pacienteRepository.ObterPorId(ap.PacienteId);
-                    if (paciente == null)
-                    {
-                        result.Valido = false;
-                        result.Mensagens.Add($"Paciente com ID {ap.PacienteId} não encontrado.");
-                    }
+                    result.Valido = false;
+                    result.Mensagens.Add($"Paciente com ID {agendamento.PacienteId} não encontrado.");
                 }
             }
-            // Adicione validações para TiposAtendimento se necessário
 
             if (result.Valido)
             {
@@ -82,6 +57,62 @@ namespace SGHSSVidaPlus.Application.Services
                 await _agendamentoRepository.Incluir(agendamento);
                 result.Mensagens.Add("Agendamento incluído com sucesso.");
             }
+
+            return result;
+        }
+
+        // AgendamentoService.cs - Método Editar
+        public async Task<OperationResult> Editar(Agendamento agendamento)
+        {
+            var result = new OperationResult();
+
+            if (agendamento.Id <= 0)
+            {
+                result.Valido = false;
+                result.Mensagens.Add("ID do agendamento inválido para edição.");
+            }
+
+            // Valida se o PacienteId principal foi informado
+            if (agendamento.PacienteId <= 0)
+            {
+                result.Valido = false;
+                result.Mensagens.Add("O agendamento deve ter um paciente associado.");
+            }
+            else
+            {
+                var paciente = await _pacienteRepository.ObterPorId(agendamento.PacienteId);
+                if (paciente == null)
+                {
+                    result.Valido = false;
+                    result.Mensagens.Add($"Paciente com ID {agendamento.PacienteId} não encontrado.");
+                }
+            }
+
+            // ... outras validações (ProfissionalResponsavelId, etc.)
+
+            if (!result.Valido)
+            {
+                return result;
+            }
+
+            var agendamentoExistente = await _agendamentoRepository.ObterPorId(agendamento.Id);
+            if (agendamentoExistente == null)
+            {
+                result.Valido = false;
+                result.Mensagens.Add("Agendamento não encontrado para edição.");
+                return result;
+            }
+
+            // Atualiza as propriedades do agendamento existente
+            agendamentoExistente.Descricao = agendamento.Descricao;
+            agendamentoExistente.DataHoraAgendamento = agendamento.DataHoraAgendamento;
+            agendamentoExistente.Local = agendamento.Local; // Se existir
+            agendamentoExistente.ProfissionalResponsavelId = agendamento.ProfissionalResponsavelId;
+            agendamentoExistente.PacienteId = agendamento.PacienteId; // Atualiza o ID do paciente principal
+            agendamentoExistente.Observacoes = agendamento.Observacoes;
+
+            await _agendamentoRepository.Alterar(agendamentoExistente);
+            result.Mensagens.Add("Agendamento editado com sucesso.");
 
             return result;
         }
@@ -131,34 +162,7 @@ namespace SGHSSVidaPlus.Application.Services
             return result;
         }
 
-        public async Task<OperationResult> Editar(Agendamento agendamento)
-        {
-            var result = new OperationResult();
-
-            if (agendamento.Id <= 0)
-            {
-                result.Valido = false;
-                result.Mensagens.Add("ID do agendamento inválido para edição.");
-            }
-            // Adicione mais validações aqui, como se o agendamento já foi encerrado
-
-            if (result.Valido)
-            {
-                var agendamentoExistente = await _agendamentoRepository.ObterPorId(agendamento.Id);
-                if (agendamentoExistente == null)
-                {
-                    result.Valido = false;
-                    result.Mensagens.Add("Agendamento não encontrado para edição.");
-                    return result;
-                }
-                
-
-                await _agendamentoRepository.Alterar(agendamentoExistente);
-                result.Mensagens.Add("Agendamento editado com sucesso.");
-            }
-
-            return result;
-        }
+       
 
         public async Task<OperationResult> EncerrarAgendamento(int agendamentoId, string usuarioEncerramento)
         {

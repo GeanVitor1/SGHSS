@@ -45,4 +45,11 @@
 		<ProjectReference Include="..\SGHSSVidaPlus.Infrastructure.Data\SGHSSVidaPlus.Infrastructure.Data.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Content Update="wwwroot\js\Agendamentos\Editar.js">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+	  </Content>
+	</ItemGroup>
+
 </Project>

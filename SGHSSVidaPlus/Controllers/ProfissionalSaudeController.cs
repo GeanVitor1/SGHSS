@@ -76,6 +76,94 @@ namespace SGHSSVidaPlus.MVC.Controllers
             return View(new ProfissionalSaudeViewModel());
         }
 
+        [HttpPost]
+        public async Task<JsonResult> Incluir(ProfissionalSaudeViewModel profissionalSaudeViewModel)
+        {
+            try
+            {
+                // Certifique-se de que estes campos não estão causando validação desnecessária
+                ModelState.Remove("UsuarioInclusao");
+                ModelState.Remove("EspecialidadeCargo"); // Confirme se este campo não é parte do formulário principal
+
+                // Se houver campos que são Required no ViewModel, mas não são preenchidos na View
+                // e você não quer que eles causem erros de validação, você pode remover seus ModelStates
+                // Exemplo: ModelState.Remove("AlgumCampoNaoPreenchido");
+
+                // Importante: Recuperar as listas do TempData ANTES da validação do ModelState,
+                // pois elas não virão do formData no ViewModel principal.
+                var formacaoViewModelFromTempData = TempData.Get<List<FormacaoAcademicaProfissionalSaudeViewModel>>("formacao-profissional") ?? new List<FormacaoAcademicaProfissionalSaudeViewModel>();
+                profissionalSaudeViewModel.Formacao = formacaoViewModelFromTempData; // Atribua ao ViewModel para que a validação do serviço possa usá-los
+
+                var cursosViewModelFromTempData = TempData.Get<List<CursosCertificacoesProfissionalSaudeViewModel>>("cursos-profissional") ?? new List<CursosCertificacoesProfissionalSaudeViewModel>();
+                profissionalSaudeViewModel.Cursos = cursosViewModelFromTempData; // Atribua ao ViewModel
+
+                // Validação do ModelState: Verifique se os campos principais do ProfissionalSaudeViewModel estão válidos
+                if (!ModelState.IsValid)
+                {
+                    var erros = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    // Mantém os dados no TempData para que a view possa re-exibi-los
+                    TempData.Put("formacao-profissional", profissionalSaudeViewModel.Formacao);
+                    TempData.Put("cursos-profissional", profissionalSaudeViewModel.Cursos);
+                    // Retorna a mensagem de erro formatada
+                    return Json(new { resultado = "falha", mensagem = string.Join(" ", erros) });
+                }
+
+                var profissional = _mapper.Map<ProfissionalSaude>(profissionalSaudeViewModel);
+
+                // Não é necessário recuperar novamente do TempData aqui, pois já atribuímos ao profissionalSaudeViewModel
+                // e o mapper deve lidar com isso se as propriedades Formacao e Cursos estiverem no ViewModel.
+                // Se o AutoMapper não mapeia as coleções automaticamente, você precisará fazer isso manualmente:
+                // profissional.Formacao = _mapper.Map<List<FormacaoAcademicaProfissionalSaude>>(formacaoViewModelFromTempData);
+                // profissional.Cursos = _mapper.Map<List<CursosCertificacoesProfissionalSaude>>(cursosViewModelFromTempData);
+
+                // Se o AutoMapper já estiver configurado para mapear as coleções
+                // de profissionalSaudeViewModel (que agora contêm os dados do TempData) para profissional,
+                // as duas linhas abaixo não são estritamente necessárias, mas servem como garantia.
+                profissional.Formacao = _mapper.Map<List<FormacaoAcademicaProfissionalSaude>>(profissionalSaudeViewModel.Formacao);
+                profissional.Cursos = _mapper.Map<List<CursosCertificacoesProfissionalSaude>>(profissionalSaudeViewModel.Cursos);
+
+
+                // Define valores padrões ou de contexto para inclusão
+                profissional.UsuarioInclusao = User.Identity?.Name ?? "Sistema";
+                profissional.DataInclusao = DateTime.Now;
+                profissional.Ativo = true;
+
+                var resultado = await _profissionalSaudeService.Incluir(profissional);
+
+                if (!resultado.Valido)
+                {
+                    // Se houver falha na validação do serviço, preserve os dados para o usuário corrigir
+                    TempData.Put("formacao-profissional", _mapper.Map<List<FormacaoAcademicaProfissionalSaudeViewModel>>(profissional.Formacao));
+                    TempData.Put("cursos-profissional", _mapper.Map<List<CursosCertificacoesProfissionalSaudeViewModel>>(profissional.Cursos));
+                    return Json(new { resultado = "falha", mensagem = string.Join(" ", resultado.Mensagens) });
+                }
+
+                TempData["success"] = "Profissional de saúde incluído com sucesso!";
+                // Remova os TempData após a inclusão bem-sucedida para não manter dados antigos
+                TempData.Remove("formacao-profissional");
+                TempData.Remove("cursos-profissional");
+                return Json(new { resultado = "sucesso", mensagem = "Profissional incluído com sucesso!" });
+            }
+            catch (DbUpdateException ex)
+            {
+                var innerException = ex.InnerException as SqlException;
+                if (innerException != null)
+                {
+                    if (innerException.Number == 2601 || innerException.Number == 2627)
+                        return Json(new { resultado = "falha", mensagem = "Já existe um registro com os dados informados (violação de chave única)." });
+                    else if (innerException.Number == 515)
+                        return Json(new { resultado = "falha", mensagem = "Um campo obrigatório não foi preenchido no banco de dados. Verifique os dados do profissional, formação e cursos." });
+                    else
+                        return Json(new { resultado = "falha", mensagem = $"Erro no banco de dados: {innerException.Message}" });
+                }
+                return Json(new { resultado = "falha", mensagem = "Ocorreu um erro ao salvar os dados. Detalhes: " + ex.Message });
+            }
+            catch (Exception e)
+            {
+                return Json(new { resultado = "falha", mensagem = "Ocorreu um erro inesperado ao incluir o profissional de saúde: " + e.Message });
+            }
+        }
+
         public IActionResult TelaNovaFormacaoAcademica() => PartialView("_NovaFormacaoAcademica");
 
         [HttpPost]

@@ -20,6 +20,7 @@ namespace SGHSSVidaPlus.Application.Services
         {
             var result = new OperationResult();
 
+            // Validações básicas (já existentes)
             if (string.IsNullOrWhiteSpace(profissionalSaude.Nome))
             {
                 result.Valido = false;
@@ -30,13 +31,34 @@ namespace SGHSSVidaPlus.Application.Services
                 result.Valido = false;
                 result.Mensagens.Add("O cargo do profissional de saúde é obrigatório.");
             }
-            // Adicione validações para Telefone, Email, RegistroConselho se forem obrigatórios
+            // Adicione mais validações aqui para outros campos obrigatórios do ProfissionalSaude
+            // Ex: if (string.IsNullOrWhiteSpace(profissionalSaude.Email)) { result.Valido = false; result.Mensagens.Add("O e-mail é obrigatório."); }
+
+            // Validações para Formação Acadêmica
+            if (profissionalSaude.Formacao == null || !profissionalSaude.Formacao.Any())
+            {
+                result.Valido = false;
+                result.Mensagens.Add("É necessário adicionar pelo menos uma formação acadêmica.");
+            }
+            // Você pode adicionar mais validações específicas para cada item da formação
+            // Ex: foreach (var formacao in profissionalSaude.Formacao) { /* validar campos da formação */ }
+
+            // Validações para Cursos e Certificações
+            if (profissionalSaude.Cursos == null || !profissionalSaude.Cursos.Any())
+            {
+                result.Valido = false;
+                result.Mensagens.Add("É necessário adicionar pelo menos um curso ou certificação.");
+            }
+            // Ex: foreach (var curso in profissionalSaude.Cursos) { /* validar campos do curso */ }
+
 
             if (result.Valido)
             {
-                profissionalSaude.DataInclusao = DateTime.Now;
-                profissionalSaude.UsuarioInclusao = "Sistema"; // Substituir pelo usuário real
-                profissionalSaude.Ativo = true; // Por padrão, profissional incluído já é ativo
+                // Estes campos já devem ser definidos no controller antes de chamar o serviço,
+                // mas mantê-los aqui como fallback ou para lógica de serviço se necessário.
+                // profissionalSaude.DataInclusao = DateTime.Now;
+                // profissionalSaude.UsuarioInclusao = "Sistema"; // Substituir pelo usuário real
+                // profissionalSaude.Ativo = true;
 
                 await _profissionalSaudeRepository.Incluir(profissionalSaude);
                 result.Mensagens.Add("Profissional de saúde incluído com sucesso.");

@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SGHSSVidaPlus.Domain.Entities;
-using SGHSSVidaPlus.Domain.ExtensionsParams; // Certifique-se que AgendamentoParams e ProfissionalSaudeParams estão aqui
+using SGHSSVidaPlus.Domain.ExtensionsParams;
 using SGHSSVidaPlus.Domain.Interfaces.Repository;
 using SGHSSVidaPlus.Domain.Interfaces.Service;
 using SGHSSVidaPlus.MVC.Models;
@@ -41,10 +41,13 @@ namespace SGHSSVidaPlus.MVC.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var agendamentos = await _agendamentoRepository.BuscarAgendamentos(new AgendamentoParams());
-            // Se sua view Index espera uma ViewModel, descomente a linha abaixo e mapeie:
-            // var viewModelList = _mapper.Map<List<AgendamentoViewModel>>(agendamentos);
-            // return View(viewModelList);
+            var parametros = new AgendamentoParams
+            {
+                IncluirProfissional = true,
+                IncluirPaciente = true // Certifique-se de incluir o paciente aqui para o Index também
+            };
+
+            var agendamentos = await _agendamentoRepository.BuscarAgendamentos(parametros);
             return View(agendamentos);
         }
 
@@ -54,7 +57,7 @@ namespace SGHSSVidaPlus.MVC.Controllers
         }
 
         [HttpPost]
-        public async Task<JsonResult> Incluir([FromBody] AgendamentoViewModel agendamentoViewModel) // Adicione [FromBody] se você vai enviar JSON via AJAX
+        public async Task<JsonResult> Incluir([FromBody] AgendamentoViewModel agendamentoViewModel)
         {
             try
             {
@@ -64,17 +67,17 @@ namespace SGHSSVidaPlus.MVC.Controllers
                     return Json(new { resultado = "falha", mensagem = string.Join(" ", erros) });
                 }
 
+                if (agendamentoViewModel.PacienteId <= 0)
+                {
+                    return Json(new { resultado = "falha", mensagem = "É necessário informar o paciente para o agendamento." });
+                }
+
                 var agendamento = _mapper.Map<Agendamento>(agendamentoViewModel);
+                agendamento.PacienteId = agendamentoViewModel.PacienteId; // Se for um paciente principal
 
                 agendamento.UsuarioInclusao = User.Identity.Name ?? "Sistema";
                 agendamento.DataInclusao = DateTime.Now;
                 agendamento.Encerrado = false;
-                agendamento.UsuarioEncerramento = null;
-                agendamento.DataEncerramento = null;
-
-                // Os IDs já virão preenchidos da ViewModel
-                // agendamento.ProfissionalResponsavelId = agendamentoViewModel.ProfissionalResponsavelId; 
-                // agendamento.PacienteId = agendamentoViewModel.PacienteId;
 
                 var resultado = await _agendamentoService.Incluir(agendamento);
 
@@ -83,68 +86,25 @@ namespace SGHSSVidaPlus.MVC.Controllers
                     return Json(new { resultado = "falha", mensagem = string.Join(" ", resultado.Mensagens) });
                 }
 
-                TempData["success"] = "Agendamento incluído com sucesso!";
-                return Json(new { resultado = "sucesso", redirectUrl = Url.Action("Index", "Agendamentos") }); // Adicionado redirectUrl
+                return Json(new { resultado = "sucesso", redirectUrl = Url.Action("Index", "Agendamentos") });
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao incluir agendamento: {ex.Message}");
                 Console.WriteLine(ex.StackTrace);
-                return Json(new { resultado = "falha", mensagem = "Ocorreu um erro inesperado ao incluir o agendamento: " + ex.Message });
+                return Json(new { resultado = "falha", mensagem = "Ocorreu um erro inesperado ao incluir o agendamento." });
             }
         }
 
-        // Action para obter a lista de profissionais de saúde para o modal de seleção
-        // Já está boa, apenas confirme que ProfissionalSaudeParams e o .Where(p => p.Ativo) funcionam conforme seu repositório
-        public async Task<IActionResult> ObterProfissionaisParaSelecao()
-        {
-            try
-            {
-                var parametros = new ProfissionalSaudeParams { Ativo = true };
-                var profissionais = await _profissionalSaudeRepository.BuscarProfissional(parametros);
-
-                var viewModelList = _mapper.Map<List<ProfissionalSaudeViewModel>>(profissionais);
-
-                return PartialView("_TabelaProfissionaisParaSelecao", viewModelList);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erro ao carregar lista de profissionais: {ex.Message}");
-                Console.WriteLine(ex.StackTrace);
-                Response.StatusCode = 500;
-                return Content("Erro interno do servidor ao carregar profissionais.");
-            }
-        }
-
-        // Action para obter a lista de pacientes para o modal de seleção
-        // Já está boa, apenas confirme que _pacienteRepository.ObterTodos() retorna apenas ativos,
-        // ou ajuste para usar um parâmetro como no profissional
-        public async Task<IActionResult> ObterPacientesParaSelecao()
-        {
-            try
-            {
-                // Sugestão: Crie um PacienteParams para filtrar ativos, se ObterTodos não o fizer
-                // var parametros = new PacienteParams { Ativo = true };
-                // var pacientes = await _pacienteRepository.BuscarPacientes(parametros);
-                var pacientes = await _pacienteRepository.ObterTodos(); // Se ObterTodos já traz só ativos ou você não precisa filtrar
-
-                var viewModelList = _mapper.Map<List<PacienteViewModel>>(pacientes);
-
-                return PartialView("_TabelaPacientesParaSelecao", viewModelList);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erro ao carregar lista de pacientes: {ex.Message}");
-                Console.WriteLine(ex.StackTrace);
-                Response.StatusCode = 500;
-                return Content("Erro interno do servidor ao carregar pacientes.");
-            }
-        }
-
-        // ... (Seu código de Editar e outras ações)
         public async Task<IActionResult> Editar(int id)
         {
-            var agendamento = (await _agendamentoRepository.BuscarAgendamentos(new AgendamentoParams { Id = id, IncluirProfissional = true, IncluirPaciente = true })).FirstOrDefault();
+            var agendamento = (await _agendamentoRepository.BuscarAgendamentos(new AgendamentoParams
+            {
+                Id = id,
+                IncluirProfissional = true,
+                IncluirPaciente = true // Incluir o paciente para carregar os dados completos
+            })).FirstOrDefault();
+
             if (agendamento == null)
             {
                 TempData["error"] = "Agendamento não encontrado.";
@@ -165,7 +125,13 @@ namespace SGHSSVidaPlus.MVC.Controllers
                     return Json(new { resultado = "falha", mensagem = string.Join(" ", erros) });
                 }
 
+                if (agendamentoViewModel.PacienteId <= 0)
+                {
+                    return Json(new { resultado = "falha", mensagem = "É necessário informar o paciente para o agendamento." });
+                }
+
                 var agendamento = _mapper.Map<Agendamento>(agendamentoViewModel);
+                agendamento.PacienteId = agendamentoViewModel.PacienteId; // Se for um paciente principal
 
                 var resultado = await _agendamentoService.Editar(agendamento);
 
@@ -173,14 +139,77 @@ namespace SGHSSVidaPlus.MVC.Controllers
                 {
                     return Json(new { resultado = "falha", mensagem = string.Join(" ", resultado.Mensagens) });
                 }
-                TempData["success"] = "Agendamento editado com sucesso!";
+
                 return Json(new { resultado = "sucesso", redirectUrl = Url.Action("Index", "Agendamentos") });
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao editar agendamento: {ex.Message}");
                 Console.WriteLine(ex.StackTrace);
-                return Json(new { resultado = "falha", mensagem = "Ocorreu um erro inesperado ao editar o agendamento: " + ex.Message });
+                return Json(new { resultado = "falha", mensagem = "Ocorreu um erro inesperado ao editar o agendamento." });
+            }
+        }
+
+        // NOVO MÉTODO VISUALIZAR
+        public async Task<IActionResult> Visualizar(int id)
+        {
+            // Busca o agendamento por ID e inclui as entidades relacionadas (Profissional e Paciente)
+            // É crucial incluir estas entidades para que os nomes sejam exibidos na view.
+            var agendamento = (await _agendamentoRepository.BuscarAgendamentos(new AgendamentoParams
+            {
+                Id = id,
+                IncluirProfissional = true, // Para ter acesso ao nome do profissional
+                IncluirPaciente = true      // Para ter acesso ao nome do paciente
+                // Se você tiver tipos de atendimento ou outros relacionados para visualizar, inclua aqui:
+                // IncluirPacientesTiposAtendimento = true
+            })).FirstOrDefault();
+
+            if (agendamento == null)
+            {
+                TempData["error"] = "Agendamento não encontrado.";
+                return RedirectToAction("Index");
+            }
+
+            // Mapeia a entidade Agendamento para a AgendamentoViewModel
+            var viewModel = _mapper.Map<AgendamentoViewModel>(agendamento);
+
+            // Retorna a view "Visualizar" com a ViewModel populada
+            return View("Visualizar", viewModel);
+        }
+
+        // --- MÉTODOS PARA OS MODAIS ---
+        public async Task<IActionResult> ObterProfissionaisParaSelecao()
+        {
+            try
+            {
+                var parametros = new ProfissionalSaudeParams { Ativo = true };
+                var profissionais = await _profissionalSaudeRepository.BuscarProfissional(parametros);
+                var viewModelList = _mapper.Map<List<ProfissionalSaudeViewModel>>(profissionais);
+                return PartialView("_TabelaProfissionaisParaSelecao", viewModelList);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao carregar lista de profissionais: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                Response.StatusCode = 500;
+                return Content("Erro interno do servidor ao carregar profissionais.");
+            }
+        }
+
+        public async Task<IActionResult> ObterPacientesParaSelecao()
+        {
+            try
+            {
+                var pacientes = await _pacienteRepository.ObterTodos();
+                var viewModelList = _mapper.Map<List<PacienteViewModel>>(pacientes);
+                return PartialView("_TabelaPacientesParaSelecao", viewModelList);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao carregar lista de pacientes: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                Response.StatusCode = 500;
+                return Content("Erro interno do servidor ao carregar pacientes.");
             }
         }
     }

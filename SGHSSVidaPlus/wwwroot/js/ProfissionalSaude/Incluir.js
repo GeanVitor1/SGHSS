@@ -172,17 +172,21 @@ function gravarInclusao() {
                 if (typeof hideOverlay === 'function') hideOverlay(".wrapper");
                 if (data.resultado === "sucesso") {
                     mensagem.success(data.mensagem || "Profissional de saúde incluído com sucesso!", "", 10);
+                    // Atraso para que o usuário possa ler a mensagem de sucesso antes do redirecionamento
                     setTimeout(function () { location.href = "/ProfissionalSaude/Index"; }, 1500);
                 } else {
-                    mensagem.error(data.mensagem || "Erro ao incluir profissional de saúde.", "", 10);
+                    // **Ponto de melhoria:** Exibir a mensagem de erro específica do backend.
+                    mensagem.error(data.mensagem || "Erro desconhecido ao incluir profissional de saúde.", "", 10);
                 }
             },
-            error: function () {
+            error: function (jqXHR) {
                 if (typeof hideOverlay === 'function') hideOverlay(".wrapper");
-                mensagem.error("Erro na comunicação com o servidor.", "", 10);
+                // **Ponto de melhoria:** Exibir a resposta de erro do servidor para depuração.
+                mensagem.error("Erro na comunicação com o servidor: " + jqXHR.responseText, "", 10);
             }
         });
     } else {
+        // Isso já força a validação HTML5, o que é bom.
         form[0].reportValidity();
     }
 }

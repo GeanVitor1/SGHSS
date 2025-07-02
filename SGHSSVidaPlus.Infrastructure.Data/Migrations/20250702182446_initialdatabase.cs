@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialIdentitySetup : Migration
+    public partial class initialdatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,7 +32,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProfissionaisSaude",
+                name: "ProfissionalSaude",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -49,7 +49,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ProfissionaisSaude", x => x.Id);
+                    table.PrimaryKey("PK_ProfissionalSaude", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -118,27 +118,36 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Descricao = table.Column<string>(type: "varchar(300)", nullable: false),
+                    Observacoes = table.Column<string>(type: "varchar(100)", nullable: true),
+                    Local = table.Column<string>(type: "varchar(100)", nullable: true),
                     DataHoraAgendamento = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Encerrado = table.Column<bool>(type: "bit", nullable: false),
                     UsuarioInclusao = table.Column<string>(type: "varchar(30)", nullable: false),
                     DataInclusao = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UsuarioEncerramento = table.Column<string>(type: "varchar(30)", nullable: false),
+                    UsuarioEncerramento = table.Column<string>(type: "varchar(30)", nullable: true),
                     DataEncerramento = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    ProfissionalResponsavelId = table.Column<int>(type: "int", nullable: false)
+                    Status = table.Column<string>(type: "varchar(100)", nullable: false),
+                    ProfissionalResponsavelId = table.Column<int>(type: "int", nullable: false),
+                    PacienteId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Agendamentos", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Agendamentos_ProfissionaisSaude_ProfissionalResponsavelId",
+                        name: "FK_Agendamentos_Pacientes_PacienteId",
+                        column: x => x.PacienteId,
+                        principalTable: "Pacientes",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Agendamentos_ProfissionalSaude_ProfissionalResponsavelId",
                         column: x => x.ProfissionalResponsavelId,
-                        principalTable: "ProfissionaisSaude",
+                        principalTable: "ProfissionalSaude",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "CursosCertificacoesProfissionaisSaude",
+                name: "CursosCertificacoesProfissionalSaude",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -152,21 +161,22 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CursosCertificacoesProfissionaisSaude", x => x.Id);
+                    table.PrimaryKey("PK_CursosCertificacoesProfissionalSaude", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CursosCertificacoesProfissionaisSaude_ProfissionaisSaude_ProfissionalSaudeId",
+                        name: "FK_CursosCertificacoesProfissionalSaude_ProfissionalSaude_ProfissionalSaudeId",
                         column: x => x.ProfissionalSaudeId,
-                        principalTable: "ProfissionaisSaude",
+                        principalTable: "ProfissionalSaude",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "FormacoesAcademicasProfissionaisSaude",
+                name: "FormacoesAcademicasProfissionalSaude",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Titulo = table.Column<string>(type: "varchar(500)", nullable: false),
+                    Area = table.Column<string>(type: "varchar(100)", nullable: false),
                     InstituicaoEnsino = table.Column<string>(type: "varchar(300)", nullable: false),
                     AnoConclusao = table.Column<string>(type: "varchar(6)", nullable: false),
                     Descricao = table.Column<string>(type: "varchar(2000)", nullable: false),
@@ -174,11 +184,11 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_FormacoesAcademicasProfissionaisSaude", x => x.Id);
+                    table.PrimaryKey("PK_FormacoesAcademicasProfissionalSaude", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_FormacoesAcademicasProfissionaisSaude_ProfissionaisSaude_ProfissionalSaudeId",
+                        name: "FK_FormacoesAcademicasProfissionalSaude_ProfissionalSaude_ProfissionalSaudeId",
                         column: x => x.ProfissionalSaudeId,
-                        principalTable: "ProfissionaisSaude",
+                        principalTable: "ProfissionalSaude",
                         principalColumn: "Id");
                 });
 
@@ -233,6 +243,11 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Agendamentos_PacienteId",
+                table: "Agendamentos",
+                column: "PacienteId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Agendamentos_ProfissionalResponsavelId",
                 table: "Agendamentos",
                 column: "ProfissionalResponsavelId");
@@ -258,13 +273,13 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                 column: "TipoAtendimentoId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CursosCertificacoesProfissionaisSaude_ProfissionalSaudeId",
-                table: "CursosCertificacoesProfissionaisSaude",
+                name: "IX_CursosCertificacoesProfissionalSaude_ProfissionalSaudeId",
+                table: "CursosCertificacoesProfissionalSaude",
                 column: "ProfissionalSaudeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_FormacoesAcademicasProfissionaisSaude_ProfissionalSaudeId",
-                table: "FormacoesAcademicasProfissionaisSaude",
+                name: "IX_FormacoesAcademicasProfissionalSaude_ProfissionalSaudeId",
+                table: "FormacoesAcademicasProfissionalSaude",
                 column: "ProfissionalSaudeId");
 
             migrationBuilder.CreateIndex(
@@ -294,10 +309,10 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                 name: "AgendamentosTiposAtendimento");
 
             migrationBuilder.DropTable(
-                name: "CursosCertificacoesProfissionaisSaude");
+                name: "CursosCertificacoesProfissionalSaude");
 
             migrationBuilder.DropTable(
-                name: "FormacoesAcademicasProfissionaisSaude");
+                name: "FormacoesAcademicasProfissionalSaude");
 
             migrationBuilder.DropTable(
                 name: "HistoricoPacientes");
@@ -315,7 +330,7 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                 name: "Pacientes");
 
             migrationBuilder.DropTable(
-                name: "ProfissionaisSaude");
+                name: "ProfissionalSaude");
         }
     }
 }
