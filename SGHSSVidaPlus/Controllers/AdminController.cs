@@ -41,33 +41,71 @@ namespace SGHSSVidaPlus.MVC.Controllers // Namespace atualizado
         }
 
         [HttpPost]
-        public async Task<JsonResult> Incluir(UsuarioViewModel usuario)
+        public async Task<JsonResult> Incluir([FromBody] UsuarioViewModel usuario)
         {
+            // 1. Validação de existência do usuário por Login
             var usuarioExiste = await _userManager.FindByNameAsync(usuario.Login);
             if (usuarioExiste != null)
-                return Json(new { resultado = "falha", mensagem = "O usuário informado já existe" });
+            {
+                return Json(new { resultado = "falha", mensagem = "O login informado já está em uso." });
+            }
 
-            // Removido !ModelState.IsValid aqui pois é uma validação comum e deve ser tratada no cliente ou com ModelState.AddModelError
-            // e os erros seriam detalhados. Se for para Json, o string.Join abaixo é melhor.
-            // if (!ModelState.IsValid)
-            //    return Json(new { resultado = "falha", mensagem = "Ocorreu um erro desconhecido ao tentar incluir um novo usuário" });
-
+            // 2. Validação do ModelState (validações via Data Annotations na UsuarioViewModel)
             if (!ModelState.IsValid)
             {
-                var erros = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                var erros = ModelState.Values
+                                .SelectMany(v => v.Errors)
+                                .Select(e => e.ErrorMessage)
+                                .ToList();
+                // Se o erro for de duplicidade de e-mail (gerenciado pelo Identity), adicione uma mensagem mais amigável
+                if (erros.Any(e => e.Contains("Email", StringComparison.OrdinalIgnoreCase) && e.Contains("is already taken", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return Json(new { resultado = "falha", mensagem = "O e-mail informado já está em uso." });
+                }
                 return Json(new { resultado = "falha", mensagem = string.Join(" ", erros) });
             }
 
-            var user = new ApplicationUser { UserName = usuario.Login, Email = usuario.Email, Nome = usuario.Nome, Admin = usuario.Admin }; // Adicionado 'Admin' e 'Nome'
-            var result = await _userManager.CreateAsync(user, usuario.Password);
-            if (!result.Succeeded)
-                return Json(new { resultado = "falha", mensagem = string.Join(" ", result.Errors.Select(e => e.Description)) }); // Erros mais detalhados
+            // 3. Criação do ApplicationUser
+            var user = new ApplicationUser
+            {
+                UserName = usuario.Login,
+                Email = usuario.Email,
+                Nome = usuario.Nome,
+                Admin = usuario.Admin, // Propriedade personalizada para indicar se é Admin
+                EmailConfirmed = true // Considere confirmar o e-mail automaticamente ou por um processo de ativação
+            };
 
+            // Tenta criar o usuário com a senha
+            var result = await _userManager.CreateAsync(user, usuario.Password);
+
+            // 4. Tratamento de falha na criação do usuário pelo Identity
+            if (!result.Succeeded)
+            {
+                // Identity Errors são geralmente muito descritivos (ex: "Passwords must have at least one digit.")
+                // Mapeia os erros do Identity para mensagens legíveis.
+                var identityErrors = result.Errors.Select(e =>
+                {
+                    if (e.Code == "DuplicateUserName") return "O login já existe.";
+                    if (e.Code == "DuplicateEmail") return "O e-mail já existe.";
+                    if (e.Code == "PasswordTooShort") return $"A senha é muito curta. Mínimo {e.Description.Split(' ').LastOrDefault()} caracteres.";
+                    if (e.Code == "PasswordRequiresNonAlphanumeric") return "A senha deve conter pelo menos um caractere não alfanumérico.";
+                    if (e.Code == "PasswordRequiresDigit") return "A senha deve conter pelo menos um número ('0'-'9').";
+                    if (e.Code == "PasswordRequiresLower") return "A senha deve conter pelo menos uma letra minúscula ('a'-'z').";
+                    if (e.Code == "PasswordRequiresUpper") return "A senha deve conter pelo menos uma letra maiúscula ('A'-'Z').";
+                    return e.Description; // Retorna a descrição padrão para outros erros
+                }).ToList();
+
+                return Json(new { resultado = "falha", mensagem = string.Join(" ", identityErrors) });
+            }
+
+            // 5. Atribuição de Role (Administrador)
             if (usuario.Admin)
             {
                 var role = await _roleManager.FindByNameAsync("admin");
                 if (role == null)
                 {
+                    // Cria a role "admin" se ela não existir. Isso deve ser feito no Seed ou em migrações.
+                    // Mas para garantir que não pare o fluxo, podemos criar aqui também.
                     role = new IdentityRole()
                     {
                         Name = "admin",
@@ -75,28 +113,42 @@ namespace SGHSSVidaPlus.MVC.Controllers // Namespace atualizado
                     };
                     await _roleManager.CreateAsync(role);
                 }
-                await _userManager.AddToRoleAsync(user, role.Name);
+                // Adiciona o usuário à role "admin"
+                result = await _userManager.AddToRoleAsync(user, role.Name);
+                if (!result.Succeeded)
+                {
+                    // Se falhar, é um erro crítico, pois o usuário foi criado mas a role não foi atribuída.
+                    // Poderíamos deletar o usuário ou logar um erro para correção manual.
+                    return Json(new { resultado = "falha", mensagem = "Usuário incluído, porém não foi possível atribuir o status de administrador. Motivo: " + string.Join(" ", result.Errors.Select(e => e.Description)) });
+                }
             }
-            else
+            // 6. Atribuição de Permissões (Claims) para usuários não-admin
+            else // Se o usuário NÃO for administrador, atribua as claims de permissão
             {
-                var claimsSelecionadas = usuario.Permissoes.Where(c => c.IsSelected);
+                var claimsSelecionadas = usuario.Permissoes.Where(c => c.IsSelected).ToList();
                 var claimsIncluir = new List<Claim>();
 
-                foreach (var claimViewModel in claimsSelecionadas) // Itera sobre ClaimViewModel
+                foreach (var claimViewModel in claimsSelecionadas)
                 {
-                    // As claims são adicionadas como Tipo e Valor, não agrupadas por tipo em uma string
+                    // Adiciona a Claim com Tipo e Valor
                     claimsIncluir.Add(new Claim(claimViewModel.Tipo, claimViewModel.Valor));
                 }
 
-                claimsIncluir.Add(new Claim("Nome", usuario.Nome)); // Adiciona a claim de Nome
+                // Adiciona a Claim "Nome" que é importante para ser acessada via User.FindFirstValue("Nome")
+                claimsIncluir.Add(new Claim("Nome", user.Nome));
 
                 result = await _userManager.AddClaimsAsync(user, claimsIncluir);
                 if (!result.Succeeded)
-                    return Json(new { resultado = "falha", mensagem = "Usuário incluso, porém não foi possível incluir as permissões.Motivo: " + string.Join(" ", result.Errors.Select(e => e.Description)) });
+                {
+                    return Json(new { resultado = "falha", mensagem = "Usuário incluído, porém não foi possível incluir as permissões. Motivo: " + string.Join(" ", result.Errors.Select(e => e.Description)) });
+                }
             }
 
+            // 7. Sucesso!
+            // Usa TempData para passar a mensagem de sucesso que será exibida no _Layout.cshtml
             TempData["success"] = "Usuário Incluído com Sucesso!";
-            return Json(new { resultado = "sucesso" });
+            // Retorna sucesso com URL de redirecionamento
+            return Json(new { resultado = "sucesso", redirectUrl = Url.Action("Index", "Admin") });
         }
 
         public async Task<IActionResult> Visualizar(string userId)

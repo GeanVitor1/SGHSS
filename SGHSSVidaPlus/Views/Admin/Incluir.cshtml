@@ -58,6 +58,7 @@
                                 <div class="form-group form-group-default">
                                     <label>Login</label>
                                     <input asp-for="Login" id="login" type="text" class="form-control" required />
+                                    <span asp-validation-for="Login" class="text-danger"></span> @* Adicionado span de validação *@
                                 </div>
                             </div>
                         </div>
@@ -65,7 +66,8 @@
                             <div class="col-4">
                                 <div class="form-group form-group-default">
                                     <label>Nome</label>
-                                    <input asp-for="Nome" id="nome" type="text" class="form-control" required />
+                                    <input asp-for="Nome" id="nomeUsuario" type="text" class="form-control" required /> @* ID corrigido aqui *@
+                                    <span asp-validation-for="Nome" class="text-danger"></span> @* Adicionado span de validação *@
                                 </div>
                             </div>
                         </div>
@@ -73,7 +75,8 @@
                             <div class="col-8">
                                 <div class="form-group form-group-default">
                                     <label>Email</label>
-                                    <input asp-for="Email" id="email" type="text" class="form-control" required />
+                                    <input asp-for="Email" id="email" type="email" class="form-control" required /> @* type="email" é bom para validação HTML5 *@
+                                    <span asp-validation-for="Email" class="text-danger"></span> @* Adicionado span de validação *@
                                 </div>
                             </div>
                         </div>
@@ -81,13 +84,15 @@
                             <div class="col-4">
                                 <div class="form-group form-group-default">
                                     <label>Senha</label>
-                                    <input asp-for="Password" id="nome" type="password" class="form-control" required />
+                                    <input asp-for="Password" id="password" type="password" class="form-control" required /> @* ID corrigido aqui *@
+                                    <span asp-validation-for="Password" class="text-danger"></span> @* Adicionado span de validação *@
                                 </div>
                             </div>
                             <div class="col-4">
                                 <div class="form-group form-group-default">
                                     <label>Confirmar Senha</label>
-                                    <input asp-for="ConfirmPassword" id="nome" type="password" class="form-control" required />
+                                    <input asp-for="ConfirmPassword" id="confirmPassword" type="password" class="form-control" required /> @* ID corrigido aqui *@
+                                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span> @* Adicionado span de validação *@
                                 </div>
                             </div>
                         </div>
@@ -110,8 +115,11 @@
                                     if (Model.Permissoes[i].Tipo == tipo)
                                     {
                                         <div class="form-switch mt-2">
-                                            <input type="hidden" asp-for="@Model.Permissoes[i].Tipo" />
-                                            <input type="hidden" asp-for="@Model.Permissoes[i].Valor" />
+                                            @* Para ASP.NET Core MVC, asp-for em elementos não-checkbox já define o 'name' e o 'value'.
+                                Para checkbox, o asp-for define o 'name' e 'id' e marca/desmarca.
+                                Hidden inputs para 'Tipo' e 'Valor' são bons para garantir que esses dados sejam enviados. *@
+                                            <input type="hidden" name="Permissoes[@i].Tipo" value="@Model.Permissoes[i].Tipo" />
+                                            <input type="hidden" name="Permissoes[@i].Valor" value="@Model.Permissoes[i].Valor" />
                                             <input class="form-check-input c-pointer" asp-for="@Model.Permissoes[i].IsSelected" type="checkbox" role="switch" id="checkbox_@i">
                                             <label class="form-check-label text-capitalize" for="checkbox_@i">@Model.Permissoes[i].Valor</label>
                                         </div>
@@ -127,5 +135,8 @@
 </div>
 
 @section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    } @* Garante scripts de validação *@
     <script src="~/js/Admin/Incluir.js"></script>
 }
