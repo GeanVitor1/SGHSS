@@ -25,38 +25,79 @@
 });
 
 // Função para alterar o status do agendamento (Encerrar/Reabrir)
-function alterarStatus(agendamentoId, descricao, acao) { // Parâmetros atualizados
-    Swal.fire({
-        title: `${acao} Agendamento`,
-        text: `Deseja realmente ${acao.toLowerCase()} o agendamento: ${descricao}?`,
+// Exemplo de como sua função alterarStatus pode parecer em site.js
+// (Pode ter pequenas variações)
+
+function alterarStatus(id, nomeOuDescricao, acao) {
+    let titulo = '';
+    let mensagem = '';
+    let url = '';
+    let confirmText = '';
+    let successMessage = '';
+
+    if (acao === 'Inativar') {
+        titulo = 'Inativar ' + nomeOuDescricao + '?';
+        mensagem = 'Esta ação irá inativar o registro. Deseja continuar?';
+        url = '/Pacientes/AlterarStatus'; // <<-- ESTA É A URL QUE ESTÁ SENDO CHAMADA PARA PACIENTES
+        confirmText = 'Sim, inativar!';
+        successMessage = 'Registro inativado com sucesso!';
+    } else if (acao === 'Reativar') {
+        titulo = 'Reativar ' + nomeOuDescricao + '?';
+        mensagem = 'Esta ação irá reativar o registro. Deseja continuar?';
+        url = '/Pacientes/AlterarStatus'; // <<-- ESTA É A URL QUE ESTÁ SENDO CHAMADA PARA PACIENTES
+        confirmText = 'Sim, reativar!';
+        successMessage = 'Registro reativado com sucesso!';
+    } else if (acao === 'Encerrar') { // NOVO CASO PARA AGENDAMENTO
+        titulo = 'Encerrar Agendamento: ' + nomeOuDescricao + '?';
+        mensagem = 'Esta ação irá encerrar o agendamento. Deseja continuar?';
+        url = '/Agendamentos/EncerrarAgendamento'; // <<-- URL CORRETA PARA AGENDAMENTO
+        confirmText = 'Sim, encerrar!';
+        successMessage = 'Agendamento encerrado com sucesso!';
+    } else if (acao === 'Reabrir') { // NOVO CASO PARA AGENDAMENTO
+        titulo = 'Reabrir Agendamento: ' + nomeOuDescricao + '?';
+        mensagem = 'Esta ação irá reabrir o agendamento. Deseja continuar?';
+        url = '/Agendamentos/ReabrirAgendamento'; // <<-- Você precisará deste método no Controller e Service
+        confirmText = 'Sim, reabrir!';
+        successMessage = 'Agendamento reaberto com sucesso!';
+    } else {
+        console.error("Ação desconhecida: " + acao);
+        return;
+    }
+
+    Swal.fire({ // Usando SweetAlert2
+        title: titulo,
+        text: mensagem,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: `Sim, ${acao.toLowerCase()}!`,
+        confirmButtonText: confirmText,
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
-                url: '/Agendamentos/AlterarStatus', // URL do método no controlador Agendamentos
-                method: 'POST',
-                data: { id: agendamentoId }, // Passa o ID do agendamento
-                beforeSend: function () {
-                    if (typeof showOverlay === 'function') showOverlay(".wrapper");
-                },
-                success: function (data) {
-                    if (data.resultado === "sucesso") {
-                        mensagem.success(data.mensagem || `Agendamento ${acao.toLowerCase()} com sucesso!`, "", 10);
-                        setTimeout(function () { location.reload(); }, 1500); // Recarrega a página
+                url: url,
+                type: 'POST', // Geralmente é POST para alteração de status
+                contentType: 'application/json',
+                data: JSON.stringify(id), // Envia apenas o ID
+                success: function (response) {
+                    if (response.resultado === "sucesso") {
+                        Swal.fire('Sucesso!', response.mensagem || successMessage, 'success')
+                            .then(() => {
+                                // Redireciona para atualizar a tabela
+                                location.reload(); // Ou para uma URL específica: location.href = '/Agendamentos/Index';
+                            });
                     } else {
-                        mensagem.error(data.mensagem || `Erro ao ${acao.toLowerCase()} agendamento.`, "", 10);
+                        Swal.fire('Erro!', response.mensagem || 'Ocorreu um erro ao alterar o status.', 'error');
                     }
                 },
-                complete: function () {
-                    if (typeof hideOverlay === 'function') hideOverlay(".wrapper");
-                },
-                error: function () {
-                    mensagem.error(`Erro ao ${acao.toLowerCase()} agendamento`, "Ocorreu um erro desconhecido", 10);
+                error: function (xhr, status, error) {
+                    console.error("Erro AJAX ao alterar status:", error, xhr.responseText);
+                    let errorMessage = 'Erro na comunicação com o servidor ao alterar o status.';
+                    if (xhr.responseJSON && xhr.responseJSON.mensagem) {
+                        errorMessage = xhr.responseJSON.mensagem;
+                    }
+                    Swal.fire('Erro!', errorMessage, 'error');
                 }
             });
         }

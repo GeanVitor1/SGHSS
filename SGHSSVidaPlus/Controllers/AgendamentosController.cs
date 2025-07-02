@@ -147,6 +147,57 @@ namespace SGHSSVidaPlus.MVC.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<JsonResult> EncerrarAgendamento([FromBody] int agendamentoId) // Ou um ViewModel se precisar de mais dados
+        {
+            try
+            {
+                // Aqui você pode pegar o nome do usuário logado se precisar de auditoria
+                var usuarioEncerramento = User.Identity.Name ?? "Sistema";
+
+                var resultado = await _agendamentoService.EncerrarAgendamento(agendamentoId, usuarioEncerramento);
+
+                if (!resultado.Valido)
+                {
+                    return Json(new { resultado = "falha", mensagem = string.Join(" ", resultado.Mensagens) });
+                }
+
+                return Json(new { resultado = "sucesso", mensagem = resultado.Mensagens.FirstOrDefault() ?? "Agendamento encerrado com sucesso!", redirectUrl = Url.Action("Index", "Agendamentos") });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao encerrar agendamento: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                return Json(new { resultado = "falha", mensagem = "Ocorreu um erro inesperado ao encerrar o agendamento." });
+            }
+        }
+
+        [HttpPost]
+        public async Task<JsonResult> ReabrirAgendamento([FromBody] int agendamentoId)
+        {
+            try
+            {
+                var usuarioReabertura = User.Identity.Name ?? "Sistema"; // Ou algum usuário de auditoria
+
+                // Crie um método correspondente no seu AgendamentoService:
+                // public async Task<OperationResult> ReabrirAgendamento(int agendamentoId, string usuarioReabertura)
+                var resultado = await _agendamentoService.ReabrirAgendamento(agendamentoId, usuarioReabertura); // <--- Este método precisa existir no serviço
+
+                if (!resultado.Valido)
+                {
+                    return Json(new { resultado = "falha", mensagem = string.Join(" ", resultado.Mensagens) });
+                }
+
+                return Json(new { resultado = "sucesso", mensagem = resultado.Mensagens.FirstOrDefault() ?? "Agendamento reaberto com sucesso!", redirectUrl = Url.Action("Index", "Agendamentos") });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao reabrir agendamento: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                return Json(new { resultado = "falha", mensagem = "Ocorreu um erro inesperado ao reabrir o agendamento." });
+            }
+        }
+
         // NOVO MÉTODO VISUALIZAR
         public async Task<IActionResult> Visualizar(int id)
         {

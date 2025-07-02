@@ -12,6 +12,8 @@ namespace SGHSSVidaPlus.Domain.Interfaces.Service
         // O método IncluirCandidatos foi adaptado para IncluirPacientesNoAgendamento
         Task<OperationResult> IncluirPacientesNoAgendamento(List<AgendamentoPaciente> pacientesAgendados, int agendamentoId);
         Task<OperationResult> Editar(Agendamento agendamento);
-         Task<OperationResult> EncerrarAgendamento(int agendamentoId, string usuarioEncerramento);
+        Task<OperationResult> EncerrarAgendamento(int agendamentoId, string usuarioEncerramento); // <--- Primeira declaração
+
+        Task<OperationResult> ReabrirAgendamento(int agendamentoId, string usuarioReabertura);
     }
 }

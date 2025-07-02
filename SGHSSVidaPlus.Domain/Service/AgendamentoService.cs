@@ -61,6 +61,46 @@ namespace SGHSSVidaPlus.Application.Services
             return result;
         }
 
+        public async Task<OperationResult> ReabrirAgendamento(int agendamentoId, string usuarioReabertura)
+        {
+            var result = new OperationResult();
+
+            if (agendamentoId <= 0)
+            {
+                result.Valido = false;
+                result.Mensagens.Add("ID do agendamento inválido.");
+            }
+
+            if (!result.Valido)
+            {
+                return result;
+            }
+
+            var agendamentoExistente = await _agendamentoRepository.ObterPorId(agendamentoId);
+            if (agendamentoExistente == null)
+            {
+                result.Valido = false;
+                result.Mensagens.Add("Agendamento não encontrado.");
+                return result;
+            }
+
+            if (!agendamentoExistente.Encerrado)
+            {
+                result.Valido = false;
+                result.Mensagens.Add("Agendamento não está encerrado para ser reaberto.");
+                return result;
+            }
+
+            agendamentoExistente.Encerrado = false; // Define como não encerrado
+            agendamentoExistente.DataEncerramento = null; // Limpa a data de encerramento
+            agendamentoExistente.UsuarioEncerramento = null; // Limpa o usuário de encerramento
+
+            await _agendamentoRepository.Alterar(agendamentoExistente);
+            result.Mensagens.Add("Agendamento reaberto com sucesso.");
+
+            return result;
+        }
+
         // AgendamentoService.cs - Método Editar
         public async Task<OperationResult> Editar(Agendamento agendamento)
         {
