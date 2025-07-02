@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="~/css/demo.css" />
     <link rel="stylesheet" href="~/lib/select2/select2.min.css">
     <link rel="stylesheet" href="~/lib/select2/select2-bootstrap-5-theme.min.css">
-    <link href="~/css/sweetalert.min.css" rel="stylesheet" />
+    @* REMOVA: <link href="~/css/sweetalert.min.css" rel="stylesheet" /> - Será substituído pelo SweetAlert2 *@
     <link rel="stylesheet" href="~/css/site.css" />
 
 </head>
@@ -36,6 +36,7 @@
             </div>
         </div>
     </div>
+    @* ORDEM DOS SCRIPTS CORRIGIDA E DEPENDÊNCIAS ADICIONADAS/REMOVIDAS *@
     <script src="~/js/core/jquery-3.7.1.min.js"></script>
     <script src="~/js/core/popper.min.js"></script>
     <script src="~/js/core/bootstrap.min.js"></script>
@@ -47,21 +48,49 @@
     <script src="~/js/plugin/bootstrap-notify/bootstrap-notify.min.js"></script>
     <script src="~/js/plugin/jsvectormap/jsvectormap.min.js"></script>
     <script src="~/js/plugin/jsvectormap/world.js"></script>
-    <script src="~/js/plugin/sweetalert/sweetalert.min.js"></script>
+
+    @* CORREÇÃO SWEETALERT: REMOVA O ANTIGO, ADICIONE O SWEETALERT2 VIA CDN *@
+    @* REMOVA: <script src="~/js/plugin/sweetalert/sweetalert.min.js"></script> *@
+    @* REMOVA: <script src="~/js/sqeetalert.min.js"></script> (Provavelmente um erro de digitação/duplicidade) *@
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> @* SweetAlert2 para a animação boa *@
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"> @* CSS para SweetAlert2 *@
+
+    @* ADICIONE MOMENT.JS AQUI *@
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
     <script src="~/js/kaiadmin.min.js"></script>
     <script src="~/js/setting-demo.js"></script>
     <script src="~/js/demo.js"></script>
     <script src="~/lib/select2/select2.full.min.js"></script>
-    <script src="~/js/sqeetalert.min.js"></script>
-    <script src="~/js/site.js"></script>
+    <script src="~/js/site.js"></script> @* Seu site.js pode ter outras lógicas globais *@
 
     @await RenderSectionAsync("Scripts", required: false)
 
+    @* Este bloco de TempData provavelmente usa o bootstrap-notify ou um alert personalizado.
+    Se a ideia é que use SweetAlert2, este código precisaria ser reescrito para Swal.fire.
+    Por enquanto, deixo como está, mas se a ideia é tudo usar SweetAlert2, precisaria adaptar. *@
     @if (TempData["success"] != null)
     {
         var mensagem = TempData["success"];
         <script>
-            mensagem.success("@mensagem", "", 10);
+            // Adapte esta chamada se a função 'mensagem.success' não for definida por um de seus plugins ou site.js
+            // Se você quer SweetAlert2 aqui, use:
+            Swal.fire({
+                title: 'Sucesso!',
+                text: '@mensagem',
+                icon: 'success',
+                toast: true, // Para notificações que aparecem e somem
+                position: 'top-end', // Posição
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+            // ou a sua função 'mensagem.success("@mensagem", "", 10);' se for um plugin específico
         </script>
     }
 
@@ -69,7 +98,23 @@
     {
         var mensagem = TempData["error"];
         <script>
-            mensagem.error("@mensagem", "", 10);
+            // Adapte esta chamada se a função 'mensagem.error' não for definida por um de seus plugins ou site.js
+            // Se você quer SweetAlert2 aqui, use:
+            Swal.fire({
+                title: 'Erro!',
+                text: '@mensagem',
+                icon: 'error',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+            // ou a sua função 'mensagem.error("@mensagem", "", 10);'
         </script>
     }
 </body>

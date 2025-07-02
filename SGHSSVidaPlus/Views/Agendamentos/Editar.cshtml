@@ -70,14 +70,13 @@
                         <div class="form-group form-group-default">
                             <label>Profissional Responsável</label>
                             <div class="input-group">
-                                <input type="hidden" asp-for="ProfissionalResponsavelId" />
+                                <input type="hidden" asp-for="ProfissionalResponsavelId" id="profissionalResponsavelIdHidden" /> @* ID igual ao incluir.cshtml *@
                                 <input id="ProfissionalResponsavelNomeDisplay" type="text" class="form-control" readonly
                                        value="@(Model.ProfissionalResponsavel != null ? Model.ProfissionalResponsavel.Nome : string.Empty)" />
                                 <div class="input-group-append">
-                                    
-                                    <button id="ProfissionalSearchBtn" class="btn btn-primary" type="button" data-toggle="modal"
-                                            data-target="#modalProfissionais" data-ajax-url="@Url.Action("ObterProfissionaisParaSelecao", "Agendamentos")">
-                                        <i class="fas fa-search"></i>
+                                    @* Mude para onclick *@
+                                    <button class="btn btn-primary btn-border" type="button" onclick="abrirModalProfissionaisEdicao()">
+                                        <i class="fa fa-search"></i>
                                     </button>
                                 </div>
                             </div>
@@ -97,14 +96,13 @@
                         <div class="form-group form-group-default">
                             <label>Paciente</label>
                             <div class="input-group">
-                                <input type="hidden" asp-for="PacienteId" />
+                                <input type="hidden" asp-for="PacienteId" id="pacienteIdHidden" /> @* ID igual ao incluir.cshtml *@
                                 <input id="PacienteNomeDisplay" type="text" class="form-control" readonly
                                        value="@(Model.Paciente != null ? Model.Paciente.Nome : string.Empty)" />
                                 <div class="input-group-append">
-                                    
-                                    <button id="PacienteSearchBtn" class="btn btn-primary" type="button" data-toggle="modal"
-                                            data-target="#modalPacientes" data-ajax-url="@Url.Action("ObterPacientesParaSelecao", "Agendamentos")">
-                                        <i class="fas fa-search"></i>
+                                    @* Mude para onclick *@
+                                    <button class="btn btn-primary btn-border" type="button" onclick="abrirModalPacientesEdicao()">
+                                        <i class="fa fa-search"></i>
                                     </button>
                                 </div>
                             </div>
@@ -140,11 +138,12 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalProfissionais" tabindex="-1" role="dialog" aria-labelledby="modalProfissionaisLabel" aria-hidden="true">
+@* Mude os IDs dos modais para serem consistentes com o JavaScript de seleção *@
+<div class="modal fade" id="modalSelecionarProfissional" tabindex="-1" role="dialog" aria-labelledby="modalSelecionarProfissionalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalProfissionaisLabel">Selecionar Profissional</h5>
+                <h5 class="modal-title" id="modalSelecionarProfissionalLabel">Selecionar Profissional</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -156,16 +155,17 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" id="btnSelecionarProfissional" disabled>Selecionar</button> @* ID do botão *@
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="modalPacientes" tabindex="-1" role="dialog" aria-labelledby="modalPacientesLabel" aria-hidden="true">
+<div class="modal fade" id="modalSelecionarPaciente" tabindex="-1" role="dialog" aria-labelledby="modalSelecionarPacienteLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalPacientesLabel">Selecionar Paciente</h5>
+                <h5 class="modal-title" id="modalSelecionarPacienteLabel">Selecionar Paciente</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -177,6 +177,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" id="btnSelecionarPaciente" disabled>Selecionar</button> @* ID do botão *@
             </div>
         </div>
     </div>
@@ -186,6 +187,5 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-    @* Certifique-se de que Moment.js, jQuery e Bootstrap JS estão carregados antes deste script *@
     <script src="~/js/Agendamentos/editar.js"></script>
 }

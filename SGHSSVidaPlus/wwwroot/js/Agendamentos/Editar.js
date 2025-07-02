@@ -1,13 +1,77 @@
-// Crie ou abra o arquivo: wwwroot/js/Agendamentos/editar.js
+// wwwroot/js/Agendamentos/editar.js
 
-// Define a função gravarEdicao no escopo global
+// Variáveis globais para armazenar a seleção temporária para edição
+let selectedProfissionalEdicao = null;
+let selectedPacienteEdicao = null;
+
+// =========================================================
+// FUNÇÕES PARA ABRIR MODAIS (ESPECÍFICAS PARA EDIÇÃO)
+// =========================================================
+
+function abrirModalProfissionaisEdicao() {
+    $('#modalSelecionarProfissional').modal('show'); // ID do modal
+    const container = $('#tabelaProfissionaisContainer');
+    container.html('<p class="text-center">Carregando profissionais...</p>');
+
+    $.ajax({
+        url: '/Agendamentos/ObterProfissionaisParaSelecao',
+        type: 'GET',
+        success: function (html) {
+            container.html(html);
+            $('#btnSelecionarProfissional').prop('disabled', true);
+            $('#tabelaProfissionaisContainer .selectable-row').removeClass('table-primary');
+        },
+        error: function (xhr, status, error) {
+            container.html('<p class="text-danger">Erro ao carregar profissionais: ' + (xhr.responseText || error) + '</p>');
+            console.error("Erro ao carregar profissionais:", error, xhr.responseText);
+        }
+    });
+}
+
+function abrirModalPacientesEdicao() {
+    $('#modalSelecionarPaciente').modal('show'); // ID do modal
+    const container = $('#tabelaPacientesContainer');
+    container.html('<p class="text-center">Carregando pacientes...</p>');
+
+    $.ajax({
+        url: '/Agendamentos/ObterPacientesParaSelecao',
+        type: 'GET',
+        success: function (html) {
+            container.html(html);
+            $('#btnSelecionarPaciente').prop('disabled', true);
+            $('#tabelaPacientesContainer .selectable-row').removeClass('table-primary');
+        },
+        error: function (xhr, status, error) {
+            container.html('<p class="text-danger">Erro ao carregar pacientes: ' + (xhr.responseText || error) + '</p>');
+            console.error("Erro ao carregar pacientes:", error, xhr.responseText);
+        }
+    });
+}
+
+// =========================================================
+// FUNÇÃO PARA ENVIAR O FORMULÁRIO DE EDIÇÃO
+// =========================================================
 window.gravarEdicao = function () {
-    var form = $('#formEditar');
+    var form = $("#formEditar");
 
-    // Garante que o jQuery Unobtrusive Validation é acionado
-    form.validate(); // Inicializa o validador se ainda não foi
-    if (!form.valid()) {
-        // Se a validação do cliente falhar, exibe os erros e não prossegue
+    if (!form[0].checkValidity()) {
+        form[0].reportValidity();
+        if (typeof $.validator !== 'undefined' && $.validator.unobtrusive && !$(form).valid()) {
+            return;
+        }
+        return;
+    }
+
+    // Verifique se os IDs ocultos foram preenchidos
+    const profissionalId = $('#profissionalResponsavelIdHidden').val();
+    const pacienteId = $('#pacienteIdHidden').val();
+
+    if (!profissionalId || profissionalId === '0') {
+        Swal.fire("Erro", "Por favor, selecione um Profissional Responsável.", "error"); // Use Swal.fire
+        return;
+    }
+    if (!pacienteId || pacienteId === '0') {
+        Swal.fire("Erro", "Por favor, selecione um Paciente.", "error"); // Use Swal.fire
         return;
     }
 
@@ -15,86 +79,48 @@ window.gravarEdicao = function () {
         Id: $('#Id').val(),
         Descricao: $('#Descricao').val(),
         DataHoraAgendamento: $('#DataHoraAgendamento').val(),
+        ProfissionalResponsavelId: parseInt(profissionalId),
         Local: $('#Local').val(),
-        ProfissionalResponsavelId: $('#ProfissionalResponsavelId').val(),
-        PacienteId: $('#PacienteId').val(),
-        Observacoes: $('#Observacoes').val(),
+        PacienteId: parseInt(pacienteId),
         Status: $('#Status').val(),
-        Encerrado: $('#Encerrado').is(':checked')
-        // DataEncerramento: $('#DataEncerramento').val() // Incluir se houver um campo para isso na view e ViewModel
+        Observacoes: $('#Observacoes').val()
     };
 
+    // if (typeof showOverlay === 'function') showOverlay(".wrapper"); // Se você tiver essa função no site.js
+
     $.ajax({
-        url: form.attr('action'),
-        type: form.attr('method'),
-        contentType: 'application/json',
+        url: "/Agendamentos/Editar", // URL da ação de edição
+        method: "POST",
+        contentType: "application/json",
         data: JSON.stringify(formData),
-        success: function (response) {
-            // CORREÇÃO AQUI para o SweetAlert2
-            if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') { // Se for SweetAlert2
-                Swal.fire({ // Use Swal.fire() para SweetAlert2
-                    title: "Sucesso!",
-                    text: response.mensagem,
-                    icon: "success",
-                    buttonsStyling: false,
-                    confirmButtonText: "OK",
-                    customClass: {
-                        confirmButton: "btn btn-success"
-                    }
-                }).then(() => {
-                    window.location.href = response.redirectUrl;
-                });
-            } else if (typeof swal !== 'undefined') { // Se for SweetAlert original
-                swal("Sucesso!", response.mensagem, {
-                    icon: "success",
-                    buttons: {
-                        confirm: {
-                            className: 'btn btn-success'
+        success: function (data) {
+            // if (typeof hideOverlay === 'function') hideOverlay(".wrapper"); // Se você tiver essa função no site.js
+
+            if (data.resultado === "sucesso") {
+                Swal.fire("Sucesso!", data.mensagem || "Agendamento editado com sucesso!", "success")
+                    .then(() => {
+                        if (data.redirectUrl) {
+                            location.href = data.redirectUrl;
+                        } else {
+                            location.href = "/Agendamentos/Index"; // Fallback
                         }
-                    },
-                }).then(() => {
-                    window.location.href = response.redirectUrl;
-                });
-            } else { // Fallback simples
-                alert("Sucesso! " + response.mensagem);
-                window.location.href = response.redirectUrl;
+                    });
+            } else {
+                Swal.fire("Erro!", data.mensagem || "Erro ao editar agendamento.", "error");
             }
         },
         error: function (xhr, status, error) {
-            console.error("Erro na requisição AJAX:", error);
-            var errorMessage = "Ocorreu um erro inesperado ao editar o agendamento.";
-            if (xhr.responseJSON && xhr.responseJSON.mensagem) {
-                errorMessage = xhr.responseJSON.mensagem;
-            }
-
-            // CORREÇÃO AQUI para o SweetAlert2
-            if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') { // Se for SweetAlert2
-                Swal.fire({ // Use Swal.fire() para SweetAlert2
-                    title: "Erro!",
-                    text: errorMessage,
-                    icon: "error",
-                    buttonsStyling: false,
-                    confirmButtonText: "OK",
-                    customClass: {
-                        confirmButton: "btn btn-danger"
-                    }
-                });
-            } else if (typeof swal !== 'undefined') { // Se for SweetAlert original
-                swal("Erro!", errorMessage, {
-                    icon: "error",
-                    buttons: {
-                        confirm: {
-                            className: 'btn btn-danger'
-                        }
-                    },
-                });
-            } else { // Fallback simples
-                alert("Erro: " + errorMessage);
-            }
+            // if (typeof hideOverlay === 'function') hideOverlay(".wrapper"); // Se você tiver essa função no site.js
+            const errorMessage = xhr.responseJSON && xhr.responseJSON.mensagem ? xhr.responseJSON.mensagem : "Erro na comunicação com o servidor.";
+            Swal.fire("Erro!", errorMessage, "error");
+            console.error("Erro AJAX: ", status, error, xhr.responseText);
         }
     });
-};
+}
 
+// =========================================================
+// CÓDIGO QUE DEVE RODAR APÓS O DOCUMENTO ESTAR PRONTO
+// =========================================================
 $(document).ready(function () {
     // Formatar a data e hora para o input type="datetime-local"
     var dataHoraInput = $('#DataHoraAgendamento');
@@ -104,59 +130,83 @@ $(document).ready(function () {
         dataHoraInput.val(formattedDateTime);
     }
 
-    // --- Lógica para os Modais de Seleção de Profissional e Paciente ---
+    // Inicializa o estado dos botões "Selecionar" no modal
+    $('#btnSelecionarProfissional').prop('disabled', true);
+    $('#btnSelecionarPaciente').prop('disabled', true);
 
-    // Cacheie as URLs para evitar chamadas de jQuery repetidas
-    var profissionalSelectUrl = $('#ProfissionalSearchBtn').data('ajax-url');
-    var pacienteSelectUrl = $('#PacienteSearchBtn').data('ajax-url');
+    // ==========================================================
+    // DELEGAÇÃO DE EVENTOS PARA TABELAS DINÂMICAS (PROFISSIONAL)
+    // ==========================================================
+    $('#modalSelecionarProfissional').on('click', '.selectable-row', function () {
+        $('#tabelaProfissionaisContainer .selectable-row').removeClass('table-primary');
+        $(this).addClass('table-primary');
 
-    // Botão de pesquisa de Profissional (assumindo que o ID é 'ProfissionalSearchBtn')
-    $('#ProfissionalSearchBtn').on('click', function () {
-        $('#modalProfissionais').modal('show');
-        $.ajax({
-            url: profissionalSelectUrl,
-            type: 'GET',
-            success: function (data) {
-                $('#tabelaProfissionaisContainer').html(data);
-            },
-            error: function (xhr, status, error) {
-                console.error("Erro ao carregar profissionais:", error);
-                $('#tabelaProfissionaisContainer').html('<p class="text-danger">Erro ao carregar profissionais. Tente novamente.</p>');
-            }
-        });
+        selectedProfissionalEdicao = {
+            id: $(this).data('id'),
+            nome: $(this).data('nome')
+        };
+
+        if (selectedProfissionalEdicao.id && selectedProfissionalEdicao.nome) {
+            $('#btnSelecionarProfissional').prop('disabled', false);
+        } else {
+            $('#btnSelecionarProfissional').prop('disabled', true);
+            console.warn("Dados do profissional selecionado não encontrados (verifique data-id e data-nome na sua Partial View).");
+        }
     });
 
-    // Botão de pesquisa de Paciente (assumindo que o ID é 'PacienteSearchBtn')
-    $('#PacienteSearchBtn').on('click', function () {
-        $('#modalPacientes').modal('show');
-        $.ajax({
-            url: pacienteSelectUrl,
-            type: 'GET',
-            success: function (data) {
-                $('#tabelaPacientesContainer').html(data);
-            },
-            error: function (xhr, status, error) {
-                console.error("Erro ao carregar pacientes:", error);
-                $('#tabelaPacientesContainer').html('<p class="text-danger">Erro ao carregar pacientes. Tente novamente.</p>');
-            }
-        });
+    // ==========================================================
+    // DELEGAÇÃO DE EVENTOS PARA TABELAS DINÂMICAS (PACIENTE)
+    // ==========================================================
+    $('#modalSelecionarPaciente').on('click', '.selectable-row', function () {
+        $('#tabelaPacientesContainer .selectable-row').removeClass('table-primary');
+        $(this).addClass('table-primary');
+
+        selectedPacienteEdicao = {
+            id: $(this).data('id'),
+            nome: $(this).data('nome')
+        };
+
+        if (selectedPacienteEdicao.id && selectedPacienteEdicao.nome) {
+            $('#btnSelecionarPaciente').prop('disabled', false);
+        } else {
+            $('#btnSelecionarPaciente').prop('disabled', true);
+            console.warn("Dados do paciente selecionado não encontrados (verifique data-id e data-nome na sua Partial View).");
+        }
     });
 
-    // Lógica para seleção de Profissional no modal (mantida)
-    $(document).on('click', '.select-profissional-btn', function () {
-        var profissionalId = $(this).data('id');
-        var profissionalNome = $(this).data('nome');
-        $('#ProfissionalResponsavelId').val(profissionalId);
-        $('#ProfissionalResponsavelNomeDisplay').val(profissionalNome); // Atualiza o campo de exibição
-        $('#modalProfissionais').modal('hide');
+
+    // Evento de clique do botão "Selecionar" no modal de profissional
+    $('#btnSelecionarProfissional').on('click', function () {
+        if (selectedProfissionalEdicao) {
+            $('#profissionalResponsavelIdHidden').val(selectedProfissionalEdicao.id);
+            $('#ProfissionalResponsavelNomeDisplay').val(selectedProfissionalEdicao.nome); // Atualiza campo de display
+            $('#modalSelecionarProfissional').modal('hide');
+        }
     });
 
-    // Lógica para seleção de Paciente no modal (mantida)
-    $(document).on('click', '.select-paciente-btn', function () {
-        var pacienteId = $(this).data('id');
-        var pacienteNome = $(this).data('nome');
-        $('#PacienteId').val(pacienteId);
-        $('#PacienteNomeDisplay').val(pacienteNome); // Atualiza o campo de exibição
-        $('#modalPacientes').modal('hide');
+    // Evento de clique do botão "Selecionar" no modal de paciente
+    $('#btnSelecionarPaciente').on('click', function () {
+        if (selectedPacienteEdicao) {
+            $('#pacienteIdHidden').val(selectedPacienteEdicao.id);
+            $('#PacienteNomeDisplay').val(selectedPacienteEdicao.nome); // Atualiza campo de display
+            $('#modalSelecionarPaciente').modal('hide');
+        }
     });
+
+    // Limpa a seleção e desabilita o botão quando o modal é fechado
+    $('#modalSelecionarProfissional').on('hidden.bs.modal', function () {
+        selectedProfissionalEdicao = null;
+        $('#btnSelecionarProfissional').prop('disabled', true);
+        $('#tabelaProfissionaisContainer .selectable-row').removeClass('table-primary');
+    });
+
+    $('#modalSelecionarPaciente').on('hidden.bs.modal', function () {
+        selectedPacienteEdicao = null;
+        $('#btnSelecionarPaciente').prop('disabled', true);
+        $('#tabelaPacientesContainer .selectable-row').removeClass('table-primary');
+    });
+
+    // Garante que o input text não seja editável manualmente
+    $('#ProfissionalResponsavelNomeDisplay').attr('readonly', true);
+    $('#PacienteNomeDisplay').attr('readonly', true);
 });
