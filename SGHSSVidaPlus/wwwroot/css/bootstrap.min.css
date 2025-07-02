@@ -4232,7 +4232,9 @@ textarea.form-control-lg {
     font-size: var(--bs-navbar-brand-font-size);
     color: var(--bs-navbar-brand-color);
     text-decoration: none;
-    white-space: nowrap
+    white-space: nowrap;
+    height: 80px !important; /* Aumente o valor para teste */
+    width: auto !important; /* Para manter a proporção */
 }
 
     .navbar-brand:focus, .navbar-brand:hover {

@@ -2,9 +2,11 @@
 for details on configuring this project to bundle and minify static web assets. */
 
 a.navbar-brand {
-  white-space: normal;
-  text-align: center;
-  word-break: break-all;
+    white-space: normal;
+    text-align: center;
+    word-break: break-all;
+    height: 80px !important; /* Aumente o valor para teste */
+    width: auto !important; /* Para manter a proporção */
 }
 
 a {
