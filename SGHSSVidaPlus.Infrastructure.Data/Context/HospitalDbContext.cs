@@ -34,8 +34,6 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Context
         public DbSet<Agendamento> Agendamentos { get; set; }
         public DbSet<AgendamentoPaciente> AgendamentosPacientes { get; set; }
 
-        public DbSet<TipoAtendimento> TiposAtendimento { get; set; }
-        public DbSet<AgendamentoTipoAtendimento> AgendamentosTiposAtendimento { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

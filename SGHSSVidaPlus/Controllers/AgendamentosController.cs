@@ -19,7 +19,6 @@ namespace SGHSSVidaPlus.MVC.Controllers
         private readonly IAgendamentoRepository _agendamentoRepository;
         private readonly IAgendamentoService _agendamentoService;
         private readonly IPacienteRepository _pacienteRepository;
-        private readonly ITipoAtendimentoRepository _tipoAtendimentoRepository;
         private readonly IProfissionalSaudeRepository _profissionalSaudeRepository;
         private readonly IMapper _mapper;
 
@@ -27,14 +26,12 @@ namespace SGHSSVidaPlus.MVC.Controllers
             IAgendamentoRepository agendamentoRepository,
             IAgendamentoService agendamentoService,
             IPacienteRepository pacienteRepository,
-            ITipoAtendimentoRepository tipoAtendimentoRepository,
             IProfissionalSaudeRepository profissionalSaudeRepository,
             IMapper mapper)
         {
             _agendamentoRepository = agendamentoRepository;
             _agendamentoService = agendamentoService;
             _pacienteRepository = pacienteRepository;
-            _tipoAtendimentoRepository = tipoAtendimentoRepository;
             _profissionalSaudeRepository = profissionalSaudeRepository;
             _mapper = mapper;
         }

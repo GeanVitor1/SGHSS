@@ -24,7 +24,6 @@ namespace SGHSSVidaPlus.Domain.Entities
         public Paciente Paciente { get; set; } // Propriedade de navegação
 
         public ICollection<AgendamentoPaciente> PacientesAgendados { get; set; } = new List<AgendamentoPaciente>();
-        public ICollection<AgendamentoTipoAtendimento> TiposAtendimento { get; set; } = new List<AgendamentoTipoAtendimento>();
     }
 
 

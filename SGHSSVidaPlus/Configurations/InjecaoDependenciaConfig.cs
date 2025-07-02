@@ -20,14 +20,12 @@ namespace SGHSSVidaPlus.MVC.Configurations // Namespace atualizado
 
             // Injeções de Interfaces de Serviço (Business Logic)
             services.AddScoped<IPacienteService, PacienteService>(); // Atualizado de CandidatosService
-            services.AddScoped<ITipoAtendimentoService, TipoAtendimentoService>(); // Atualizado de EtapasSelecaoService
             services.AddScoped<IAgendamentoService, AgendamentoService>(); // Atualizado de SelecaoService
             services.AddScoped<IProfissionalSaudeService, ProfissionalSaudeService>(); // ADICIONADO: serviço para ProfissionalSaude
 
             // Injeções de Interfaces de Repositório (Data Access)
             services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>)); // Repositório base genérico
             services.AddScoped<IPacienteRepository, PacienteRepository>();
-            services.AddScoped<ITipoAtendimentoRepository, TipoAtendimentoRepository>();
             services.AddScoped<IAgendamentoRepository, AgendamentoRepository>();
             services.AddScoped<IProfissionalSaudeRepository, ProfissionalSaudeRepository>(); // ADICIONADO: repositório para ProfissionalSaude
 

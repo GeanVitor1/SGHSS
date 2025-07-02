@@ -28,14 +28,6 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Repositories
                 query = query.Include(a => a.Paciente); // Supondo que a propriedade de navegação é Paciente
             }
 
-            if (parametros.IncluirPacientesTiposAtendimento)
-            {
-                query = query.Include(a => a.PacientesAgendados)
-                             .ThenInclude(ap => ap.Paciente) // Para incluir os dados do Paciente na lista de AgendamentoPaciente
-                             .Include(a => a.TiposAtendimento)
-                             .ThenInclude(att => att.TipoAtendimento); // Para incluir os dados do TipoAtendimento na lista de AgendamentoTipoAtendimento
-            }
-
             // Filtro por Id
             if (parametros.Id != 0)
                 query = query.Where(a => a.Id == parametros.Id);

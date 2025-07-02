@@ -13,12 +13,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Remove="wwwroot\js\TiposAtendimento\**" />
+	  <Content Remove="wwwroot\js\TiposAtendimento\**" />
+	  <EmbeddedResource Remove="wwwroot\js\TiposAtendimento\**" />
+	  <None Remove="wwwroot\js\TiposAtendimento\**" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Folder Include="Migrations\" />
 		<Folder Include="wwwroot\img\" />
-		<Folder Include="wwwroot\js\TiposAtendimento\" />
 		<Folder Include="wwwroot\js\Admin\" />
 	</ItemGroup>
 

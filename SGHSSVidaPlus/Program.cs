@@ -52,12 +52,10 @@ builder.Services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>));
 builder.Services.AddScoped<IPacienteRepository, PacienteRepository>();
 builder.Services.AddScoped<IProfissionalSaudeRepository, ProfissionalSaudeRepository>();
 builder.Services.AddScoped<IAgendamentoRepository, AgendamentoRepository>();
-builder.Services.AddScoped<ITipoAtendimentoRepository, TipoAtendimentoRepository>();
 
 builder.Services.AddScoped<IPacienteService, PacienteService>();
 builder.Services.AddScoped<IProfissionalSaudeService, ProfissionalSaudeService>();
 builder.Services.AddScoped<IAgendamentoService, AgendamentoService>();
-builder.Services.AddScoped<ITipoAtendimentoService, TipoAtendimentoService>();
 
 builder.Services.Configure<RouteOptions>(o => o.LowercaseUrls = true);
 

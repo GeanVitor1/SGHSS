@@ -26,8 +26,8 @@
                     <div class="form-button-action">
                         <a class="ms-4" asp-action="Visualizar" asp-route-id="@agendamento.Id"><i class="fa fa-eye text-secondary c-pointer"></i></a>
                         <a class="ms-4" asp-action="Editar" asp-route-id="@agendamento.Id"><i class="fa fa-edit text-primary c-pointer"></i></a>
-                        <a class="ms-4" asp-action="IncluirPacientes" asp-route-id="@agendamento.Id" title="Gerenciar Pacientes"><i class="fa fa-users text-info c-pointer"></i></a>
-                        <a class="ms-4" asp-action="IncluirTiposAtendimento" asp-route-id="@agendamento.Id" title="Gerenciar Tipos de Atendimento"><i class="fa fa-list-alt text-warning c-pointer"></i></a>
+                        
+                       
                         @if (!agendamento.Encerrado)
                         {
                             <i class="fa fa-times text-danger ms-4 c-pointer mt-1" title="Encerrar" onclick="alterarStatus('@agendamento.Id','@agendamento.Descricao','Encerrar')"></i>

@@ -48,7 +48,6 @@ namespace SGHSSVidaPlus.MVC.Models // Namespace atualizado
         // Se um agendamento for SEMPRE para UM paciente, a lista 'PacientesAgendados' pode ser removida
         // e o 'PacienteId' principal deve ser usado para todas as interações.
         public List<AgendamentoPacienteViewModel> PacientesAgendados { get; set; } = new List<AgendamentoPacienteViewModel>();
-        public List<AgendamentoTipoAtendimentoViewModel> TiposAtendimento { get; set; } = new List<AgendamentoTipoAtendimentoViewModel>();
     }
 
     // ViewModel para a entidade de ligação Agendamento-Paciente
@@ -63,14 +62,5 @@ namespace SGHSSVidaPlus.MVC.Models // Namespace atualizado
         public bool IsSelected { get; set; } // Usado para seleção em UI, se houver uma lista de seleção
     }
 
-    // ViewModel para a entidade de ligação Agendamento-TipoAtendimento
-    public class AgendamentoTipoAtendimentoViewModel
-    {
-        public int Id { get; set; }
-        public int AgendamentoId { get; set; }
-        public int TipoAtendimentoId { get; set; }
-        public TipoAtendimentoViewModel? TipoAtendimento { get; set; } // Para carregar dados do tipo de atendimento
-        public bool IsSelected { get; set; } // Usado para seleção em UI, se houver uma lista de seleção
-    }
 
 }

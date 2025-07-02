@@ -53,7 +53,6 @@ namespace SGHSSVidaPlus.MVC.Configurations
                 .ForMember(dest => dest.Paciente, opt => opt.Ignore())
                 // IGNORAR coleções aninhadas que não são tratadas diretamente pela ViewModel no POST principal
                 .ForMember(dest => dest.PacientesAgendados, opt => opt.Ignore())
-                .ForMember(dest => dest.TiposAtendimento, opt => opt.Ignore())
                 // IGNORAR campos de auditoria que são preenchidos no serviço/repositório
                 .ForMember(dest => dest.DataInclusao, opt => opt.Ignore())
                 .ForMember(dest => dest.UsuarioInclusao, opt => opt.Ignore());
@@ -63,13 +62,11 @@ namespace SGHSSVidaPlus.MVC.Configurations
             // Mapeamentos para outras ViewModels (mantenha como estão, o ReverseMap aqui está ok)
             CreateMap<Paciente, PacienteViewModel>().ReverseMap();
             CreateMap<ProfissionalSaude, ProfissionalSaudeViewModel>().ReverseMap();
-            CreateMap<TipoAtendimento, TipoAtendimentoViewModel>().ReverseMap();
             CreateMap<PacienteContato, PacienteContatoViewModel>().ReverseMap();
             CreateMap<HistoricoPaciente, HistoricoPacienteViewModel>().ReverseMap();
             CreateMap<FormacaoAcademicaProfissionalSaude, FormacaoAcademicaProfissionalSaudeViewModel>().ReverseMap();
             CreateMap<CursosCertificacoesProfissionalSaude, CursosCertificacoesProfissionalSaudeViewModel>().ReverseMap();
             CreateMap<AgendamentoPaciente, AgendamentoPacienteViewModel>().ReverseMap();
-            CreateMap<AgendamentoTipoAtendimento, AgendamentoTipoAtendimentoViewModel>().ReverseMap();
         }
     }
 }
