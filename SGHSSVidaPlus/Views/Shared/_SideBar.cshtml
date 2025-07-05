@@ -1,27 +1,34 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Identity
+@using SGHSSVidaPlus.MVC.Data
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@{
     string controller = "";
     if (ViewContext.RouteData.Values.ContainsKey("controller"))
     {
         controller = ViewContext.RouteData.Values["controller"].ToString().ToLower();
         switch (controller)
         {
-            case "tiposatendimento": 
-                controller = "agendamentos"; 
+            case "tiposatendimento":
+                controller = "agendamentos";
                 break;
-
             case "":
                 controller = "home";
                 break;
-            
-            case "pacientes": 
+            case "pacientes":
                 controller = "pacientes";
                 break;
-            case "profissionalSaude": 
-                controller = "profissionalSaude";
+            case "profissionalsaude":
+                controller = "profissionalsaude";
                 break;
         }
     }
+
+    bool isAdmin = User.IsInRole("admin");
+    bool isPatient = User.HasClaim(c => c.Type == "TipoUsuario" && c.Value == "Paciente");
 }
+
 <div class="sidebar" data-background-color="dark">
     <div class="sidebar-logo">
         <div class="logo-header" data-background-color="dark">
@@ -40,7 +47,7 @@
                 <i class="gg-more-vertical-alt"></i>
             </button>
         </div>
-        </div>
+    </div>
     <div class="sidebar-wrapper scrollbar scrollbar-inner">
         <div class="sidebar-content">
             <ul class="nav nav-secondary">
@@ -56,69 +63,79 @@
                     </span>
                     <h4 class="text-section">Menus</h4>
                 </li>
-                
-                
-                <li class="nav-item @(controller == "pacientes" ? "active" : "")">
-                    <a data-bs-toggle="collapse" href="#pacientes">
-                       <i class="fas fa-user-plus"></i>
-                        <p>Pacientes</p>
-                        <span class="caret"></span>
-                    </a>
-                    <div class="collapse" id="pacientes">
-                        <ul class="nav nav-collapse">
-                            <li>
-                                <a asp-controller="Pacientes" asp-action="Index">
-                                    <span class="sub-item">Listar Pacientes</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
 
-                
-                <li class="nav-item mt-2 @(controller == "profissionalSaude" ? "active" : "")">
-                    <a data-bs-toggle="collapse" href="#profissionaisSaude">
-                        <i class="fas fa-user-md"></i> 
-                        <p>Profissionais</p>
-                        <span class="caret"></span>
-                    </a>
-                    <div class="collapse" id="profissionaisSaude">
-                        <ul class="nav nav-collapse">
-                            <li>
-                                <a asp-controller="ProfissionalSaude" asp-action="Index">
-                                    <span class="sub-item">Listar Profissionais</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+                @if (isAdmin || isPatient)
+                {
+                    <li class="nav-item @(controller == "agendamentos" ? "active" : "")">
+                        <a data-bs-toggle="collapse" href="#agendamentos">
+                            <i class="fas fa-calendar-alt"></i>
+                            <p>Agendamentos</p>
+                            <span class="caret"></span>
+                        </a>
+                        <div class="collapse" id="agendamentos">
+                            <ul class="nav nav-collapse">
+                                <li>
+                                    @if (isAdmin)
+                                    {
+                                        <a asp-controller="Agendamentos" asp-action="Index">
+                                            <span class="sub-item">Listar Agendamentos</span>
+                                        </a>
+                                    }
+                                    else if (isPatient)
+                                    {
+                                        <a asp-controller="Agendamentos" asp-action="MeusAgendamentos">
+                                            <span class="sub-item">Meus Agendamentos</span>
+                                        </a>
+                                    }
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                }
 
-                
-                <li class="nav-item mt-2 @(controller == "agendamentos" ? "active" : "")">
-                    <a data-bs-toggle="collapse" href="#agendamentos">
-                        <i class="fas fa-calendar-alt"></i> 
-                        <p>Agendamentos</p>
-                        <span class="caret"></span>
-                    </a>
-                    <div class="collapse" id="agendamentos">
-                        <ul class="nav nav-collapse">
-                            <li>
-                                <a asp-controller="Agendamentos" asp-action="Index">
-                                    <span class="sub-item">Listar Agendamentos</span>
-                                </a>
-                            </li>
-                          
-                        </ul>
-                    </div>
-                </li>
+                @if (isAdmin) // Somente para Admin
+                {
+                    <li class="nav-item @(controller == "pacientes" ? "active" : "")">
+                        <a data-bs-toggle="collapse" href="#pacientes">
+                           <i class="fas fa-user-plus"></i>
+                            <p>Pacientes</p>
+                            <span class="caret"></span>
+                        </a>
+                        <div class="collapse" id="pacientes">
+                            <ul class="nav nav-collapse">
+                                <li>
+                                    <a asp-controller="Pacientes" asp-action="Index">
+                                        <span class="sub-item">Listar Pacientes</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
 
-               
-                <li class="nav-item mt-2 @(controller == "admin" ? "active" : "")">
-                    <a asp-controller="Admin" asp-action="Index">
-                        <i class="fas fa-user-cog"></i>
-                        <span class="sub-item">Usuários</span>
-                    </a>
-                </li>
+                    <li class="nav-item mt-2 @(controller == "profissionalsaude" ? "active" : "")">
+                        <a data-bs-toggle="collapse" href="#profissionaisSaude">
+                            <i class="fas fa-user-md"></i>
+                            <p>Profissionais</p>
+                            <span class="caret"></span>
+                        </a>
+                        <div class="collapse" id="profissionaisSaude">
+                            <ul class="nav nav-collapse">
+                                <li>
+                                    <a asp-controller="ProfissionalSaude" asp-action="Index">
+                                        <span class="sub-item">Listar Profissionais</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="nav-item mt-2 @(controller == "admin" ? "active" : "")">
+                        <a asp-controller="Admin" asp-action="Index">
+                            <i class="fas fa-user-cog"></i>
+                            <span class="sub-item">Usuários</span>
+                        </a>
+                    </li>
+                }
             </ul>
         </div>
     </div>

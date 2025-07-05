@@ -15,28 +15,43 @@
     <link rel="stylesheet" href="~/css/demo.css" />
     <link rel="stylesheet" href="~/lib/select2/select2.min.css">
     <link rel="stylesheet" href="~/lib/select2/select2-bootstrap-5-theme.min.css">
-    @* REMOVA: <link href="~/css/sweetalert.min.css" rel="stylesheet" /> - Será substituído pelo SweetAlert2 *@
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"> @* CSS para SweetAlert2 *@
     <link rel="stylesheet" href="~/css/site.css" />
+
+    
+    @using System.Text.Encodings.Web;
 
 </head>
 
 <body>
     <div class="wrapper">
-        <partial name="_SideBar" />
-        <div class="main-panel">
-            <div class="main-header">
-                <partial name="_NavBar" />
-            </div>
-            <div class="container">
-                <div class="page-inner">
-                    <main role="main">
-                        @RenderBody()
-                    </main>
+        
+        @if (Context.Request.Path != "/Identity/Account/Login")
+        {
+            <partial name="_SideBar" />
+            <div class="main-panel">
+                <div class="main-header">
+                    <partial name="_NavBar" />
+                </div>
+                <div class="container">
+                    <div class="page-inner">
+                        <main role="main">
+                            @RenderBody()
+                        </main>
+                    </div>
                 </div>
             </div>
-        </div>
+        }
+        else
+        {
+            
+            <main role="main" class="w-100">
+                @RenderBody()
+            </main>
+        }
     </div>
-    @* ORDEM DOS SCRIPTS CORRIGIDA E DEPENDÊNCIAS ADICIONADAS/REMOVIDAS *@
+
+   
     <script src="~/js/core/jquery-3.7.1.min.js"></script>
     <script src="~/js/core/popper.min.js"></script>
     <script src="~/js/core/bootstrap.min.js"></script>
@@ -46,17 +61,17 @@
     <script src="~/js/plugin/chart-circle/circles.min.js"></script>
     <script src="~/js/plugin/datatables/datatables.min.js"></script>
     <script src="~/js/plugin/bootstrap-notify/bootstrap-notify.min.js"></script>
-    <script src="~/js/plugin/jsvectormap/jsvectormap.min.js"></script>
-    <script src="~/js/plugin/jsvectormap/world.js"></script>
 
-    @* CORREÇÃO SWEETALERT: REMOVA O ANTIGO, ADICIONE O SWEETALERT2 VIA CDN *@
-    @* REMOVA: <script src="~/js/plugin/sweetalert/sweetalert.min.js"></script> *@
-    @* REMOVA: <script src="~/js/sqeetalert.min.js"></script> (Provavelmente um erro de digitação/duplicidade) *@
+  
+    @if (Context.Request.Path != "/Identity/Account/Login")
+    {
+        <script src="~/js/plugin/jsvectormap/jsvectormap.min.js"></script>
+        <script src="~/js/plugin/jsvectormap/world.js"></script>
+    }
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> @* SweetAlert2 para a animação boa *@
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"> @* CSS para SweetAlert2 *@
 
-    @* ADICIONE MOMENT.JS AQUI *@
+ 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 
     <script src="~/js/kaiadmin.min.js"></script>
@@ -67,21 +82,17 @@
 
     @await RenderSectionAsync("Scripts", required: false)
 
-    @* Este bloco de TempData provavelmente usa o bootstrap-notify ou um alert personalizado.
-    Se a ideia é que use SweetAlert2, este código precisaria ser reescrito para Swal.fire.
-    Por enquanto, deixo como está, mas se a ideia é tudo usar SweetAlert2, precisaria adaptar. *@
+ 
     @if (TempData["success"] != null)
     {
-        var mensagem = TempData["success"];
+        var mensagem = TempData["success"].ToString();
         <script>
-            // Adapte esta chamada se a função 'mensagem.success' não for definida por um de seus plugins ou site.js
-            // Se você quer SweetAlert2 aqui, use:
             Swal.fire({
                 title: 'Sucesso!',
-                text: '@mensagem',
+                text: '@Html.Raw(JavaScriptEncoder.Default.Encode(mensagem))', // Usar JavaScriptEncoder
                 icon: 'success',
-                toast: true, // Para notificações que aparecem e somem
-                position: 'top-end', // Posição
+                toast: true,
+                position: 'top-end',
                 showConfirmButton: false,
                 timer: 3000,
                 timerProgressBar: true,
@@ -90,19 +101,16 @@
                     toast.addEventListener('mouseleave', Swal.resumeTimer);
                 }
             });
-            // ou a sua função 'mensagem.success("@mensagem", "", 10);' se for um plugin específico
         </script>
     }
 
     @if (TempData["error"] != null)
     {
-        var mensagem = TempData["error"];
+        var mensagem = TempData["error"].ToString();
         <script>
-            // Adapte esta chamada se a função 'mensagem.error' não for definida por um de seus plugins ou site.js
-            // Se você quer SweetAlert2 aqui, use:
             Swal.fire({
                 title: 'Erro!',
-                text: '@mensagem',
+                text: '@Html.Raw(JavaScriptEncoder.Default.Encode(mensagem))', // Usar JavaScriptEncoder
                 icon: 'error',
                 toast: true,
                 position: 'top-end',
@@ -114,7 +122,36 @@
                     toast.addEventListener('mouseleave', Swal.resumeTimer);
                 }
             });
-            // ou a sua função 'mensagem.error("@mensagem", "", 10);'
+        </script>
+    }
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        var erros = string.Join(" . ", ViewData.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+        {
+           
+        }
+        <script>
+            // Aqui, a lógica de 'showRegisterTab()' ou 'showLoginTab()' já está no login.cshtml
+            // Este script do _Layout é apenas para alertas globais.
+            // Para erros de ModelState, as mensagens individuais dos campos já devem aparecer.
+            // Se você ainda quiser um Swal.fire para *todos* os erros de ModelState, use assim:
+            // (Lembre-se que o "erros" pode ser vazio se houver apenas erros de validação de campo)
+            @if (!string.IsNullOrEmpty(erros))
+            {
+                    <text>
+                    Swal.fire({
+                        title: 'Atenção!',
+                        text: '@Html.Raw(JavaScriptEncoder.Default.Encode(erros))',
+                        icon: 'warning',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 5000,
+                        timerProgressBar: true,
+                    });
+                    </text>
+            }
         </script>
     }
 </body>

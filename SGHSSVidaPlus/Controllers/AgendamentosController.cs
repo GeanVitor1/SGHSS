@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims; // Necessário para acessar as claims do usuário
 
 namespace SGHSSVidaPlus.MVC.Controllers
 {
@@ -36,24 +37,61 @@ namespace SGHSSVidaPlus.MVC.Controllers
             _mapper = mapper;
         }
 
+        // Action para administradores verem todos os agendamentos
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Index()
         {
             var parametros = new AgendamentoParams
             {
                 IncluirProfissional = true,
-                IncluirPaciente = true // Certifique-se de incluir o paciente aqui para o Index também
+                IncluirPaciente = true
             };
 
             var agendamentos = await _agendamentoRepository.BuscarAgendamentos(parametros);
             return View(agendamentos);
         }
 
+        // NOVO: Action para pacientes verem seus próprios agendamentos
+        [Authorize(Policy = "RequirePacienteRoleOrClaim")] // Ou uma policy mais específica
+        public async Task<IActionResult> MeusAgendamentos()
+        {
+            // Obtém o ApplicationUserId do usuário logado
+            var applicationUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(applicationUserId))
+            {
+                TempData["error"] = "Não foi possível identificar seu usuário.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Busca o paciente associado a este ApplicationUserId
+            var paciente = (await _pacienteRepository.BuscarPacientes(new PacienteParams { ApplicationUserId = applicationUserId })).FirstOrDefault();
+
+            if (paciente == null)
+            {
+                TempData["error"] = "Seu perfil de paciente não foi encontrado. Por favor, entre em contato com o suporte.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            var parametros = new AgendamentoParams
+            {
+                PacienteId = paciente.Id, // Filtra pelo ID do paciente logado
+                IncluirProfissional = true,
+                IncluirPaciente = true
+            };
+
+            var agendamentos = await _agendamentoRepository.BuscarAgendamentos(parametros);
+            return View("Index", agendamentos); // Reutiliza a View Index para exibir a lista
+        }
+
+        [Authorize(Roles = "admin")] // Somente admin pode incluir agendamentos manualmente
         public IActionResult Incluir()
         {
             return View(new AgendamentoViewModel());
         }
 
         [HttpPost]
+        [Authorize(Roles = "admin")] // Somente admin pode incluir agendamentos manualmente
         public async Task<JsonResult> Incluir([FromBody] AgendamentoViewModel agendamentoViewModel)
         {
             try
@@ -70,7 +108,7 @@ namespace SGHSSVidaPlus.MVC.Controllers
                 }
 
                 var agendamento = _mapper.Map<Agendamento>(agendamentoViewModel);
-                agendamento.PacienteId = agendamentoViewModel.PacienteId; // Se for um paciente principal
+                agendamento.PacienteId = agendamentoViewModel.PacienteId;
 
                 agendamento.UsuarioInclusao = User.Identity.Name ?? "Sistema";
                 agendamento.DataInclusao = DateTime.Now;
@@ -93,13 +131,14 @@ namespace SGHSSVidaPlus.MVC.Controllers
             }
         }
 
+        [Authorize(Roles = "admin")] // Somente admin pode editar
         public async Task<IActionResult> Editar(int id)
         {
             var agendamento = (await _agendamentoRepository.BuscarAgendamentos(new AgendamentoParams
             {
                 Id = id,
                 IncluirProfissional = true,
-                IncluirPaciente = true // Incluir o paciente para carregar os dados completos
+                IncluirPaciente = true
             })).FirstOrDefault();
 
             if (agendamento == null)
@@ -112,6 +151,7 @@ namespace SGHSSVidaPlus.MVC.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "admin")] // Somente admin pode editar
         public async Task<JsonResult> Editar([FromBody] AgendamentoViewModel agendamentoViewModel)
         {
             try
@@ -128,7 +168,7 @@ namespace SGHSSVidaPlus.MVC.Controllers
                 }
 
                 var agendamento = _mapper.Map<Agendamento>(agendamentoViewModel);
-                agendamento.PacienteId = agendamentoViewModel.PacienteId; // Se for um paciente principal
+                agendamento.PacienteId = agendamentoViewModel.PacienteId;
 
                 var resultado = await _agendamentoService.Editar(agendamento);
 
@@ -148,12 +188,32 @@ namespace SGHSSVidaPlus.MVC.Controllers
         }
 
         [HttpPost]
-        public async Task<JsonResult> EncerrarAgendamento([FromBody] int agendamentoId) // Ou um ViewModel se precisar de mais dados
+        [Authorize] // Ambos, admin e paciente, podem encerrar/cancelar
+        public async Task<JsonResult> EncerrarAgendamento([FromBody] int agendamentoId)
         {
             try
             {
-                // Aqui você pode pegar o nome do usuário logado se precisar de auditoria
                 var usuarioEncerramento = User.Identity.Name ?? "Sistema";
+
+                // Se o usuário não for admin, verificar se ele é o paciente dono do agendamento
+                if (!User.IsInRole("admin"))
+                {
+                    var applicationUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    var paciente = (await _pacienteRepository.BuscarPacientes(new PacienteParams { ApplicationUserId = applicationUserId })).FirstOrDefault();
+
+                    if (paciente == null)
+                    {
+                        return Json(new { resultado = "falha", mensagem = "Paciente não encontrado ou não autorizado a cancelar este agendamento." });
+                    }
+
+                    var agendamentoToCheck = (await _agendamentoRepository.BuscarAgendamentos(new AgendamentoParams { Id = agendamentoId })).FirstOrDefault();
+
+                    if (agendamentoToCheck == null || agendamentoToCheck.PacienteId != paciente.Id)
+                    {
+                        return Json(new { resultado = "falha", mensagem = "Você não tem permissão para cancelar este agendamento." });
+                    }
+                }
+
 
                 var resultado = await _agendamentoService.EncerrarAgendamento(agendamentoId, usuarioEncerramento);
 
@@ -172,16 +232,16 @@ namespace SGHSSVidaPlus.MVC.Controllers
             }
         }
 
+
         [HttpPost]
+        [Authorize(Roles = "admin")] // Somente admin pode reabrir
         public async Task<JsonResult> ReabrirAgendamento([FromBody] int agendamentoId)
         {
             try
             {
-                var usuarioReabertura = User.Identity.Name ?? "Sistema"; // Ou algum usuário de auditoria
+                var usuarioReabertura = User.Identity.Name ?? "Sistema";
 
-                // Crie um método correspondente no seu AgendamentoService:
-                // public async Task<OperationResult> ReabrirAgendamento(int agendamentoId, string usuarioReabertura)
-                var resultado = await _agendamentoService.ReabrirAgendamento(agendamentoId, usuarioReabertura); // <--- Este método precisa existir no serviço
+                var resultado = await _agendamentoService.ReabrirAgendamento(agendamentoId, usuarioReabertura);
 
                 if (!resultado.Valido)
                 {
@@ -198,34 +258,50 @@ namespace SGHSSVidaPlus.MVC.Controllers
             }
         }
 
-        // NOVO MÉTODO VISUALIZAR
+        // Visualizar agendamento (acessível por admin e paciente, mas paciente só vê o dele)
+        [Authorize]
         public async Task<IActionResult> Visualizar(int id)
         {
-            // Busca o agendamento por ID e inclui as entidades relacionadas (Profissional e Paciente)
-            // É crucial incluir estas entidades para que os nomes sejam exibidos na view.
+            // Se não for admin, verifica a permissão
+            if (!User.IsInRole("admin"))
+            {
+                var applicationUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var paciente = (await _pacienteRepository.BuscarPacientes(new PacienteParams { ApplicationUserId = applicationUserId })).FirstOrDefault();
+
+                if (paciente == null)
+                {
+                    TempData["error"] = "Seu perfil de paciente não foi encontrado.";
+                    return RedirectToAction("MeusAgendamentos");
+                }
+
+                var agendamentoToCheck = (await _agendamentoRepository.BuscarAgendamentos(new AgendamentoParams { Id = id })).FirstOrDefault();
+
+                if (agendamentoToCheck == null || agendamentoToCheck.PacienteId != paciente.Id)
+                {
+                    TempData["error"] = "Você não tem permissão para visualizar este agendamento.";
+                    return RedirectToAction("MeusAgendamentos");
+                }
+            }
+
             var agendamento = (await _agendamentoRepository.BuscarAgendamentos(new AgendamentoParams
             {
                 Id = id,
-                IncluirProfissional = true, // Para ter acesso ao nome do profissional
-                IncluirPaciente = true      // Para ter acesso ao nome do paciente
-                // Se você tiver tipos de atendimento ou outros relacionados para visualizar, inclua aqui:
-                // IncluirPacientesTiposAtendimento = true
+                IncluirProfissional = true,
+                IncluirPaciente = true
             })).FirstOrDefault();
 
             if (agendamento == null)
             {
                 TempData["error"] = "Agendamento não encontrado.";
-                return RedirectToAction("Index");
+                return RedirectToAction("Index"); // Ou MeusAgendamentos se for paciente
             }
 
-            // Mapeia a entidade Agendamento para a AgendamentoViewModel
             var viewModel = _mapper.Map<AgendamentoViewModel>(agendamento);
-
-            // Retorna a view "Visualizar" com a ViewModel populada
             return View("Visualizar", viewModel);
         }
 
-        // --- MÉTODOS PARA OS MODAIS ---
+        // --- MÉTODOS PARA OS MODAIS (Acessíveis apenas para admin, pois a inclusão manual é admin-only) ---
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> ObterProfissionaisParaSelecao()
         {
             try
@@ -244,6 +320,7 @@ namespace SGHSSVidaPlus.MVC.Controllers
             }
         }
 
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> ObterPacientesParaSelecao()
         {
             try

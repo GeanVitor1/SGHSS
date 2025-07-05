@@ -1,54 +1,244 @@
 ﻿@page
 @model SGHSSVidaPlus.MVC.Areas.Identity.Pages.Account.LoginModel
+@using System.Text.Encodings.Web;
+
 @{
-    ViewData["Title"] = "Entrar";
-    Layout = "_LayoutLogin"; // Certifique-se que está em Views/Shared ou na mesma pasta
+    ViewData["Title"] = "Entrar / Cadastrar";
+    Layout = "_LayoutLogin";
 }
 
 <section class="gradient-custom d-flex justify-content-center align-items-center" style="min-height: 100vh">
     <div class="container h-100">
-        <form id="account" method="post">
-            <div class="row d-flex justify-content-center align-items-center h-100">
-                <div class="col-10 col-md-8 col-lg-6 col-xl-5 mx-auto">
-                    <div class="card bg-white text-dark" style="border-radius: 1rem;">
-                        <div class="card-body p-5 text-center">
-                            <div class="mt-md-4 pb-5">
-                                <img src="~/img/logo.svg" height="200" />
-                                <p class="text-dark-50 mt-5">Por favor, digite seu login e senha!</p>
+        <div class="row d-flex justify-content-center align-items-center h-100">
+            <div class="col-12 col-md-8 col-lg-6 col-xl-5 mx-auto">
+                <div class="card bg-white text-dark" style="border-radius: 1rem;">
+                    <div class="card-body p-5 text-center">
+                        <div class="mt-md-4 pb-5">
+                            <img src="~/img/logo.svg" height="200" alt="Logo SGHSSVidaPlus" />
 
-                                <div class="form-outline form-white mb-4">
-                                    <div class="form-floating mb-3">
-                                        <input asp-for="Input.Usuario" class="form-control" autocomplete="username" type="text" aria-required="true" placeholder="Usuário" />
-                                        <label asp-for="Input.Usuario" class="form-label">Usuário</label>
-                                        <span asp-validation-for="Input.Usuario" class="text-danger"></span>
-                                    </div>
+                            <ul class="nav nav-tabs nav-justified mb-4" id="loginRegisterTab" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="login-tab" data-bs-toggle="tab" href="#login" role="tab" aria-controls="login" aria-selected="true">Login</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="register-tab" data-bs-toggle="tab" href="#register" role="tab" aria-controls="register" aria-selected="false">Cadastrar</a>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content" id="loginRegisterTabContent">
+                                <div class="tab-pane fade show active" id="login" role="tabpanel" aria-labelledby="login-tab">
+                                    <p class="text-dark-50 mt-5">Por favor, digite seu login e senha!</p>
+                                    <form id="account" method="post">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-outline form-white mb-4">
+                                                    <div class="form-floating mb-3">
+                                                        <input asp-for="Input.Usuario" class="form-control" autocomplete="username" type="text" aria-required="true" placeholder="Usuário" />
+                                                        <label asp-for="Input.Usuario" class="form-label">Usuário</label>
+                                                        <span asp-validation-for="Input.Usuario" class="text-danger"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-outline form-dark mb-4">
+                                                    <div class="form-floating mb-3">
+                                                        <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Senha" />
+                                                        <label asp-for="Input.Password" class="form-label">Senha</label>
+                                                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button class="btn btn-stantard btn-lg px-5" type="submit">Entrar</button>
+
+                                        <div class="d-flex justify-content-center mt-3">
+                                            <a id="forgot-password" asp-page="./ForgotPassword">Esqueceu sua senha?</a>
+                                        </div>
+                                    </form>
                                 </div>
 
-                                <div class="form-outline form-dark mb-4">
-                                    <div class="form-floating mb-3">
-                                        <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Senha" />
-                                        <label asp-for="Input.Password" class="form-label">Senha</label>
-                                        <span asp-validation-for="Input.Password" class="text-danger"></span>
-                                    </div>
-                                </div>
+                                <div class="tab-pane fade" id="register" role="tabpanel" aria-labelledby="register-tab">
+                                    <p class="text-dark-50 mt-5">Cadastre-se para agendar sua consulta!</p>
+                                    <form id="registerForm" method="post" asp-page-handler="RegisterPatient">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-floating mb-3">
+                                                    <input asp-for="RegisterInput.Nome" class="form-control" placeholder="Nome Completo" />
+                                                    <label asp-for="RegisterInput.Nome"></label>
+                                                    <span asp-validation-for="RegisterInput.Nome" class="text-danger"></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating mb-3">
+                                                    <input asp-for="RegisterInput.DataNascimento" type="date" class="form-control" placeholder="Data de Nascimento" />
+                                                    <label asp-for="RegisterInput.DataNascimento"></label>
+                                                    <span asp-validation-for="RegisterInput.DataNascimento" class="text-danger"></span>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                <button class="btn btn-stantard btn-lg px-5" type="submit">Entrar</button>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-floating mb-3">
+                                                    <input asp-for="RegisterInput.CPF" class="form-control" placeholder="CPF" />
+                                                    <label asp-for="RegisterInput.CPF"></label>
+                                                    <span asp-validation-for="RegisterInput.CPF" class="text-danger"></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating mb-3">
+                                                    <select asp-for="RegisterInput.EstadoCivil" class="form-control">
+                                                        <option value="">Selecione</option>
+                                                        <option value="Solteiro">Solteiro(a)</option>
+                                                        <option value="Casado">Casado(a)</option>
+                                                        <option value="Separado">Separado(a)</option>
+                                                        <option value="Divorciado">Divorciado(a)</option>
+                                                        <option value="Viuvo">Viúvo(a)</option>
+                                                    </select>
+                                                    <label asp-for="RegisterInput.EstadoCivil"></label>
+                                                    <span asp-validation-for="RegisterInput.EstadoCivil" class="text-danger"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-floating mb-3">
+                                            <input asp-for="RegisterInput.Endereco" class="form-control" placeholder="Endereço Completo" />
+                                            <label asp-for="RegisterInput.Endereco"></label>
+                                            <span asp-validation-for="RegisterInput.Endereco" class="text-danger"></span>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-floating mb-3">
+                                                    <input asp-for="RegisterInput.Email" class="form-control" autocomplete="email" aria-required="true" placeholder="nome@exemplo.com" />
+                                                    <label asp-for="RegisterInput.Email" class="form-label"></label>
+                                                    <span asp-validation-for="RegisterInput.Email" class="text-danger"></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating mb-3">
+                                                    <input asp-for="RegisterInput.Senha" class="form-control" autocomplete="new-password" aria-required="true" placeholder="senha" />
+                                                    <label asp-for="RegisterInput.Senha" class="form-label"></label>
+                                                    <span asp-validation-for="RegisterInput.Senha" class="text-danger"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-floating mb-3">
+                                            <input asp-for="RegisterInput.ConfirmarSenha" class="form-control" autocomplete="new-password" aria-required="true" placeholder="confirme a senha" />
+                                            <label asp-for="RegisterInput.ConfirmarSenha" class="form-label"></label>
+                                            <span asp-validation-for="RegisterInput.ConfirmarSenha" class="text-danger"></span>
+                                        </div>
+
+                                        <div class="form-floating mb-3">
+                                            <select asp-for="RegisterInput.TipoConsultaDesejada" class="form-control">
+                                                <option value="">Nenhum</option>
+                                                <option value="Consulta Geral">Consulta Geral</option>
+                                                <option value="Exame de Rotina">Exame de Rotina</option>
+                                                <option value="Atendimento Especialista">Atendimento Especialista</option>
+                                            </select>
+                                            <label asp-for="RegisterInput.TipoConsultaDesejada"></label>
+                                        </div>
+
+                                        <button id="registerButton" type="submit" class="w-100 btn btn-lg btn-primary">Registrar</button>
+
+                                        <p class="mt-3">
+                                            <a id="login-link" href="#" onclick="showLoginTab(); return false;">Já tem conta? Faça login</a>
+                                        </p>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </form>
+        </div>
     </div>
 </section>
 
 @section Scripts {
-    @if (!ViewData.ModelState.IsValid)
-    {
-        var erros = string.Join(" . ", ViewData.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
-        <script>
-            mensagem.error('@erros', "", 10);
-        </script>
-    }
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Function to show the Login tab
+        function showLoginTab() {
+            var loginTab = new bootstrap.Tab(document.getElementById('login-tab'));
+            loginTab.show();
+        }
+
+        // Function to show the Register tab
+        function showRegisterTab() {
+            var registerTab = new bootstrap.Tab(document.getElementById('register-tab'));
+            registerTab.show();
+        }
+
+        // --- Lógica do Razor (C#) para gerar a mensagem de erro para o JavaScript ---
+        @{
+                var allErrors = ViewData.ModelState.Values
+                                                                .SelectMany(v => v.Errors)
+                                                                .Where(e => !string.IsNullOrEmpty(e.ErrorMessage)) // Filtra erros vazios
+                                                                .Select(e => e.ErrorMessage)
+                                                                .ToList();
+
+                // Adiciona mensagens de erro do TempData se existirem
+                if (TempData.ContainsKey("error") && !string.IsNullOrEmpty(TempData["error"]?.ToString()))
+                {
+                        allErrors.Insert(0, TempData["error"].ToString()); // Adiciona ao início para dar prioridade
+                }
+                var jsErrorMessage = string.Join(" . ", allErrors); // Junta todas as mensagens
+        }
+
+        // --- Bloco JavaScript para exibir alertas ---
+        // A tag <text> foi removida daqui, pois já estamos dentro de um bloco <script>
+        var errorMessageToDisplay = '@Html.Raw(JavaScriptEncoder.Default.Encode(jsErrorMessage))';
+
+        var formId = '@(ViewData["FormIdWithErrors"]?.ToString() ?? "account")'; // Pega o ID do formulário com erros ou padrão para 'account'
+
+        if (formId === 'registerForm') {
+            showRegisterTab();
+        } else {
+            showLoginTab();
+        }
+
+        if (errorMessageToDisplay) {
+            Swal.fire({
+                title: 'Atenção!',
+                text: errorMessageToDisplay, // Usa a variável JavaScript com a mensagem já codificada
+                icon: 'warning',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 8000, // Aumentei o timer para dar mais tempo ao usuário ler
+                timerProgressBar: true,
+            });
+        }
+
+        // Adiciona SweetAlert para mensagens de sucesso (diretamente do ViewData["ShowSuccessAlert"])
+        var successMessage = '@(ViewData["ShowSuccessAlert"] != null ? Html.Raw(JavaScriptEncoder.Default.Encode(ViewData["ShowSuccessAlert"].ToString())) : "")';
+        if (successMessage) {
+            Swal.fire({
+                title: 'Sucesso!',
+                text: successMessage,
+                icon: 'success',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true,
+            });
+        }
+
+
+        // Add a listener for when the register tab is shown, to clear the form
+        document.getElementById('register-tab').addEventListener('shown.bs.tab', function (event) {
+            document.getElementById('registerForm').reset();
+            $('span.text-danger').text(''); // Limpa mensagens de validação
+        });
+
+        // Add a listener for when the login tab is shown, to clear the form
+        document.getElementById('login-tab').addEventListener('shown.bs.tab', function (event) {
+            document.getElementById('account').reset();
+            $('span.text-danger').text(''); // Limpa mensagens de validação
+        });
+    </script>
 }

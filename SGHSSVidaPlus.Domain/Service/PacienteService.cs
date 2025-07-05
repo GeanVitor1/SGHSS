@@ -4,7 +4,7 @@ using SGHSSVidaPlus.Domain.Interfaces.Repository;
 using SGHSSVidaPlus.Domain.Interfaces.Service;
 using System;
 using System.Collections.Generic;
-using System.Linq; // Necessário para .Any(), .Where() etc.
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SGHSSVidaPlus.Application.Services
@@ -32,14 +32,23 @@ namespace SGHSSVidaPlus.Application.Services
                 result.Valido = false;
                 result.Mensagens.Add("O CPF do paciente é obrigatório.");
             }
+            // Verifica se o CPF já existe
+            var pacienteComCpfExistente = (await _pacienteRepository.BuscarPacientes(new PacienteParams { CPF = paciente.CPF })).FirstOrDefault();
+            if (pacienteComCpfExistente != null && pacienteComCpfExistente.Id != paciente.Id) // Permite editar o próprio CPF
+            {
+                result.Valido = false;
+                result.Mensagens.Add("Já existe um paciente cadastrado com este CPF.");
+            }
 
             if (result.Valido)
             {
-                paciente.DataInclusao = DateTime.Now;
-                paciente.UsuarioInclusao = "Sistema";
+                // Esses campos já virão preenchidos do Login.cshtml.cs no novo fluxo de cadastro
+                if (string.IsNullOrWhiteSpace(paciente.UsuarioInclusao))
+                    paciente.UsuarioInclusao = "Sistema (Auto-cadastro)";
+                if (paciente.DataInclusao == DateTime.MinValue)
+                    paciente.DataInclusao = DateTime.Now;
 
                 await _pacienteRepository.Incluir(paciente);
-
                 result.Mensagens.Add("Paciente incluído com sucesso.");
             }
 
@@ -60,10 +69,16 @@ namespace SGHSSVidaPlus.Application.Services
                 result.Valido = false;
                 result.Mensagens.Add("O nome do paciente é obrigatório para edição.");
             }
+            // Verifica duplicidade de CPF ao editar
+            var pacienteComCpfExistente = (await _pacienteRepository.BuscarPacientes(new PacienteParams { CPF = paciente.CPF })).FirstOrDefault();
+            if (pacienteComCpfExistente != null && pacienteComCpfExistente.Id != paciente.Id)
+            {
+                result.Valido = false;
+                result.Mensagens.Add("Já existe outro paciente cadastrado com este CPF.");
+            }
 
             if (result.Valido)
             {
-                // Busca o paciente existente COM AS LISTAS incluídas para comparação. ESSENCIAL!
                 var pacienteExistente = (await _pacienteRepository.BuscarPacientes(new PacienteParams { Id = paciente.Id, IncluirContatosHistorico = true })).FirstOrDefault();
                 if (pacienteExistente == null)
                 {
@@ -72,36 +87,33 @@ namespace SGHSSVidaPlus.Application.Services
                     return result;
                 }
 
-                // --- ATUALIZA PROPRIEDADES DE NÍVEL SUPERIOR ---
+                // Atualiza propriedades de nível superior
                 pacienteExistente.Nome = paciente.Nome;
                 pacienteExistente.DataNascimento = paciente.DataNascimento;
                 pacienteExistente.Endereco = paciente.Endereco;
                 pacienteExistente.CPF = paciente.CPF;
                 pacienteExistente.EstadoCivil = paciente.EstadoCivil;
-                pacienteExistente.Ativo = paciente.Ativo; // Atualiza o status Ativo com o valor vindo da UI
+                pacienteExistente.Ativo = paciente.Ativo;
 
-                // --- LÓGICA PARA ATUALIZAR LISTAS ANINHADAS (CONTATOS) ---
-                // Itens a remover: Estão no DB (pacienteExistente.Contatos), mas não na lista atual da UI (paciente.Contatos)
+                // Lógica para atualizar listas aninhadas (Contatos)
                 var contatosParaRemover = pacienteExistente.Contatos
                     .Where(cDb => !paciente.Contatos.Any(cUi => cUi.Contato == cDb.Contato && cUi.Tipo == cDb.Tipo))
                     .ToList();
                 foreach (var c in contatosParaRemover)
                 {
-                    pacienteExistente.Contatos.Remove(c); // Remove do objeto rastreado pelo EF
+                    pacienteExistente.Contatos.Remove(c);
                 }
 
-                // Itens a adicionar: Estão na lista atual da UI (paciente.Contatos), mas não no DB
                 var contatosParaAdicionar = paciente.Contatos
                     .Where(cUi => !pacienteExistente.Contatos.Any(cDb => cDb.Contato == cUi.Contato && cDb.Tipo == cUi.Tipo))
                     .ToList();
                 foreach (var c in contatosParaAdicionar)
                 {
-                    c.PacienteId = pacienteExistente.Id; // Garante a FK para o novo item
-                    pacienteExistente.Contatos.Add(c); // Adiciona ao objeto rastreado
+                    c.PacienteId = pacienteExistente.Id;
+                    pacienteExistente.Contatos.Add(c);
                 }
 
-                // --- LÓGICA PARA ATUALIZAR LISTAS ANINHADAS (HISTÓRICO) ---
-                // Itens a remover: Estão no DB (pacienteExistente.Historico), mas não na lista atual da UI (paciente.Historico)
+                // Lógica para atualizar listas aninhadas (Histórico)
                 var historicosParaRemover = pacienteExistente.Historico
                     .Where(hDb => !paciente.Historico.Any(hUi => hUi.Titulo == hDb.Titulo && hUi.DataEvento == hDb.DataEvento))
                     .ToList();
@@ -110,22 +122,20 @@ namespace SGHSSVidaPlus.Application.Services
                     pacienteExistente.Historico.Remove(h);
                 }
 
-                // Itens a adicionar: Estão na lista atual da UI (paciente.Historico), mas não no DB
                 var historicosParaAdicionar = paciente.Historico
                     .Where(hUi => !pacienteExistente.Historico.Any(hDb => hDb.Titulo == hUi.Titulo && hDb.DataEvento == hUi.DataEvento))
                     .ToList();
                 foreach (var h in historicosParaAdicionar)
                 {
-                    h.PacienteId = pacienteExistente.Id; // Garante a FK para o novo item
+                    h.PacienteId = pacienteExistente.Id;
                     pacienteExistente.Historico.Add(h);
                 }
 
-                // Salva todas as alterações no objeto pacienteExistente (que o EF Core está rastreando).
-                // Isso inclui as propriedades de nível superior e as adições/remoções nas coleções.
                 await _pacienteRepository.Alterar(pacienteExistente);
 
                 result.Mensagens.Add("Paciente editado com sucesso.");
             }
+
             return result;
         }
 
@@ -155,6 +165,12 @@ namespace SGHSSVidaPlus.Application.Services
             }
 
             return result;
+        }
+
+        // NOVO: Método para buscar pacientes com base em parâmetros (para o Login.cshtml.cs)
+        public async Task<IEnumerable<Paciente>> BuscarPacientes(PacienteParams parametros)
+        {
+            return await _pacienteRepository.BuscarPacientes(parametros);
         }
     }
 }

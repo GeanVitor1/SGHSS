@@ -25,5 +25,7 @@ namespace SGHSSVidaPlus.Domain.ExtensionsParams // <-- ESTE NAMESPACE DEVE ESTAR
         public int TotalRegistros { get; set; } = 10;
 
         public bool IncluirContatosHistorico { get; set; }
+
+        public string? ApplicationUserId { get; set; } // Permitir nulo, pois nem todo Paciente terá um ApplicationUser associado (ex: cadastrados pelo admin)
     }
 }

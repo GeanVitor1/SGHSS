@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SGHSSVidaPlus.MVC.Data;
 
@@ -11,9 +12,11 @@ using SGHSSVidaPlus.MVC.Data;
 namespace SGHSSVidaPlus.MVC.Migrations
 {
     [DbContext(typeof(SGHSSVidaPlusIdentityContext))]
-    partial class SGHSSVidaPlusIdentityContextModelSnapshot : ModelSnapshot
+    [Migration("20250705140054_cadastropaciente")]
+    partial class cadastropaciente
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,7 +55,7 @@ namespace SGHSSVidaPlus.MVC.Migrations
                         new
                         {
                             Id = "a2dfa1e2-b1d5-4a8e-a9b0-a3e7e0e7a1e2",
-                            ConcurrencyStamp = "6fdaba82-fdf6-49ec-b9d5-0fafb3ec0309",
+                            ConcurrencyStamp = "d4cd4957-1a78-45d4-ac55-9e139ec947a0",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         });
@@ -252,16 +255,16 @@ namespace SGHSSVidaPlus.MVC.Migrations
                             AccessFailedCount = 0,
                             Admin = true,
                             Bloqueado = false,
-                            ConcurrencyStamp = "e92aa85d-bd8c-4550-bb0e-28e06ab0e4c0",
+                            ConcurrencyStamp = "f2763da5-9fc2-44d4-8bfc-69f796eb5629",
                             Email = "admin@sghssvidaplus.com.br",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             Nome = "Administrador Master",
                             NormalizedEmail = "ADMIN@SGHSSVIDAPLUS.COM.BR",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEP0aYGxqNyn4fCofryAA5TBhWi5//9/u2nuqCnyfktQqtho3FawjorKXCnTCY7FiSA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAED3QZ7JdJP6uiaJ3fnIFa2nCyEfQpxjRsWXk+e93YgYOe35rk76AT0bbubt441WE2w==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "40f946f4-bff1-47f1-9901-f3385c18b975",
+                            SecurityStamp = "76edd325-330b-4e37-bafa-ee30a85133af",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         });
