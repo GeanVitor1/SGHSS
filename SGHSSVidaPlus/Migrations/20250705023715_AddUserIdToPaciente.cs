@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace SGHSSVidaPlus.MVC.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialIdentitySetup : Migration
+    public partial class AddUserIdToPaciente : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -162,12 +164,16 @@ namespace SGHSSVidaPlus.MVC.Migrations
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
-                values: new object[] { "a2dfa1e2-b1d5-4a8e-a9b0-a3e7e0e7a1e2", "14173c6f-f402-46ca-80e6-fd0609a8cf97", "admin", "ADMIN" });
+                values: new object[,]
+                {
+                    { "a2dfa1e2-b1d5-4a8e-a9b0-a3e7e0e7a1e2", "396d11ec-b0ac-4475-84b3-0a65428d3bcb", "admin", "ADMIN" },
+                    { "c8f2a1b3-d4e5-4f6a-g7h8-i9j0k1l2m3n4", "536a0450-345f-44a3-9855-3c1b2cd01d4f", "paciente", "PACIENTE" }
+                });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "Admin", "Bloqueado", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "Nome", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "b743329b-2839-4d64-968b-f417b7b9f847", 0, true, false, "206ce6e4-3e5a-486b-8c48-4b51aaff0a6b", "admin@sghssvidaplus.com.br", true, false, null, "Administrador Master", "ADMIN@SGHSSVIDAPLUS.COM.BR", "ADMIN", "AQAAAAIAAYagAAAAEFoW7bcKT1r7R4sJpN7vCF8ANJZHUXeYcitqB4bkDU6npgWMBo9msg3Tk+JfKiiDUA==", null, false, "7a0be62c-a414-4d65-94d1-a5ab372a3a14", false, "admin" });
+                values: new object[] { "b743329b-2839-4d64-968b-f417b7b9f847", 0, true, false, "1dc304ba-0275-41fe-b731-3c7071ed0109", "admin@sghssvidaplus.com.br", true, false, null, "Administrador Master", "ADMIN@SGHSSVIDAPLUS.COM.BR", "ADMIN", "AQAAAAIAAYagAAAAELa+Yw6O+dH38d32JINwU68PpoCr0IkSrjAPRPFpYhYg+Z4V+ccib5TE7m5NK3z44g==", null, false, "2c005313-c084-4afc-8e4f-b4d222d60e43", false, "admin" });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",

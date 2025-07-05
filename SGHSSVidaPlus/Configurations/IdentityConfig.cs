@@ -31,7 +31,8 @@ namespace SGHSSVidaPlus.MVC.Configurations // Namespace atualizado
                 options.Cookie.HttpOnly = true;
                 options.ExpireTimeSpan = TimeSpan.FromHours(1);
                 options.SlidingExpiration = true;
-                options.LoginPath = new PathString("/Login"); // Caminho para a sua página de Login
+                options.LoginPath = new PathString("/Identity/Account/Login");
+
             });
 
             return services;

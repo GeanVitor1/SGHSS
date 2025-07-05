@@ -45,11 +45,23 @@ namespace SGHSSVidaPlus.MVC.Additional
                 return;
             }
 
-            if (user.IsInRole("admin")) // <-- ESTA LINHA DEVE RETORNAR TRUE PARA O ADMIN!
+            // Se for admin, ele pode fazer tudo, independentemente das claims
+            if (user.IsInRole("admin"))
                 return;
 
+            // NOVO: Se o usuário for um paciente, ele pode ter acesso a algumas funcionalidades específicas de paciente.
+            // Aqui, você pode adicionar lógica específica para roles ou claims de paciente.
+            // Por exemplo, se você quiser que pacientes acessem coisas específicas sem claims detalhadas:
+            if (user.IsInRole("paciente") && _claim.Type == "paciente" && _claim.Value == "acesso_dashboard")
+            {
+                // Permite acesso ao dashboard do paciente
+                return;
+            }
+            // Ou, se a claim específica for o suficiente:
             if (!CustomAuthorization.ValidarClaimsUsuario(context.HttpContext, _claim.Type, _claim.Value))
-                context.Result = new StatusCodeResult(403);
+            {
+                context.Result = new StatusCodeResult(403); // Acesso negado
+            }
         }
     }
 }

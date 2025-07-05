@@ -52,9 +52,16 @@ namespace SGHSSVidaPlus.MVC.Migrations
                         new
                         {
                             Id = "a2dfa1e2-b1d5-4a8e-a9b0-a3e7e0e7a1e2",
-                            ConcurrencyStamp = "cc227245-926e-4f7b-bf82-19da6aef8126",
+                            ConcurrencyStamp = "396d11ec-b0ac-4475-84b3-0a65428d3bcb",
                             Name = "admin",
                             NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "c8f2a1b3-d4e5-4f6a-g7h8-i9j0k1l2m3n4",
+                            ConcurrencyStamp = "536a0450-345f-44a3-9855-3c1b2cd01d4f",
+                            Name = "paciente",
+                            NormalizedName = "PACIENTE"
                         });
                 });
 
@@ -252,16 +259,16 @@ namespace SGHSSVidaPlus.MVC.Migrations
                             AccessFailedCount = 0,
                             Admin = true,
                             Bloqueado = false,
-                            ConcurrencyStamp = "84a0b66f-f361-4358-8f32-46eb8ffa7ecb",
+                            ConcurrencyStamp = "1dc304ba-0275-41fe-b731-3c7071ed0109",
                             Email = "admin@sghssvidaplus.com.br",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             Nome = "Administrador Master",
                             NormalizedEmail = "ADMIN@SGHSSVIDAPLUS.COM.BR",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPhW257t2XPbN1tslDAnDe5MOeExR15FzascR7sLjbukiY41AJvmNsNWvJaGJpwskQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELa+Yw6O+dH38d32JINwU68PpoCr0IkSrjAPRPFpYhYg+Z4V+ccib5TE7m5NK3z44g==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "f2647b04-292c-4e7d-8365-2a6531cd4349",
+                            SecurityStamp = "2c005313-c084-4afc-8e4f-b4d222d60e43",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         });

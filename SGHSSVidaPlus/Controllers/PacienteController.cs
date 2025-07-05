@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding; // Necessário para ModelStateDictionary
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -18,10 +18,15 @@ using System.Threading.Tasks;
 using System.IO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
+using Microsoft.Extensions.Logging;
+
+// **CORREÇÃO AQUI: Adicione a diretiva using para o namespace onde ApplicationUser está definido**
+using SGHSSVidaPlus.MVC.Data;
 
 namespace SGHSSVidaPlus.MVC.Controllers
 {
-    [Authorize]
     public class PacientesController : Controller
     {
         public readonly IPacienteService _pacienteService;
@@ -32,13 +37,22 @@ namespace SGHSSVidaPlus.MVC.Controllers
         private readonly ITempDataProvider _tempDataProvider;
         private readonly IServiceProvider _serviceProvider;
 
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ILogger<PacientesController> _logger;
+
         public PacientesController(
             IPacienteService pacienteService,
             IPacienteRepository pacienteRepository,
             IMapper mapper,
             ICompositeViewEngine viewEngine,
             ITempDataProvider tempDataProvider,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            RoleManager<IdentityRole> roleManager,
+            ILogger<PacientesController> logger)
         {
             _pacienteService = pacienteService;
             _pacienteRepository = pacienteRepository;
@@ -46,6 +60,11 @@ namespace SGHSSVidaPlus.MVC.Controllers
             _viewEngine = viewEngine;
             _tempDataProvider = tempDataProvider;
             _serviceProvider = serviceProvider;
+
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _roleManager = roleManager;
+            _logger = logger;
         }
 
         private async Task<string> RenderPartialViewToString(string viewName, object model)
@@ -76,6 +95,127 @@ namespace SGHSSVidaPlus.MVC.Controllers
                 await viewResult.View.RenderAsync(viewContext);
                 return writer.GetStringBuilder().ToString();
             }
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegisterPatient(RegisterPacienteViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var userExists = await _userManager.FindByEmailAsync(model.Email);
+                if (userExists != null)
+                {
+                    ModelState.AddModelError(string.Empty, "O e-mail informado já está cadastrado.");
+                    TempData["ShowRegisterTab"] = true;
+                    TempData["error"] = "O e-mail informado já está cadastrado.";
+                    return RedirectToAction("Login", "Account", new { Area = "Identity" });
+                }
+
+                var cpfExists = (await _pacienteRepository.BuscarPacientes(new PacienteParams { CPF = model.CPF })).Any();
+                if (cpfExists)
+                {
+                    ModelState.AddModelError(string.Empty, "O CPF informado já está cadastrado para outro paciente.");
+                    TempData["ShowRegisterTab"] = true;
+                    TempData["error"] = "O CPF informado já está cadastrado para outro paciente.";
+                    return RedirectToAction("Login", "Account", new { Area = "Identity" });
+                }
+
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    Nome = model.Nome,
+                    Admin = false,
+                    EmailConfirmed = true,
+                    Bloqueado = false
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Senha);
+
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation("Novo usuário paciente criado com sucesso.");
+
+                    if (!await _roleManager.RoleExistsAsync("paciente"))
+                    {
+                        var pacienteRole = new IdentityRole("paciente");
+                        await _roleManager.CreateAsync(pacienteRole);
+                    }
+
+                    var addToRoleResult = await _userManager.AddToRoleAsync(user, "paciente");
+                    if (!addToRoleResult.Succeeded)
+                    {
+                        _logger.LogError($"Erro ao adicionar o usuário {user.UserName} à role 'paciente': {string.Join(", ", addToRoleResult.Errors.Select(e => e.Description))}");
+                        ModelState.AddModelError(string.Empty, $"Erro interno: não foi possível atribuir a função de paciente. Tente novamente ou contate o suporte.");
+                        await _userManager.DeleteAsync(user);
+                        TempData["ShowRegisterTab"] = true;
+                        TempData["error"] = "Erro interno ao atribuir função de paciente.";
+                        return RedirectToAction("Login", "Account", new { Area = "Identity" });
+                    }
+
+                    await _userManager.AddClaimAsync(user, new Claim("Nome", user.Nome));
+                    await _userManager.AddClaimAsync(user, new Claim("CPF", model.CPF));
+
+                    var paciente = _mapper.Map<Paciente>(model);
+                    // Certifique-se de que o nome da propriedade na entidade Paciente é 'UserId'
+                    // ou 'ApplicationUserId' conforme sua definição. Baseado no seu Paciente.cs, é 'UserId'.
+                    paciente.UserId = user.Id;
+                    paciente.Ativo = true;
+                    paciente.DataInclusao = DateTime.Now;
+                    paciente.UsuarioInclusao = user.UserName;
+
+                    paciente.Contatos.Add(new PacienteContato { Contato = model.Email, Tipo = "Email", IsWhatsApp = false });
+
+                    if (!string.IsNullOrEmpty(model.TipoConsultaDesejada))
+                    {
+                        paciente.Historico.Add(new HistoricoPaciente
+                        {
+                            Titulo = "Interesse de Consulta (Auto-cadastro)",
+                            Descricao = $"Paciente manifestou interesse em consulta: {model.TipoConsultaDesejada}",
+                            DataEvento = DateTime.Now, // **CORREÇÃO AQUI: Era DateTime.DateTime.Now**
+                            ProfissionalResponsavel = "Sistema (Auto-cadastro)"
+                        });
+                    }
+
+                    var pacienteResult = await _pacienteService.Incluir(paciente);
+
+                    if (!pacienteResult.Valido)
+                    {
+                        var errorMessage = string.Join(" ", pacienteResult.Mensagens);
+                        _logger.LogError($"Erro ao salvar os dados do paciente: {errorMessage}");
+                        ModelState.AddModelError(string.Empty, $"Erro ao salvar os dados do paciente: {errorMessage}");
+                        await _userManager.DeleteAsync(user);
+                        TempData["ShowRegisterTab"] = true;
+                        TempData["error"] = errorMessage;
+                        return RedirectToAction("Login", "Account", new { Area = "Identity" });
+                    }
+
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    _logger.LogInformation("Paciente logado automaticamente após o cadastro.");
+
+                    TempData["success"] = "Cadastro realizado com sucesso! Bem-vindo(a)!";
+
+                    return RedirectToAction("Dashboard");
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+
+            TempData["ShowRegisterTab"] = true;
+            TempData["error"] = string.Join(" ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+            return RedirectToAction("Login", "Account", new { Area = "Identity" });
+        }
+
+
+        [Authorize(Roles = "paciente")]
+        public IActionResult Dashboard()
+        {
+            return View();
         }
 
         [ClaimsAuthorize("paciente", "visualizar")]
@@ -134,7 +274,7 @@ namespace SGHSSVidaPlus.MVC.Controllers
             TempData.Put("contatos-paciente", contatos);
 
             var partialHtml = await RenderPartialViewToString("_Contatos", contatos);
-            return Json(new { resultado = "sucesso", mensagem = "Contato removido com sucesso.", partialHtml = partialHtml });
+            return Json(new { resultado = "sucesso", mensagem = "Registro de histórico removido com sucesso.", partialHtml = partialHtml });
         }
 
         public IActionResult TelaNovoHistorico() => PartialView("_NovoHistorico");
@@ -182,7 +322,6 @@ namespace SGHSSVidaPlus.MVC.Controllers
         {
             try
             {
-                // NOVO: Ignora a validação para UsuarioInclusao no ModelState
                 ModelState.Remove("UsuarioInclusao");
 
                 if (!ModelState.IsValid)
@@ -269,8 +408,7 @@ namespace SGHSSVidaPlus.MVC.Controllers
         {
             try
             {
-                // CORREÇÃO AQUI: Ignora a validação para UsuarioInclusao no ModelState
-                ModelState.Remove("UsuarioInclusao"); // <-- ADICIONADO AQUI
+                ModelState.Remove("UsuarioInclusao");
 
                 if (!ModelState.IsValid)
                 {

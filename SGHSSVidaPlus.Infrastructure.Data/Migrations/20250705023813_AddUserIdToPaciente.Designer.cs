@@ -12,8 +12,8 @@ using SGHSSVidaPlus.Infrastructure.Data.Context;
 namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(HospitalDbContext))]
-    [Migration("20250702194246_removertipoatendimento")]
-    partial class removertipoatendimento
+    [Migration("20250705023813_AddUserIdToPaciente")]
+    partial class AddUserIdToPaciente
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -248,6 +248,9 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasColumnType("varchar(200)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("UsuarioInclusao")
                         .HasColumnType("varchar(30)");

@@ -246,6 +246,9 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(200)");
 
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(100)");
+
                     b.Property<string>("UsuarioInclusao")
                         .HasColumnType("varchar(30)");
 

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class initialdatabase : Migration
+    public partial class AddUserIdToPaciente : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -24,7 +24,8 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                     EstadoCivil = table.Column<string>(type: "varchar(20)", nullable: false),
                     Ativo = table.Column<bool>(type: "bit", nullable: false),
                     UsuarioInclusao = table.Column<string>(type: "varchar(30)", nullable: true),
-                    DataInclusao = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    DataInclusao = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserId = table.Column<string>(type: "varchar(100)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -50,22 +51,6 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ProfissionalSaude", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TiposAtendimento",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nome = table.Column<string>(type: "varchar(200)", nullable: false),
-                    Ativo = table.Column<bool>(type: "bit", nullable: false),
-                    UsuarioInclusao = table.Column<string>(type: "varchar(30)", nullable: false),
-                    DataInclusao = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TiposAtendimento", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -218,30 +203,6 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                         principalColumn: "Id");
                 });
 
-            migrationBuilder.CreateTable(
-                name: "AgendamentosTiposAtendimento",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TipoAtendimentoId = table.Column<int>(type: "int", nullable: false),
-                    AgendamentoId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AgendamentosTiposAtendimento", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_AgendamentosTiposAtendimento_Agendamentos_AgendamentoId",
-                        column: x => x.AgendamentoId,
-                        principalTable: "Agendamentos",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_AgendamentosTiposAtendimento_TiposAtendimento_TipoAtendimentoId",
-                        column: x => x.TipoAtendimentoId,
-                        principalTable: "TiposAtendimento",
-                        principalColumn: "Id");
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_Agendamentos_PacienteId",
                 table: "Agendamentos",
@@ -261,16 +222,6 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                 name: "IX_AgendamentosPacientes_PacienteId",
                 table: "AgendamentosPacientes",
                 column: "PacienteId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AgendamentosTiposAtendimento_AgendamentoId",
-                table: "AgendamentosTiposAtendimento",
-                column: "AgendamentoId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AgendamentosTiposAtendimento_TipoAtendimentoId",
-                table: "AgendamentosTiposAtendimento",
-                column: "TipoAtendimentoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CursosCertificacoesProfissionalSaude_ProfissionalSaudeId",
@@ -306,9 +257,6 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
                 name: "AgendamentosPacientes");
 
             migrationBuilder.DropTable(
-                name: "AgendamentosTiposAtendimento");
-
-            migrationBuilder.DropTable(
                 name: "CursosCertificacoesProfissionalSaude");
 
             migrationBuilder.DropTable(
@@ -322,9 +270,6 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "Agendamentos");
-
-            migrationBuilder.DropTable(
-                name: "TiposAtendimento");
 
             migrationBuilder.DropTable(
                 name: "Pacientes");

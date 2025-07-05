@@ -25,16 +25,12 @@ namespace SGHSSVidaPlus.MVC.Configurations
         {
             // Mapeamento de Entidade para ViewModel (Usado em GETs: Index, Editar, Visualizar)
             CreateMap<Agendamento, AgendamentoViewModel>()
-                // Mapeia o nome do profissional (se existir)
                 .ForMember(dest => dest.ProfissionalResponsavel, opt => opt.MapFrom(src => src.ProfissionalResponsavel))
-                // Mapeia o nome do paciente (se existir)
                 .ForMember(dest => dest.Paciente, opt => opt.MapFrom(src => src.Paciente))
-                // Mapeia Local para LocalDeAtendimento na ViewModel (se o nome da prop for diferente)
                 .ForMember(dest => dest.Local, opt => opt.MapFrom(src => src.Local));
 
             // Mapeamento de ViewModel para Entidade (Usado em POSTs: Incluir, Editar)
             CreateMap<AgendamentoViewModel, Agendamento>()
-                // Mapear propriedades diretas
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Descricao, opt => opt.MapFrom(src => src.Descricao))
                 .ForMember(dest => dest.Observacoes, opt => opt.MapFrom(src => src.Observacoes))
@@ -46,21 +42,21 @@ namespace SGHSSVidaPlus.MVC.Configurations
                 .ForMember(dest => dest.Encerrado, opt => opt.MapFrom(src => src.Encerrado))
                 .ForMember(dest => dest.UsuarioEncerramento, opt => opt.MapFrom(src => src.UsuarioEncerramento))
                 .ForMember(dest => dest.DataEncerramento, opt => opt.MapFrom(src => src.DataEncerramento))
-
-                // IGNORAR propriedades de navegação no mapeamento de ViewModel para Entidade
-                // Elas não devem ser criadas ou atualizadas a partir da ViewModel, apenas o ID é suficiente
                 .ForMember(dest => dest.ProfissionalResponsavel, opt => opt.Ignore())
                 .ForMember(dest => dest.Paciente, opt => opt.Ignore())
-                // IGNORAR coleções aninhadas que não são tratadas diretamente pela ViewModel no POST principal
                 .ForMember(dest => dest.PacientesAgendados, opt => opt.Ignore())
-                // IGNORAR campos de auditoria que são preenchidos no serviço/repositório
                 .ForMember(dest => dest.DataInclusao, opt => opt.Ignore())
                 .ForMember(dest => dest.UsuarioInclusao, opt => opt.Ignore());
 
-
-
             // Mapeamentos para outras ViewModels (mantenha como estão, o ReverseMap aqui está ok)
-            CreateMap<Paciente, PacienteViewModel>().ReverseMap();
+            // ATUALIZADO: Adicionando mapeamento para UserId
+            CreateMap<Paciente, PacienteViewModel>()
+                .ForMember(dest => dest.Email, opt => opt.Ignore()) // O email não vem da entidade Paciente diretamente, mas do ApplicationUser
+                .ForMember(dest => dest.Senha, opt => opt.Ignore()) // A senha nunca deve ser mapeada para a ViewModel
+                .ForMember(dest => dest.ConfirmarSenha, opt => opt.Ignore()) // A confirmação de senha também não
+                .ForMember(dest => dest.TipoConsultaDesejada, opt => opt.Ignore()) // O tipo de consulta é apenas para o cadastro inicial do paciente
+                .ReverseMap(); // Usamos ReverseMap para PacienteViewModel para criar e editar
+
             CreateMap<ProfissionalSaude, ProfissionalSaudeViewModel>().ReverseMap();
             CreateMap<PacienteContato, PacienteContatoViewModel>().ReverseMap();
             CreateMap<HistoricoPaciente, HistoricoPacienteViewModel>().ReverseMap();
