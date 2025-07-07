@@ -44,18 +44,31 @@ namespace SGHSSVidaPlus.MVC.Controllers
             var parametros = new AgendamentoParams
             {
                 IncluirProfissional = true,
-                IncluirPaciente = true
+                IncluirPaciente = true,
+                Encerrado = false // <-- Só mostra agendamentos em aberto
             };
 
             var agendamentos = await _agendamentoRepository.BuscarAgendamentos(parametros);
             return View(agendamentos);
         }
 
-        // NOVO: Action para pacientes verem seus próprios agendamentos
-        [Authorize(Policy = "RequirePacienteRoleOrClaim")] // Ou uma policy mais específica
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> IndexEncerrados()
+        {
+            var parametros = new AgendamentoParams
+            {
+                IncluirProfissional = true,
+                IncluirPaciente = true,
+                Encerrado = true
+            };
+
+            var agendamentos = await _agendamentoRepository.BuscarAgendamentos(parametros);
+            return View("Index", agendamentos);
+        }
+
+        [Authorize(Policy = "RequirePacienteRoleOrClaim")]
         public async Task<IActionResult> MeusAgendamentos()
         {
-            // Obtém o ApplicationUserId do usuário logado
             var applicationUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(applicationUserId))
@@ -64,24 +77,24 @@ namespace SGHSSVidaPlus.MVC.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // Busca o paciente associado a este ApplicationUserId
             var paciente = (await _pacienteRepository.BuscarPacientes(new PacienteParams { ApplicationUserId = applicationUserId })).FirstOrDefault();
 
             if (paciente == null)
             {
-                TempData["error"] = "Seu perfil de paciente não foi encontrado. Por favor, entre em contato com o suporte.";
+                TempData["error"] = "Seu perfil de paciente não foi encontrado.";
                 return RedirectToAction("Index", "Home");
             }
 
             var parametros = new AgendamentoParams
             {
-                PacienteId = paciente.Id, // Filtra pelo ID do paciente logado
+                PacienteId = paciente.Id,
                 IncluirProfissional = true,
-                IncluirPaciente = true
+                IncluirPaciente = true,
+                Encerrado = false // <-- Também só os abertos por padrão
             };
 
             var agendamentos = await _agendamentoRepository.BuscarAgendamentos(parametros);
-            return View("Index", agendamentos); // Reutiliza a View Index para exibir a lista
+            return View("Index", agendamentos);
         }
 
         [Authorize(Roles = "admin")] // Somente admin pode incluir agendamentos manualmente

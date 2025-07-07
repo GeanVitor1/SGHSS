@@ -40,14 +40,10 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Repositories
                 query = query.Where(a => a.DataHoraAgendamento >= parametros.DataHoraAgendamentoInicio && a.DataHoraAgendamento <= parametros.DataHoraAgendamentoFim);
             }
 
-            if (parametros.Encerrado)
-                query = query.Where(a => a.Encerrado);
-            else if (!string.IsNullOrWhiteSpace(parametros.StatusAgendamento))
+            // ✅ NOVO: Filtro de encerrado correto
+            if (parametros.Encerrado.HasValue)
             {
-                if (parametros.StatusAgendamento.Equals("NãoEncerrado", StringComparison.OrdinalIgnoreCase))
-                {
-                    query = query.Where(a => !a.Encerrado);
-                }
+                query = query.Where(a => a.Encerrado == parametros.Encerrado.Value);
             }
 
             if (!string.IsNullOrWhiteSpace(parametros.UsuarioInclusao))
@@ -66,15 +62,18 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Repositories
                 query = query.Where(a => a.ProfissionalResponsavelId == parametros.ProfissionalResponsavelId);
 
             if (parametros.PacienteId != 0)
-                query = query.Where(a => a.PacientesAgendados.Any(ap => ap.PacienteId == parametros.PacienteId));
-
-            query = query.OrderByDescending(a => a.Id);
+            {
+                query = query.Where(a =>
+                    a.PacienteId == parametros.PacienteId ||
+                    a.PacientesAgendados.Any(ap => ap.PacienteId == parametros.PacienteId));
+            }
 
             if (parametros.TotalRegistros != 0)
                 query = query.Take(parametros.TotalRegistros);
 
             return await query.ToListAsync();
         }
+
 
         public async Task IncluirPacientesNoAgendamento(List<AgendamentoPaciente> pacientesAgendados, int agendamentoId)
         {

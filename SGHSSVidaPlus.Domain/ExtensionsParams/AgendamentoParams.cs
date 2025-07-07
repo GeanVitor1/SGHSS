@@ -11,7 +11,8 @@ namespace SGHSSVidaPlus.Domain.ExtensionsParams
         public string Descricao { get; set; } = string.Empty;
         public DateTime DataHoraAgendamentoInicio { get; set; } // Para filtro por intervalo de data/hora do agendamento
         public DateTime DataHoraAgendamentoFim { get; set; }
-        public bool Encerrado { get; set; } // Para filtrar por agendamentos encerrados/não encerrados
+        public bool? Encerrado { get; set; }
+
         public string UsuarioInclusao { get; set; } = string.Empty;
         public DateTime DataInclusaoInicio { get; set; }
         public DateTime DataInclusaoFim { get; set; }
