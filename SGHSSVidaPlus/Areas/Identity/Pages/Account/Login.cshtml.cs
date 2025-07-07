@@ -26,11 +26,11 @@ namespace SGHSSVidaPlus.MVC.Areas.Identity.Pages.Account
         private readonly IMapper _mapper;
 
         public LoginModel(SignInManager<ApplicationUser> signInManager, // <--- LINHA CORRIGIDA AQUI
-                          UserManager<ApplicationUser> userManager,
-                          ILogger<LoginModel> logger,
-                          IPacienteService pacienteService,
-                          IAgendamentoService agendamentoService,
-                          IMapper mapper)
+                                      UserManager<ApplicationUser> userManager,
+                                      ILogger<LoginModel> logger,
+                                      IPacienteService pacienteService,
+                                      IAgendamentoService agendamentoService,
+                                      IMapper mapper)
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -251,17 +251,22 @@ namespace SGHSSVidaPlus.MVC.Areas.Identity.Pages.Account
                         {
                             PacienteId = paciente.Id,
                             Descricao = RegisterInput.TipoConsultaDesejada,
-                            DataHoraAgendamento = DateTime.Now.AddDays(7),
-                            Status = "Pendente",
+                            // DataHoraAgendamento pode ser uma data futura genérica,
+                            // pois o agendamento real será ajustado pelo admin
+                            DataHoraAgendamento = DateTime.Now.AddDays(7), // Ex: daqui a uma semana
+                            Status = "Pendente", // <-- Status inicial "Pendente"
                             Encerrado = false,
                             UsuarioInclusao = user.UserName,
                             DataInclusao = DateTime.Now,
-                            ProfissionalResponsavelId = 1
+                            ProfissionalResponsavelId = 1 // <-- ID do atendente padrão
                         };
                         var agendamentoResult = await _agendamentoService.Incluir(agendamento);
                         if (!agendamentoResult.Valido)
                         {
                             _logger.LogError("Falha ao criar agendamento inicial para o paciente {PatientId}: {Errors}", paciente.Id, string.Join(", ", agendamentoResult.Mensagens));
+                            // Opcional: Adicionar uma mensagem de erro ao TempData se o agendamento inicial falhar,
+                            // mesmo que o cadastro do paciente tenha sucesso.
+                            // TempData["error"] = "Seu cadastro foi realizado, mas houve um problema ao criar seu agendamento inicial. Por favor, entre em contato.";
                         }
                     }
 

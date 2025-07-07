@@ -60,6 +60,24 @@ namespace SGHSSVidaPlus.Infrastructure.Data.Context
 
             base.OnModelCreating(modelBuilder);
 
+            // --- NOVO: Adicionar seed de dados para ProfissionalSaude (Atendente Padrão) ---
+            modelBuilder.Entity<ProfissionalSaude>().HasData(
+                new ProfissionalSaude
+                {
+                    Id = 1, // ID fixo para o atendente padrão
+                    Nome = "Atendente de Agendamentos Pendentes",
+                    Cargo = "Atendente",
+                    EspecialidadeCargo = "Geral",
+                    Telefone = "(XX) XXXX-XXXX", // Adapte conforme suas validações
+                    Email = "atendente.padrao@sghssvidaplus.com.br", // Adapte para um email válido se necessário
+                    RegistroConselho = "N/A", // Não aplicável
+                    Ativo = true,
+                    UsuarioInclusao = "Sistema",
+                    DataInclusao = new DateTime(2023, 1, 1) // Data fixa ou DateTime.Now
+                }
+            );
+            // ---------------------------------------------------------------------------------
+
             modelBuilder.Entity<Paciente>()
                 .HasIndex(p => p.CPF)
                 .IsUnique();

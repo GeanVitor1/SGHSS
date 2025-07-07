@@ -28,7 +28,7 @@ namespace SGHSSVidaPlus.Domain.Entities
     {
         public int Id { get; set; }
         public string Titulo { get; set; }
-        public string Area { get; set; } // <<< VOCÊ PRECISA ADICIONAR ESTA LINHA AQUI!
+        public string Area { get; set; } // <<< Adicionado esta linha!
         public string InstituicaoEnsino { get; set; }
         public string AnoConclusao { get; set; }
         public string Descricao { get; set; }
@@ -43,11 +43,11 @@ namespace SGHSSVidaPlus.Domain.Entities
     public class CursosCertificacoesProfissionalSaude
     {
         public int Id { get; set; }
-        public string Titulo { get; set; } 
+        public string Titulo { get; set; }
         public string InstituicaoEnsino { get; set; }
-        public double DuracaoHoras { get; set; } 
+        public double DuracaoHoras { get; set; }
         public string AnoConclusao { get; set; }
-        public string Descricao { get; set; } 
+        public string Descricao { get; set; }
 
         // Foreign Key e propriedade de navegação para ProfissionalSaude
         [JsonIgnore]
