@@ -1,0 +1,204 @@
+﻿@model SGHSSVidaPlus.MVC.Models.AgendamentoViewModel
+@{
+    ViewData["Title"] = "Agendar Consulta";
+}
+
+<div class="d-flex justify-content-between">
+    <div class="page-header">
+        <h3 class="fw-bold mb-3">Agendar Consulta</h3>
+        <ul class="breadcrumbs">
+            <li class="nav-home active">
+                <a asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a asp-controller="Agendamentos" asp-action="MeusAgendamentos">
+                    Minhas Consultas
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <p>Agendar</p>
+            </li>
+        </ul>
+    </div>
+    <div>
+        <button class="btn btn-stantard" onclick="gravarAgendamento()">
+            <span class="btn-label">
+                <i class="fa fa-check me-1"></i>
+            </span>
+            Agendar
+        </button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form id="formAgendarConsulta">
+            <div style="width: 98%;">
+                <div class="row">
+                    <div class="col-8">
+                        <div class="form-group form-group-default">
+                            <label>Descrição</label>
+                            <input asp-for="Descricao" class="form-control" required />
+                            <span asp-validation-for="Descricao" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-group form-group-default">
+                            <label>Data e Hora Desejada</label>
+                            <input asp-for="DataHoraAgendamento" type="datetime-local" class="form-control" required />
+                            <span asp-validation-for="DataHoraAgendamento" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <div class="form-group form-group-default">
+                            <label>Profissional Responsável</label>
+                            <div class="input-group">
+                                <input asp-for="ProfissionalResponsavelId" type="hidden" value="1" />
+                                <input type="text" id="profissionalResponsavelNome" class="form-control"
+                                       value="@Model.ProfissionalResponsavelNome" readonly @* <-- CORRIGIDO AQUI *@
+                                       placeholder="Atendente Padrão" />
+                            </div>
+                            <span asp-validation-for="ProfissionalResponsavelId" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="form-group form-group-default">
+                            <label>Local de Atendimento</label>
+                            <input asp-for="Local" class="form-control" />
+                            <span asp-validation-for="Local" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <div class="form-group form-group-default">
+                            <label>Paciente</label>
+                            <input type="text" class="form-control" value="@Model.PacienteNome" readonly />
+                            <input type="hidden" asp-for="PacienteId" />
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="form-group form-group-default">
+                            <label>Status</label>
+                            <input type="text" class="form-control" value="Pendente" readonly />
+                            <input type="hidden" asp-for="Status" value="Pendente" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <div class="form-group form-group-default">
+                            <label>Observações</label>
+                            <textarea asp-for="Observacoes" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* O Modal para Seleção de Profissionais de Saúde foi removido, pois não é mais necessário para esta tela. *@
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" /> @* Garante que as validações de JS funcionem *@
+    <script>
+        function gravarAgendamento() {
+            // Garante que o ID do profissional e o status são enviados corretamente
+            // Mesmo que a View seja manipulada, o Controller reforçará esses valores.
+            var dados = $('#formAgendarConsulta').serializeJSON();
+
+            // Opcional: Se houver validação client-side complexa
+            if (!$('#formAgendarConsulta').valid()) {
+                Swal.fire({
+                    title: 'Atenção!',
+                    text: 'Por favor, preencha todos os campos obrigatórios corretamente.',
+                    icon: 'warning',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 5000,
+                    timerProgressBar: true,
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Confirmar Agendamento?',
+                text: "Deseja realmente agendar esta consulta?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sim, Agendar!',
+                cancelButtonText: 'Não, Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("AgendarConsulta", "Agendamentos")',
+                        contentType: 'application/json',
+                        data: JSON.stringify(dados),
+                        success: function (res) {
+                            if (res.resultado === "sucesso") {
+                                Swal.fire({
+                                    title: 'Sucesso!',
+                                    text: 'Seu agendamento foi registrado e está Pendente de análise. Você será notificado sobre a confirmação.',
+                                    icon: 'success',
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 8000,
+                                    timerProgressBar: true,
+                                }).then(() => {
+                                    window.location.href = res.redirectUrl;
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Erro!',
+                                    text: res.mensagem,
+                                    icon: 'error',
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 8000,
+                                    timerProgressBar: true,
+                                });
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                title: 'Erro!',
+                                text: 'Ocorreu um erro inesperado ao tentar agendar. Tente novamente mais tarde.',
+                                icon: 'error',
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 8000,
+                                timerProgressBar: true,
+                            });
+                            console.error("Erro no AJAX:", error, xhr.responseText);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Removida a função abrirModalProfissionais, pois não é mais necessária.
+    </script>
+}

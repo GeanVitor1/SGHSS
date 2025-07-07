@@ -10,7 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Security.Claims; // Necessário para acessar as claims do usuário
+using System.Security.Claims;
 
 namespace SGHSSVidaPlus.MVC.Controllers
 {
@@ -37,7 +37,6 @@ namespace SGHSSVidaPlus.MVC.Controllers
             _mapper = mapper;
         }
 
-        // Action para administradores verem todos os agendamentos
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> Index()
         {
@@ -45,7 +44,7 @@ namespace SGHSSVidaPlus.MVC.Controllers
             {
                 IncluirProfissional = true,
                 IncluirPaciente = true,
-                Encerrado = false // <-- Só mostra agendamentos em aberto
+                Encerrado = false
             };
 
             var agendamentos = await _agendamentoRepository.BuscarAgendamentos(parametros);
@@ -90,21 +89,21 @@ namespace SGHSSVidaPlus.MVC.Controllers
                 PacienteId = paciente.Id,
                 IncluirProfissional = true,
                 IncluirPaciente = true,
-                Encerrado = false // <-- Também só os abertos por padrão
+                Encerrado = false
             };
 
             var agendamentos = await _agendamentoRepository.BuscarAgendamentos(parametros);
             return View("Index", agendamentos);
         }
 
-        [Authorize(Roles = "admin")] // Somente admin pode incluir agendamentos manualmente
+        [Authorize(Roles = "admin")]
         public IActionResult Incluir()
         {
             return View(new AgendamentoViewModel());
         }
 
         [HttpPost]
-        [Authorize(Roles = "admin")] // Somente admin pode incluir agendamentos manualmente
+        [Authorize(Roles = "admin")]
         public async Task<JsonResult> Incluir([FromBody] AgendamentoViewModel agendamentoViewModel)
         {
             try
@@ -144,7 +143,7 @@ namespace SGHSSVidaPlus.MVC.Controllers
             }
         }
 
-        [Authorize(Roles = "admin")] // Somente admin pode editar
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Editar(int id)
         {
             var agendamento = (await _agendamentoRepository.BuscarAgendamentos(new AgendamentoParams
@@ -164,7 +163,7 @@ namespace SGHSSVidaPlus.MVC.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "admin")] // Somente admin pode editar
+        [Authorize(Roles = "admin")]
         public async Task<JsonResult> Editar([FromBody] AgendamentoViewModel agendamentoViewModel)
         {
             try
@@ -201,14 +200,13 @@ namespace SGHSSVidaPlus.MVC.Controllers
         }
 
         [HttpPost]
-        [Authorize] // Ambos, admin e paciente, podem encerrar/cancelar
+        [Authorize]
         public async Task<JsonResult> EncerrarAgendamento([FromBody] int agendamentoId)
         {
             try
             {
                 var usuarioEncerramento = User.Identity.Name ?? "Sistema";
 
-                // Se o usuário não for admin, verificar se ele é o paciente dono do agendamento
                 if (!User.IsInRole("admin"))
                 {
                     var applicationUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -227,7 +225,6 @@ namespace SGHSSVidaPlus.MVC.Controllers
                     }
                 }
 
-
                 var resultado = await _agendamentoService.EncerrarAgendamento(agendamentoId, usuarioEncerramento);
 
                 if (!resultado.Valido)
@@ -245,9 +242,8 @@ namespace SGHSSVidaPlus.MVC.Controllers
             }
         }
 
-
         [HttpPost]
-        [Authorize(Roles = "admin")] // Somente admin pode reabrir
+        [Authorize(Roles = "admin")]
         public async Task<JsonResult> ReabrirAgendamento([FromBody] int agendamentoId)
         {
             try
@@ -271,11 +267,9 @@ namespace SGHSSVidaPlus.MVC.Controllers
             }
         }
 
-        // Visualizar agendamento (acessível por admin e paciente, mas paciente só vê o dele)
         [Authorize]
         public async Task<IActionResult> Visualizar(int id)
         {
-            // Se não for admin, verifica a permissão
             if (!User.IsInRole("admin"))
             {
                 var applicationUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -306,14 +300,13 @@ namespace SGHSSVidaPlus.MVC.Controllers
             if (agendamento == null)
             {
                 TempData["error"] = "Agendamento não encontrado.";
-                return RedirectToAction("Index"); // Ou MeusAgendamentos se for paciente
+                return RedirectToAction("Index");
             }
 
             var viewModel = _mapper.Map<AgendamentoViewModel>(agendamento);
             return View("Visualizar", viewModel);
         }
 
-        // --- MÉTODOS PARA OS MODAIS (Acessíveis apenas para admin, pois a inclusão manual é admin-only) ---
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> ObterProfissionaisParaSelecao()
         {
@@ -348,6 +341,78 @@ namespace SGHSSVidaPlus.MVC.Controllers
                 Console.WriteLine(ex.StackTrace);
                 Response.StatusCode = 500;
                 return Content("Erro interno do servidor ao carregar pacientes.");
+            }
+        }
+
+        [Authorize(Policy = "RequirePacienteRoleOrClaim")]
+        public async Task<IActionResult> AgendarConsulta()
+        {
+            var applicationUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var paciente = (await _pacienteRepository.BuscarPacientes(new PacienteParams { ApplicationUserId = applicationUserId })).FirstOrDefault();
+
+            if (paciente == null)
+            {
+                TempData["error"] = "Seu perfil de paciente não foi encontrado.";
+                return RedirectToAction("MeusAgendamentos");
+            }
+
+            // Buscar o profissional "Atendente Padrão" (ID = 1)
+            var atendentePadrao = (await _profissionalSaudeRepository.BuscarProfissional(new ProfissionalSaudeParams { Id = 1 })).FirstOrDefault();
+
+            var viewModel = new AgendamentoViewModel
+            {
+                PacienteId = paciente.Id,
+                PacienteNome = paciente.Nome,
+                Status = "Pendente", // Agendamentos feitos pelo paciente iniciam como Pendente
+                ProfissionalResponsavelId = atendentePadrao?.Id, // Define o ID do atendente padrão (agora é int? no ViewModel)
+                ProfissionalResponsavelNome = atendentePadrao?.Nome // Popula o nome para exibir na View
+            };
+
+            return View("AgendarPaciente", viewModel);
+        }
+
+        [HttpPost]
+        [Authorize(Policy = "RequirePacienteRoleOrClaim")]
+        public async Task<JsonResult> AgendarConsulta([FromBody] AgendamentoViewModel agendamentoViewModel)
+        {
+            try
+            {
+                var applicationUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var paciente = (await _pacienteRepository.BuscarPacientes(new PacienteParams { ApplicationUserId = applicationUserId })).FirstOrDefault();
+
+                if (paciente == null)
+                {
+                    return Json(new { resultado = "falha", mensagem = "Paciente não encontrado." });
+                }
+
+                agendamentoViewModel.PacienteId = paciente.Id;
+                agendamentoViewModel.Status = "Pendente";
+                agendamentoViewModel.ProfissionalResponsavelId = 1; // Garante que seja sempre o ID 1
+
+                // Adicione a validação ModelState.IsValid aqui antes do mapeamento
+                if (!ModelState.IsValid)
+                {
+                    var erros = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    return Json(new { resultado = "falha", mensagem = string.Join(" ", erros) });
+                }
+
+                var agendamento = _mapper.Map<Agendamento>(agendamentoViewModel);
+                agendamento.UsuarioInclusao = User.Identity.Name ?? "Sistema";
+                agendamento.DataInclusao = DateTime.Now;
+                agendamento.Encerrado = false;
+
+                var resultado = await _agendamentoService.Incluir(agendamento);
+
+                if (!resultado.Valido)
+                    return Json(new { resultado = "falha", mensagem = string.Join(" ", resultado.Mensagens) });
+
+                return Json(new { resultado = "sucesso", redirectUrl = Url.Action("MeusAgendamentos") });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro inesperado ao agendar: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                return Json(new { resultado = "falha", mensagem = "Erro inesperado ao agendar: " + ex.Message });
             }
         }
     }

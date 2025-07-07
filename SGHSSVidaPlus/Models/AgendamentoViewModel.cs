@@ -1,66 +1,91 @@
-﻿using System.Collections.Generic;
-using System; // Para DateTime
-using System.ComponentModel.DataAnnotations; // Para DataAnnotations
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering; // Necessário para SelectListItem
 
-namespace SGHSSVidaPlus.MVC.Models // Namespace atualizado
+namespace SGHSSVidaPlus.MVC.Models
 {
-    public class AgendamentoViewModel // Nome da classe atualizado
+    public class AgendamentoViewModel
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "É Necessário informar a descrição do agendamento.")]
+        [Required(ErrorMessage = "É necessário informar a descrição do agendamento.")]
+        [Display(Name = "Descrição")]
         public string Descricao { get; set; }
 
-        public string? Observacoes { get; set; } // Tornando nullable se não for sempre obrigatório
-        public string? Local { get; set; } // Tornando nullable se não for sempre obrigatório
-
-        [Required(ErrorMessage = "É Necessário informar a data e hora do agendamento.")]
-        [DataType(DataType.DateTime)] // Garante que o tipo de dado é DateTime para a UI
+        [Required(ErrorMessage = "É necessário informar a data e hora do agendamento.")]
+        [DataType(DataType.DateTime)]
+        [Display(Name = "Data e Hora do Agendamento")]
         public DateTime DataHoraAgendamento { get; set; }
 
-        // Propriedade para o ID do paciente selecionado
-        [Required(ErrorMessage = "É Necessário selecionar o paciente.")]
+        [Display(Name = "Profissional Responsável")]
+        public int? ProfissionalResponsavelId { get; set; }
+
+        // Propriedade para exibir o nome do profissional. Útil para preenchimento direto.
+        // Já existia, mantida.
+        [Display(Name = "Nome do Profissional")]
+        public string? ProfissionalResponsavelNome { get; set; }
+
+        // RESTAURADO: Propriedade de navegação para o ViewModel do Profissional de Saúde
+        // Isso permite acessar propriedades como Model.ProfissionalResponsavel.Nome
+        public ProfissionalSaudeViewModel? ProfissionalResponsavel { get; set; }
+
+        [Display(Name = "Local de Atendimento")]
+        public string? Local { get; set; }
+
+        [Required(ErrorMessage = "É necessário informar o paciente.")]
         public int PacienteId { get; set; }
 
-        // Propriedade para o ID do profissional responsável selecionado
-        [Required(ErrorMessage = "É Necessário selecionar o profissional responsável.")]
-        public int ProfissionalResponsavelId { get; set; }
+        // Propriedade para exibir o nome do paciente. Útil para preenchimento direto.
+        // Já existia, mantida.
+        [Display(Name = "Nome do Paciente")]
+        public string? PacienteNome { get; set; }
 
-        // Propriedades de navegação (útil para exibir dados em formulários de visualização ou edição)
-        // Não são usadas para input direto, mas para carregar dados relacionados.
-        public ProfissionalSaudeViewModel? ProfissionalResponsavel { get; set; }
-        public PacienteViewModel? Paciente { get; set; } // Adicionando propriedade de navegação para o Paciente principal do agendamento
+        // RESTAURADO: Propriedade de navegação para o ViewModel do Paciente
+        // Isso permite acessar propriedades como Model.Paciente.Nome, .CPF, .DataNascimento
+        public PacienteViewModel? Paciente { get; set; }
 
-        [Required(ErrorMessage = "É Necessário selecionar o status do agendamento.")]
-        public string Status { get; set; } // Agendado, Confirmado, Cancelado, Realizado
 
-        // Campos de auditoria/controle
+        [Required(ErrorMessage = "É necessário informar o status do agendamento.")]
+        [Display(Name = "Status")]
+        public string Status { get; set; }
+
+        [Display(Name = "Observações")]
+        public string? Observacoes { get; set; }
+
         public bool Encerrado { get; set; }
-        public string? UsuarioInclusao { get; set; } // Permitindo nulo, pois pode ser preenchido no Controller
-        public DateTime DataInclusao { get; set; }
-        public string? UsuarioEncerramento { get; set; } // Permitindo nulo
-        public DateTime? DataEncerramento { get; set; } // Permitindo nulo
+        public string? UsuarioEncerramento { get; set; }
+        public DateTime? DataEncerramento { get; set; }
 
-        // Listas de ViewModels aninhados (para múltiplos pacientes ou tipos de atendimento, se o agendamento for complexo)
-        // Mantenho estas listas, assumindo que um agendamento pode ter múltiplos pacientes ou tipos de atendimento
-        // A distinção é que o 'PacienteId' acima seria para o "paciente principal" do agendamento,
-        // enquanto 'PacientesAgendados' seria para um grupo, se aplicável.
-        // Se um agendamento for SEMPRE para UM paciente, a lista 'PacientesAgendados' pode ser removida
-        // e o 'PacienteId' principal deve ser usado para todas as interações.
+        public string? UsuarioInclusao { get; set; }
+        public DateTime DataInclusao { get; set; }
+
+        // Mantenha AgendamentoPacienteViewModel, pois parece que você tem uma lista
+        // de pacientes associados ao agendamento (muitos para muitos) para alguma funcionalidade.
         public List<AgendamentoPacienteViewModel> PacientesAgendados { get; set; } = new List<AgendamentoPacienteViewModel>();
     }
 
     // ViewModel para a entidade de ligação Agendamento-Paciente
+    // Esta classe está correta como você a definiu.
     public class AgendamentoPacienteViewModel
     {
-        public int Id { get; set; }
+        public int Id { get; set; } // Id da entidade AgendamentoPaciente
+
+        [Display(Name = "ID do Agendamento")]
         public int AgendamentoId { get; set; }
+
+        [Display(Name = "ID do Paciente")]
         public int PacienteId { get; set; }
-        public PacienteViewModel? Paciente { get; set; } // Para carregar os dados do paciente
+
+        // Referência ao ViewModel do Paciente para exibir os dados do paciente agendado
+        public PacienteViewModel? Paciente { get; set; }
+
+        [Display(Name = "Compareceu")]
         public bool Compareceu { get; set; }
+
+        [Display(Name = "Atendimento Finalizado")]
         public bool AtendimentoFinalizado { get; set; }
+
         public bool IsSelected { get; set; } // Usado para seleção em UI, se houver uma lista de seleção
     }
-
-
 }
