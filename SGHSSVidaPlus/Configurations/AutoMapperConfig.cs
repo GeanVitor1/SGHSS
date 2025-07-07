@@ -27,9 +27,12 @@ namespace SGHSSVidaPlus.MVC.Configurations
         {
             // Mapeamento de Entidade para ViewModel (Usado em GETs: Index, Editar, Visualizar)
             CreateMap<Agendamento, AgendamentoViewModel>()
-                .ForMember(dest => dest.ProfissionalResponsavel, opt => opt.MapFrom(src => src.ProfissionalResponsavel))
-                .ForMember(dest => dest.Paciente, opt => opt.MapFrom(src => src.Paciente))
-                .ForMember(dest => dest.Local, opt => opt.MapFrom(src => src.Local));
+                .ForMember(dest => dest.ProfissionalResponsavelId, opt => opt.MapFrom(src => src.ProfissionalResponsavelId))
+                .ForMember(dest => dest.ProfissionalResponsavelNome, opt => opt.MapFrom(src => src.ProfissionalResponsavel != null ? src.ProfissionalResponsavel.Nome : null))
+                .ForMember(dest => dest.ProfissionalResponsavel, opt => opt.MapFrom(src => src.ProfissionalResponsavel)) // Mapeia o objeto ProfissionalSaude (entidade) para ProfissionalSaudeViewModel
+                .ForMember(dest => dest.PacienteId, opt => opt.MapFrom(src => src.PacienteId))
+                .ForMember(dest => dest.PacienteNome, opt => opt.MapFrom(src => src.Paciente != null ? src.Paciente.Nome : null))
+                .ForMember(dest => dest.Paciente, opt => opt.MapFrom(src => src.Paciente)); // Mapeia o objeto Paciente (entidade) para PacienteViewModel
 
             // Mapeamento de ViewModel para Entidade (Usado em POSTs: Incluir, Editar)
             CreateMap<AgendamentoViewModel, Agendamento>()
@@ -44,16 +47,20 @@ namespace SGHSSVidaPlus.MVC.Configurations
                 .ForMember(dest => dest.Encerrado, opt => opt.MapFrom(src => src.Encerrado))
                 .ForMember(dest => dest.UsuarioEncerramento, opt => opt.MapFrom(src => src.UsuarioEncerramento))
                 .ForMember(dest => dest.DataEncerramento, opt => opt.MapFrom(src => src.DataEncerramento))
-                .ForMember(dest => dest.ProfissionalResponsavel, opt => opt.Ignore())
-                .ForMember(dest => dest.Paciente, opt => opt.Ignore())
+                .ForMember(dest => dest.ProfissionalResponsavel, opt => opt.Ignore()) // Ignora o objeto de navegação ao mapear de ViewModel para Entidade
+                .ForMember(dest => dest.Paciente, opt => opt.Ignore()) // Ignora o objeto de navegação ao mapear de ViewModel para Entidade
                 .ForMember(dest => dest.PacientesAgendados, opt => opt.Ignore())
                 .ForMember(dest => dest.DataInclusao, opt => opt.Ignore())
                 .ForMember(dest => dest.UsuarioInclusao, opt => opt.Ignore());
 
-            // Mapeamento Paciente (ViewModel para Entidade e vice-versa)
+            // Mapeamento Paciente (Entidade para ViewModel e vice-versa)
             CreateMap<Paciente, PacienteViewModel>().ReverseMap();
 
-            // Mapeamento de PacienteViewModel para ApplicationUser
+            // Mapeamento para PacienteAdminRegisterViewModel (específico para cadastro via admin)
+            // Como PacienteAdminRegisterViewModel herda de PacienteViewModel, este mapeamento cobre ambos.
+            CreateMap<Paciente, PacienteAdminRegisterViewModel>().ReverseMap();
+
+            // Mapeamento de PacienteViewModel para ApplicationUser (para auto-cadastro ou atualização de usuário existente)
             CreateMap<PacienteViewModel, ApplicationUser>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
@@ -62,7 +69,7 @@ namespace SGHSSVidaPlus.MVC.Configurations
                 .ForMember(dest => dest.EmailConfirmed, opt => opt.MapFrom(src => true))
                 .ForMember(dest => dest.Bloqueado, opt => opt.MapFrom(src => false));
 
-            // Mapeamento de RegisterPatientInputModel para ApplicationUser (Corrigido na última interação)
+            // Mapeamento de RegisterPatientInputModel para ApplicationUser (para auto-cadastro)
             CreateMap<RegisterPatientInputModel, ApplicationUser>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
@@ -71,23 +78,36 @@ namespace SGHSSVidaPlus.MVC.Configurations
                 .ForMember(dest => dest.EmailConfirmed, opt => opt.MapFrom(src => true))
                 .ForMember(dest => dest.Bloqueado, opt => opt.MapFrom(src => false));
 
-            // NOVO MAPEAMENTO NECESSÁRIO: RegisterPatientInputModel para Paciente
-            // Isso permite que o AutoMapper converta os dados de entrada do registro para a entidade Paciente.
+            // Mapeamento de RegisterPatientInputModel para Paciente (para auto-cadastro)
             CreateMap<RegisterPatientInputModel, Paciente>()
-                .ForMember(dest => dest.ApplicationUserId, opt => opt.Ignore()) // Será preenchido manualmente
-                .ForMember(dest => dest.Ativo, opt => opt.Ignore())             // Será preenchido manualmente
-                .ForMember(dest => dest.UsuarioInclusao, opt => opt.Ignore())   // Será preenchido manualmente
-                .ForMember(dest => dest.DataInclusao, opt => opt.Ignore())      // Será preenchido manualmente
-                .ForMember(dest => dest.Contatos, opt => opt.Ignore())          // Contatos serão manipulados separadamente
-                .ForMember(dest => dest.Historico, opt => opt.Ignore());        // Histórico será manipulado separadamente
+                .ForMember(dest => dest.ApplicationUserId, opt => opt.Ignore())
+                .ForMember(dest => dest.Ativo, opt => opt.Ignore())
+                .ForMember(dest => dest.UsuarioInclusao, opt => opt.Ignore())
+                .ForMember(dest => dest.DataInclusao, opt => opt.Ignore())
+                .ForMember(dest => dest.Contatos, opt => opt.Ignore())
+                .ForMember(dest => dest.Historico, opt => opt.Ignore());
 
-            // Mapeamentos para outras ViewModels
+            // Mapeamento para ProfissionalSaude (Entidade para ViewModel e vice-versa)
             CreateMap<ProfissionalSaude, ProfissionalSaudeViewModel>().ReverseMap();
+
+            // Mapeamento para PacienteContato (Entidade para ViewModel e vice-versa)
             CreateMap<PacienteContato, PacienteContatoViewModel>().ReverseMap();
+
+            // Mapeamento para HistoricoPaciente (Entidade para ViewModel e vice-versa)
             CreateMap<HistoricoPaciente, HistoricoPacienteViewModel>().ReverseMap();
+
+            // Mapeamento para FormacaoAcademicaProfissionalSaude (Entidade para ViewModel e vice-versa)
             CreateMap<FormacaoAcademicaProfissionalSaude, FormacaoAcademicaProfissionalSaudeViewModel>().ReverseMap();
+
+            // Mapeamento para CursosCertificacoesProfissionalSaude (Entidade para ViewModel e vice-versa)
             CreateMap<CursosCertificacoesProfissionalSaude, CursosCertificacoesProfissionalSaudeViewModel>().ReverseMap();
-            CreateMap<AgendamentoPaciente, AgendamentoPacienteViewModel>().ReverseMap();
+
+            // Mapeamento para AgendamentoPaciente (Entidade para ViewModel e vice-versa)
+            CreateMap<AgendamentoPaciente, AgendamentoPacienteViewModel>()
+                .ForMember(dest => dest.Paciente, opt => opt.MapFrom(src => src.Paciente)); // Mapeia o objeto Paciente (entidade) para PacienteViewModel
+
+            CreateMap<AgendamentoPacienteViewModel, AgendamentoPaciente>()
+                .ForMember(dest => dest.Paciente, opt => opt.Ignore()); // Ignora o objeto de navegação ao mapear de ViewModel para Entidade
         }
     }
 }

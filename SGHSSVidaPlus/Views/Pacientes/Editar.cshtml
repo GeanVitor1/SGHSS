@@ -1,6 +1,5 @@
 ﻿@using SGHSSVidaPlus.Domain.Entities
 @model SGHSSVidaPlus.MVC.Models.PacienteViewModel;
-
 @{
     ViewData["Title"] = "Editar Paciente";
 }
@@ -62,6 +61,7 @@
                                     <label>Nome</label>
                                     <input type="hidden" asp-for="Id" />
                                     <input type="hidden" asp-for="Ativo" />
+                                    <input type="hidden" asp-for="ApplicationUserId" /> 
                                     <input asp-for="Nome" id="nome" type="text" class="form-control" required />
                                     <span asp-validation-for="Nome" class="text-danger"></span>
                                 </div>
@@ -69,21 +69,22 @@
                             <div class="col-2">
                                 <div class="form-group form-group-default">
                                     <label>Estado Civil</label>
-                                    <select class="form-select" asp-for="EstadoCivil" id="estadoCivil">
-                                        <option></option>
+                                    <select class="form-select" asp-for="EstadoCivil" id="estadoCivil" required> 
+                                        <option value="">Selecione</option> 
                                         <option value="SOLTEIRO">SOLTEIRO</option>
                                         <option value="CASADO">CASADO</option>
                                         <option value="DIVORCIADO">DIVORCIADO</option>
                                         <option value="VIUVO">VIUVO</option>
                                     </select>
+                                    <span asp-validation-for="EstadoCivil" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-2">
                                 <div class="form-group form-group-default">
                                     <label>Data de Nascimento</label>
-                                    @* CORREÇÃO AQUI: Formata para yyyy-MM-dd para input type="date" *@
-                                    <input type="date" asp-for="DataNascimento" id="dataNascimento" class="form-control"
+                                    <input type="date" asp-for="DataNascimento" id="dataNascimento" class="form-control" required 
                                            value="@(Model.DataNascimento.HasValue && Model.DataNascimento.Value != DateTime.MinValue ? Model.DataNascimento.Value.ToString("yyyy-MM-dd") : "")" />
+                                    <span asp-validation-for="DataNascimento" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>
@@ -91,18 +92,58 @@
                             <div class="col-8">
                                 <div class="form-group form-group-default">
                                     <label>Endereço</label>
-                                    <input asp-for="Endereco" id="endereco" type="text" class="form-control" />
+                                    <input asp-for="Endereco" id="endereco" type="text" class="form-control" required /> 
                                     <span asp-validation-for="Endereco" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-4">
                                 <div class="form-group form-group-default">
                                     <label>CPF</label>
-                                    <input asp-for="CPF" id="cpf" type="text" class="form-control" />
+                                    <input asp-for="CPF" id="cpf" type="text" class="form-control" required /> 
                                     <span asp-validation-for="CPF" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>
+
+                     
+                        <div class="row mt-2">
+                            <div class="col-6">
+                                <div class="form-group form-group-default">
+                                    <label>E-mail @(string.IsNullOrEmpty(Model.ApplicationUserId) ? "(Opcional)" : "")</label> 
+                                    <input asp-for="Email" type="email" class="form-control" />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                          
+                            @if (!string.IsNullOrEmpty(Model.ApplicationUserId))
+                            {
+                                <div class="col-3">
+                                    <div class="form-group form-group-default">
+                                        <label>Senha</label> 
+                                        <input asp-for="Senha" type="password" class="form-control" autocomplete="new-password" placeholder="Mudar senha" />
+                                        <span asp-validation-for="Senha" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="form-group form-group-default">
+                                        <label>Confirmar Senha</label>
+                                        <input asp-for="ConfirmarSenha" type="password" class="form-control" autocomplete="new-password" placeholder="Confirmar senha" />
+                                        <span asp-validation-for="ConfirmarSenha" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                
+                                <div class="col-6">
+                                    <p class="mt-3 text-muted">Para gerenciar login/senha, o paciente deve criar um auto-cadastro ou ter um usuário Identity associado.</p>
+                                    <input type="hidden" asp-for="Senha" value="" /> 
+                                    <input type="hidden" asp-for="ConfirmarSenha" value="" /> 
+                                </div>
+                            }
+                        </div>
+                        
+
                     </div>
                 </form>
             </div>
@@ -121,10 +162,6 @@
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script src="~/js/Pacientes/Editar.js"></script>
-}
 
 @* MODAL PARA INCLUIR NOVO CONTATO *@
 <div class="modal" id="modalNovoContato" tabindex="-1">
@@ -161,3 +198,11 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/Pacientes/Editar.js"></script>
+    <script src="~/js/plugins/jquery.serializejson.min.js"></script> 
+
+    
+}

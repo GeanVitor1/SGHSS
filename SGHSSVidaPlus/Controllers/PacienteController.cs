@@ -9,7 +9,7 @@ using SGHSSVidaPlus.Domain.Entities;
 using SGHSSVidaPlus.Domain.ExtensionsParams;
 using SGHSSVidaPlus.Domain.Interfaces.Repository;
 using SGHSSVidaPlus.Domain.Interfaces.Service;
-using SGHSSVidaPlus.MVC.Additional;
+using SGHSSVidaPlus.MVC.Additional; // Assumo que ClaimsAuthorize está aqui
 using SGHSSVidaPlus.MVC.Models;
 using System;
 using System.Collections.Generic;
@@ -21,7 +21,8 @@ using Microsoft.Data.SqlClient;
 
 namespace SGHSSVidaPlus.MVC.Controllers
 {
-    [Authorize]
+    [Authorize] // Este authorize aqui significa que qualquer usuário LOGADO pode acessar as actions,
+                // a menos que uma role específica seja definida na action.
     public class PacientesController : Controller
     {
         public readonly IPacienteService _pacienteService;
@@ -78,21 +79,26 @@ namespace SGHSSVidaPlus.MVC.Controllers
             }
         }
 
-        [ClaimsAuthorize("paciente", "visualizar")]
+        [Authorize(Roles = "admin")] // Apenas admin pode ver a lista completa de pacientes
         public async Task<ActionResult> Index() => View(await _pacienteRepository.BuscarPacientes(new PacienteParams() { Ativo = true }));
 
+        [Authorize(Roles = "admin")] // Apenas admin pode buscar pacientes por query
         public async Task<IActionResult> BuscarPacientes([FromQuery] PacienteParams parametros) => PartialView("_Pacientes", await _pacienteRepository.BuscarPacientes(parametros));
 
+        [Authorize(Roles = "admin")] // Apenas admin pode visualizar qualquer paciente
         public async Task<IActionResult> Visualizar(int id) => View(_mapper.Map<PacienteViewModel>((await _pacienteRepository.BuscarPacientes(new PacienteParams() { Id = id, IncluirContatosHistorico = true })).FirstOrDefault()));
 
-        [ClaimsAuthorize("paciente", "incluir")]
+        [Authorize(Roles = "admin")] // Apenas admin pode abrir o formulário de inclusão (usando PacienteAdminRegisterViewModel)
         public ActionResult Incluir()
         {
             TempData.Remove("contatos-paciente");
             TempData.Remove("historico-paciente");
-            return View(new PacienteViewModel());
+            // Usa o ViewModel específico para cadastro via Admin (sem campos obrigatórios de login)
+            return View(new PacienteAdminRegisterViewModel());
         }
 
+        // As ações de Contato e Histórico podem ser acessadas por qualquer usuário autorizado
+        // (tanto admin quanto paciente que edite seu próprio perfil)
         public IActionResult TelaNovoContato() => PartialView("_NovoContato");
 
         [HttpGet]
@@ -177,13 +183,37 @@ namespace SGHSSVidaPlus.MVC.Controllers
             return Json(new { resultado = "sucesso", mensagem = "Registro de histórico removido com sucesso.", partialHtml = partialHtml });
         }
 
+        // Action para inclusão de paciente pelo ADMIN (usa PacienteAdminRegisterViewModel)
         [HttpPost]
-        public async Task<JsonResult> Incluir(PacienteViewModel pacienteViewModel)
+        [Authorize(Roles = "admin")] // Apenas admin pode submeter este formulário
+        public async Task<JsonResult> Incluir(PacienteAdminRegisterViewModel pacienteViewModel)
         {
             try
             {
-                // NOVO: Ignora a validação para UsuarioInclusao no ModelState
+                // Remover validações de Email, Senha e ConfirmarSenha se não forem fornecidas
+                if (string.IsNullOrEmpty(pacienteViewModel.Email))
+                {
+                    ModelState.Remove(nameof(pacienteViewModel.Email));
+                    ModelState.Remove(nameof(pacienteViewModel.Senha));
+                    ModelState.Remove(nameof(pacienteViewModel.ConfirmarSenha));
+                }
+                else // Se o email foi fornecido, as senhas se tornam obrigatórias
+                {
+                    if (string.IsNullOrEmpty(pacienteViewModel.Senha))
+                    {
+                        ModelState.AddModelError(nameof(pacienteViewModel.Senha), "A senha é obrigatória se o e-mail for informado.");
+                    }
+                    if (string.IsNullOrEmpty(pacienteViewModel.ConfirmarSenha))
+                    {
+                        ModelState.AddModelError(nameof(pacienteViewModel.ConfirmarSenha), "A confirmação de senha é obrigatória se o e-mail for informado.");
+                    }
+                }
+
+                // Ignora a validação para UsuarioInclusao e DataInclusao no ModelState,
+                // pois serão preenchidos no backend
                 ModelState.Remove("UsuarioInclusao");
+                ModelState.Remove("DataInclusao");
+
 
                 if (!ModelState.IsValid)
                 {
@@ -194,10 +224,12 @@ namespace SGHSSVidaPlus.MVC.Controllers
                 }
 
                 var paciente = _mapper.Map<Paciente>(pacienteViewModel);
-                paciente.UsuarioInclusao = User.Identity.Name;
+                paciente.UsuarioInclusao = User.Identity?.Name ?? "Admin (Erro Nome)"; // Garantia de nome
                 paciente.DataInclusao = DateTime.Now;
                 paciente.Ativo = true;
+                paciente.ApplicationUserId = null; // Admin não cria ApplicationUser neste fluxo, então ele é nulo por padrão
 
+                // Mapear listas de contatos e histórico do TempData
                 paciente.Contatos = _mapper.Map<List<PacienteContato>>(TempData.Get<List<PacienteContatoViewModel>>("contatos-paciente") ?? new List<PacienteContatoViewModel>());
                 paciente.Historico = _mapper.Map<List<HistoricoPaciente>>(TempData.Get<List<HistoricoPacienteViewModel>>("historico-paciente") ?? new List<HistoricoPacienteViewModel>());
 
@@ -209,10 +241,9 @@ namespace SGHSSVidaPlus.MVC.Controllers
                     TempData.Put("historico-paciente", _mapper.Map<List<HistoricoPacienteViewModel>>(paciente.Historico));
                     return Json(new { resultado = "falha", mensagem = string.Join(" ", resultado.Mensagens) });
                 }
-                ;
 
                 TempData["success"] = "Paciente Incluído com Sucesso!";
-                return Json(new { resultado = "sucesso" });
+                return Json(new { resultado = "sucesso", redirectUrl = Url.Action("Index", "Pacientes") }); // Redireciona para Index após sucesso
             }
             catch (DbUpdateException ex)
             {
@@ -240,6 +271,9 @@ namespace SGHSSVidaPlus.MVC.Controllers
             }
         }
 
+        // Action para abrir o formulário de edição de paciente.
+        // Pode ser acessada por admin para qualquer paciente, ou pelo próprio paciente (se você tiver uma rota dedicada "Meu Perfil").
+        // Para simplificar, mantemos como ClaimsAuthorize("paciente", "alterar") que geralmente o admin terá.
         [ClaimsAuthorize("paciente", "alterar")]
         public async Task<IActionResult> Editar(int id)
         {
@@ -255,22 +289,87 @@ namespace SGHSSVidaPlus.MVC.Controllers
             if (paciente == null)
             {
                 TempData["error"] = "Não foi possível localizar os dados do paciente.";
-                return RedirectToAction("Index");
+                return RedirectToAction("Index"); // Ou para uma página de erro genérica
             }
+
+            // Mapeia a entidade Paciente para o PacienteViewModel
+            // IMPORTANTE: Isso significa que as propriedades Email, Senha, ConfirmarSenha do PacienteViewModel
+            // serão preenchidas com os valores da entidade Paciente (que podem ser null/empty se não tiver login).
+            var viewModel = _mapper.Map<PacienteViewModel>(paciente);
+
+            // Se o paciente não tiver ApplicationUserId (ou seja, não tem login no Identity),
+            // podemos limpar os campos de Email/Senha/ConfirmarSenha no ViewModel para que não apareçam no formulário
+            // como requeridos, ou para evitar que campos nulos causem validação.
+            // OU, você pode decidir exibir esses campos apenas se ApplicationUserId não for null.
+            if (string.IsNullOrEmpty(viewModel.ApplicationUserId))
+            {
+                viewModel.Email = null;
+                viewModel.Senha = null;
+                viewModel.ConfirmarSenha = null;
+            }
+
 
             TempData.Put("contatos-paciente", _mapper.Map<List<PacienteContatoViewModel>>(paciente.Contatos));
             TempData.Put("historico-paciente", _mapper.Map<List<HistoricoPacienteViewModel>>(paciente.Historico));
 
-            return View(_mapper.Map<PacienteViewModel>(paciente));
+            return View(viewModel);
         }
 
+        // Action para submeter a edição de paciente.
+        // A lógica de ModelState.Remove precisa ser inteligente aqui.
         [HttpPost]
+        [ClaimsAuthorize("paciente", "alterar")] // Apenas admin pode editar pacientes (ou paciente se for edição própria)
         public async Task<JsonResult> Editar(PacienteViewModel pacienteViewModel)
         {
             try
             {
-                // CORREÇÃO AQUI: Ignora a validação para UsuarioInclusao no ModelState
-                ModelState.Remove("UsuarioInclusao"); // <-- ADICIONADO AQUI
+                // NOVO: Adiciona a lógica para remover validações de Email/Senha/ConfirmarSenha
+                // para o caso de edição, se o Email não for fornecido ou se o paciente não tiver ApplicationUserId.
+
+                // 1. Remover UsuarioInclusao (já deve estar lá, mas bom manter)
+                ModelState.Remove("UsuarioInclusao");
+                ModelState.Remove("DataInclusao"); // Também pode ser removido, pois não é atualizado na edição
+
+
+                // 2. Lógica para Email/Senha/ConfirmarSenha na EDIÇÃO:
+                // Se o Email NÃO ESTÁ sendo fornecido (campo vazio) ou
+                // se o paciente não tem um ApplicationUserId associado (não é um usuário Identity completo),
+                // removemos as validações de email/senha/confirmação.
+                // Isso permite salvar a edição sem exigir login/senha se não houver um associado.
+
+                // Primeiro, obtenha o paciente existente do banco para verificar o ApplicationUserId
+                var pacienteExistente = (await _pacienteRepository.BuscarPacientes(new PacienteParams { Id = pacienteViewModel.Id, IncluirContatosHistorico = true })).FirstOrDefault();
+
+                if (pacienteExistente != null)
+                {
+                    // Se não há um ApplicationUser associado OU o email no ViewModel está vazio,
+                    // removemos a obrigatoriedade de email e senha do ModelState.
+                    if (string.IsNullOrEmpty(pacienteExistente.ApplicationUserId) || string.IsNullOrEmpty(pacienteViewModel.Email))
+                    {
+                        ModelState.Remove(nameof(pacienteViewModel.Email));
+                        ModelState.Remove(nameof(pacienteViewModel.Senha));
+                        ModelState.Remove(nameof(pacienteViewModel.ConfirmarSenha));
+                    }
+                    // Se existe um ApplicationUser associado E o email foi fornecido no ViewModel,
+                    // mas a senha ou confirmação estão vazias, adiciona erro.
+                    else if (!string.IsNullOrEmpty(pacienteExistente.ApplicationUserId) && !string.IsNullOrEmpty(pacienteViewModel.Email))
+                    {
+                        if (string.IsNullOrEmpty(pacienteViewModel.Senha))
+                        {
+                            ModelState.AddModelError(nameof(pacienteViewModel.Senha), "A senha é obrigatória se o e-mail for informado.");
+                        }
+                        if (string.IsNullOrEmpty(pacienteViewModel.ConfirmarSenha))
+                        {
+                            ModelState.AddModelError(nameof(pacienteViewModel.ConfirmarSenha), "A confirmação de senha é obrigatória se o e-mail for informado.");
+                        }
+                    }
+                }
+                else
+                {
+                    // Caso o paciente não seja encontrado para edição (o que deveria ser tratado antes)
+                    return Json(new { resultado = "falha", mensagem = "Paciente não encontrado para edição." });
+                }
+
 
                 if (!ModelState.IsValid)
                 {
@@ -280,13 +379,23 @@ namespace SGHSSVidaPlus.MVC.Controllers
                     return Json(new { resultado = "falha", mensagem = string.Join(" ", erros) });
                 }
 
+                // IMPORTANTE: Mapeie os dados do ViewModel para a entidade Paciente.
+                // O .ReverseMap() no AutoMapper lida com isso.
                 var paciente = _mapper.Map<Paciente>(pacienteViewModel);
 
+                // Re-atribui as listas de contatos e histórico do TempData,
+                // pois elas não são passadas diretamente pelo formulário principal.
                 var contatosViewModelFromTempData = TempData.Get<List<PacienteContatoViewModel>>("contatos-paciente") ?? new List<PacienteContatoViewModel>();
                 paciente.Contatos = _mapper.Map<List<PacienteContato>>(contatosViewModelFromTempData);
 
                 var historicoViewModelFromTempData = TempData.Get<List<HistoricoPacienteViewModel>>("historico-paciente") ?? new List<HistoricoPacienteViewModel>();
                 paciente.Historico = _mapper.Map<List<HistoricoPaciente>>(historicoViewModelFromTempData);
+
+                // Certifique-se de que o ApplicationUserId do paciente existente não seja perdido se o ViewModel não o enviar.
+                // A melhor prática seria carregar a entidade existente, atualizar suas propriedades, e salvar.
+                // Ou, garantir que o ApplicationUserId seja um campo oculto no form de edição.
+                paciente.ApplicationUserId = pacienteExistente.ApplicationUserId; // Preserva o ApplicationUserId existente
+
 
                 var resultado = await _pacienteService.Editar(paciente);
 
@@ -296,10 +405,9 @@ namespace SGHSSVidaPlus.MVC.Controllers
                     TempData.Put("historico-paciente", _mapper.Map<List<HistoricoPacienteViewModel>>(paciente.Historico));
                     return Json(new { resultado = "falha", mensagem = string.Join(" ", resultado.Mensagens) });
                 }
-                ;
 
                 TempData["success"] = "Paciente Editado com Sucesso!";
-                return Json(new { resultado = "sucesso" });
+                return Json(new { resultado = "sucesso", redirectUrl = Url.Action("Index", "Pacientes") });
             }
             catch (DbUpdateException ex)
             {
@@ -329,6 +437,7 @@ namespace SGHSSVidaPlus.MVC.Controllers
 
 
         [HttpPost]
+        [ClaimsAuthorize("paciente", "alterar")] // Ou uma policy mais específica, como "paciente.alterar_status"
         public async Task<JsonResult> AlterarStatus(int id)
         {
             try
@@ -353,6 +462,7 @@ namespace SGHSSVidaPlus.MVC.Controllers
             }
         }
 
+        [Authorize] // Qualquer usuário logado pode buscar histórico de paciente, mas a View() deve ser protegida
         public async Task<IActionResult> BuscarHistorico(int id)
         {
             var paciente = (await _pacienteRepository.BuscarPacientes(new PacienteParams() { Id = id, IncluirContatosHistorico = true })).FirstOrDefault();
