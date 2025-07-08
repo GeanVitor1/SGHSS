@@ -12,8 +12,8 @@ using SGHSSVidaPlus.Infrastructure.Data.Context;
 namespace SGHSSVidaPlus.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(HospitalDbContext))]
-    [Migration("20250707170935_AddDefaultAtendenteProfessional")]
-    partial class AddDefaultAtendenteProfessional
+    [Migration("20250708011334_teste")]
+    partial class teste
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

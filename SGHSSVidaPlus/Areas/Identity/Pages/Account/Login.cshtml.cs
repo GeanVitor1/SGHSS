@@ -1,6 +1,8 @@
-﻿using AutoMapper;
+﻿// Login.cshtml.cs
+
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity; // Garanta que este using está presente
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
@@ -25,7 +27,7 @@ namespace SGHSSVidaPlus.MVC.Areas.Identity.Pages.Account
         private readonly IAgendamentoService _agendamentoService;
         private readonly IMapper _mapper;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager, // <--- LINHA CORRIGIDA AQUI
+        public LoginModel(SignInManager<ApplicationUser> signInManager,
                                       UserManager<ApplicationUser> userManager,
                                       ILogger<LoginModel> logger,
                                       IPacienteService pacienteService,
@@ -46,6 +48,13 @@ namespace SGHSSVidaPlus.MVC.Areas.Identity.Pages.Account
         public string ErrorMessage { get; set; }
 
         public RegisterPatientInputModel RegisterInput { get; set; }
+
+        // --- Método auxiliar para limpar o CPF ---
+        private string CleanCpf(string cpf)
+        {
+            return new string(cpf?.Where(char.IsDigit).ToArray());
+        }
+        // --- Fim do método auxiliar ---
 
         public class InputModel
         {
@@ -136,12 +145,11 @@ namespace SGHSSVidaPlus.MVC.Areas.Identity.Pages.Account
 
             if (!ModelState.IsValid)
             {
-                // Coleta apenas erros gerais (não associados a campos específicos do input que podem ser tratados por asp-validation-for)
                 var generalErrors = ModelState.Values
                                                 .SelectMany(v => v.Errors)
-                                                .Where(e => string.IsNullOrEmpty(e.ErrorMessage) || ModelState.Keys.All(k => k != e.ErrorMessage)) // Tentativa de filtrar erros duplicados
+                                                .Where(e => string.IsNullOrEmpty(e.ErrorMessage) || ModelState.Keys.All(k => k != e.ErrorMessage))
                                                 .Select(e => e.ErrorMessage)
-                                                .Distinct() // Garante que não haja mensagens repetidas aqui
+                                                .Distinct()
                                                 .ToList();
                 TempData["error"] = string.Join(" . ", generalErrors);
                 ViewData["FormIdWithErrors"] = "account";
@@ -188,18 +196,20 @@ namespace SGHSSVidaPlus.MVC.Areas.Identity.Pages.Account
             returnUrl ??= Url.Content("~/");
             RegisterInput = registerInput;
 
-            // Antes de tentar criar o usuário, verifique a validação do modelo RegisterInput
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values
                                        .SelectMany(v => v.Errors)
                                        .Select(e => e.ErrorMessage)
-                                       .Distinct() // Adicionado .Distinct() para remover mensagens duplicadas de validação de campo
+                                       .Distinct()
                                        .ToList();
                 TempData["error"] = string.Join(" . ", errors);
                 ViewData["FormIdWithErrors"] = "registerForm";
                 return Page();
             }
+
+            // --- AQUI É ONDE O CPF SERÁ LIMPO ANTES DA BUSCA E DO CADASTRO ---
+            var cleanedCpf = CleanCpf(RegisterInput.CPF);
 
             var userExists = await _userManager.FindByEmailAsync(RegisterInput.Email);
             if (userExists != null)
@@ -209,9 +219,12 @@ namespace SGHSSVidaPlus.MVC.Areas.Identity.Pages.Account
                 return Page();
             }
 
-            var pacienteExists = (await _pacienteService.BuscarPacientes(new Domain.ExtensionsParams.PacienteParams { CPF = RegisterInput.CPF })).FirstOrDefault();
+            // BUSCA PACIENTE POR CPF LIMPO
+            var pacienteExists = (await _pacienteService.BuscarPacientes(new Domain.ExtensionsParams.PacienteParams { CPF = cleanedCpf })).FirstOrDefault();
             if (pacienteExists != null)
             {
+                // Se um paciente com o CPF limpo já existe (e não está editando o próprio CPF, o que não é o caso aqui),
+                // então o erro de CPF duplicado é válido.
                 TempData["error"] = "Este CPF já está cadastrado em nosso sistema. Por favor, faça login ou entre em contato.";
                 ViewData["FormIdWithErrors"] = "registerForm";
                 return Page();
@@ -240,6 +253,7 @@ namespace SGHSSVidaPlus.MVC.Areas.Identity.Pages.Account
                 paciente.Ativo = true;
                 paciente.UsuarioInclusao = user.UserName;
                 paciente.DataInclusao = DateTime.Now;
+                paciente.CPF = cleanedCpf; // SALVA O CPF LIMPO NA ENTIDADE PACIENTE
 
                 var pacienteResult = await _pacienteService.Incluir(paciente);
 
@@ -251,22 +265,18 @@ namespace SGHSSVidaPlus.MVC.Areas.Identity.Pages.Account
                         {
                             PacienteId = paciente.Id,
                             Descricao = RegisterInput.TipoConsultaDesejada,
-                            // DataHoraAgendamento pode ser uma data futura genérica,
-                            // pois o agendamento real será ajustado pelo admin
-                            DataHoraAgendamento = DateTime.Now.AddDays(7), // Ex: daqui a uma semana
-                            Status = "Pendente", // <-- Status inicial "Pendente"
+                            DataHoraAgendamento = DateTime.Now.AddDays(7),
+                            Status = "Pendente",
                             Encerrado = false,
                             UsuarioInclusao = user.UserName,
                             DataInclusao = DateTime.Now,
-                            ProfissionalResponsavelId = 1 // <-- ID do atendente padrão
+                            ProfissionalResponsavelId = 1
                         };
                         var agendamentoResult = await _agendamentoService.Incluir(agendamento);
                         if (!agendamentoResult.Valido)
                         {
                             _logger.LogError("Falha ao criar agendamento inicial para o paciente {PatientId}: {Errors}", paciente.Id, string.Join(", ", agendamentoResult.Mensagens));
-                            // Opcional: Adicionar uma mensagem de erro ao TempData se o agendamento inicial falhar,
-                            // mesmo que o cadastro do paciente tenha sucesso.
-                            // TempData["error"] = "Seu cadastro foi realizado, mas houve um problema ao criar seu agendamento inicial. Por favor, entre em contato.";
+                            // Opcional: Adicionar uma mensagem de erro ao TempData se o agendamento inicial falhar, mesmo que o cadastro do paciente tenha sucesso.
                         }
                     }
 
@@ -285,18 +295,11 @@ namespace SGHSSVidaPlus.MVC.Areas.Identity.Pages.Account
             }
             else // Caso o identityResult.Succeeded seja false (erros do Identity)
             {
-                // Coleta apenas as descrições dos erros do Identity, que já virão traduzidas (se a localização estiver configurada)
                 var identityErrors = identityResult.Errors.Select(e => e.Description).Distinct().ToList();
-
-                // Adiciona esses erros ao ModelState.
-                // O Tag Helper asp-validation-for já deverá pegar e exibir nos campos corretos.
-                // Para erros gerais (como regras de senha), eles serão adicionados ao ModelState com string.Empty como chave.
                 foreach (var error in identityErrors)
                 {
                     ModelState.AddModelError(string.Empty, error);
                 }
-
-                // Passa as mensagens de erro do Identity para o TempData, para serem exibidas pelo SweetAlert
                 TempData["error"] = string.Join(" . ", identityErrors);
                 ViewData["FormIdWithErrors"] = "registerForm";
                 return Page();

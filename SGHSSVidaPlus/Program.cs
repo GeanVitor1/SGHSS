@@ -13,9 +13,10 @@ using SGHSSVidaPlus.Application.Services;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
-using System.Security.Claims; // Necessário para ClaimTypes
+using System.Security.Claims;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging; // Necessário para LogLevel
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 // Contexto principal do Hospital, só pra dados da app mesmo
 builder.Services.AddDbContext<HospitalDbContext>(options =>
     options.UseSqlServer(connectionString)
+    // ADICIONAR LOGGING PARA VER AS QUERIES SQL NO CONSOLE DE SAÍDA (PARA DEBUG)
+    .LogTo(Console.WriteLine, LogLevel.Information) // Ou LogLevel.Debug para mais detalhes
 );
 
 // Contexto do Identity
@@ -32,6 +35,8 @@ builder.Services.AddDbContext<SGHSSVidaPlusMVCContext>(options =>
         connectionString,
         sqlOptions => sqlOptions.MigrationsAssembly("SGHSSVidaPlus.Infrastructure.Data") // Migrations vão pra Infrastructure.Data
     )
+    // ADICIONAR LOGGING PARA VER AS QUERIES SQL DO IDENTITY TAMBÉM
+    .LogTo(Console.WriteLine, LogLevel.Information)
 );
 
 // Configura Identity com ApplicationUser e roles
@@ -49,15 +54,12 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("RequirePacienteRoleOrClaim", policy =>
         policy.RequireRole("paciente").RequireClaim("TipoUsuario", "Paciente"));
-    // Você pode ter uma policy que exija apenas a role, ou apenas a claim, ou ambas.
-    // Use 'RequireRole("paciente")' se você for adicionar a role "paciente" a todos os pacientes.
-    // Use 'RequireClaim("TipoUsuario", "Paciente")' se preferir usar apenas a claim.
-    // A combinação é a mais segura se você usar os dois.
 });
-
 
 builder.Services.AddAutoMapper(typeof(SGHSSVidaPlus.MVC.Configurations.AutoMapperConfig));
 
+// Injeção de Dependências
+// Certifique-se de que não há registros duplicados que possam estar sobrescrevendo
 builder.Services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>));
 builder.Services.AddScoped<IPacienteRepository, PacienteRepository>();
 builder.Services.AddScoped<IProfissionalSaudeRepository, ProfissionalSaudeRepository>();
@@ -129,7 +131,7 @@ using (var scope = app.Services.CreateScope())
 {
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var pacienteService = scope.ServiceProvider.GetRequiredService<IPacienteService>(); // Pegar o PacienteService
+    // var pacienteService = scope.ServiceProvider.GetRequiredService<IPacienteService>(); // Pegar o PacienteService - Removido aqui, pois não é usado diretamente para seed de paciente agora.
 
     // Seed para o usuário ADMINISTRADOR
     var adminUser = await userManager.FindByNameAsync("admin");
@@ -153,10 +155,11 @@ using (var scope = app.Services.CreateScope())
                 await roleManager.CreateAsync(new IdentityRole("admin"));
             await userManager.AddToRoleAsync(adminUser, "admin");
             await userManager.AddClaimAsync(adminUser, new Claim("paciente", "visualizar"));
-            // Adicione outras claims para admin se necessário
+            await userManager.AddClaimAsync(adminUser, new Claim("paciente", "incluir")); // Admin precisa de claim para Incluir
+            await userManager.AddClaimAsync(adminUser, new Claim("paciente", "alterar")); // Admin precisa de claim para Alterar
         }
     }
-    else // Se o admin já existe, garanta que ele tem a role e a claim
+    else // Se o admin já existe, garanta que ele tem as roles e claims
     {
         if (!await userManager.IsInRoleAsync(adminUser, "admin"))
         {
@@ -169,6 +172,14 @@ using (var scope = app.Services.CreateScope())
         {
             await userManager.AddClaimAsync(adminUser, new Claim("paciente", "visualizar"));
         }
+        if (!claims.Any(c => c.Type == "paciente" && c.Value == "incluir"))
+        {
+            await userManager.AddClaimAsync(adminUser, new Claim("paciente", "incluir"));
+        }
+        if (!claims.Any(c => c.Type == "paciente" && c.Value == "alterar"))
+        {
+            await userManager.AddClaimAsync(adminUser, new Claim("paciente", "alterar"));
+        }
     }
 
     // NOVO: Seed para a role "paciente" (se não existir)
@@ -176,17 +187,6 @@ using (var scope = app.Services.CreateScope())
     {
         await roleManager.CreateAsync(new IdentityRole("paciente"));
     }
-
-    // OPCIONAL: Criar um profissional padrão se não houver nenhum
-    // Para que o agendamento inicial no cadastro do paciente não quebre
-    // caso ProfissionalResponsavelId seja obrigatório e não haja profissionais cadastrados.
-    // Você precisaria de um IProfissionalSaudeService aqui também.
-    // var profissionalService = scope.ServiceProvider.GetRequiredService<IProfissionalSaudeService>();
-    // var profissionalPadrao = (await profissionalService.BuscarProfissional(new ProfissionalSaudeParams { Nome = "Profissional Padrão" })).FirstOrDefault();
-    // if (profissionalPadrao == null)
-    // {
-    //     await profissionalService.Incluir(new ProfissionalSaude { Nome = "Profissional Padrão", Cargo = "Geral", Ativo = true, /* Outros campos obrigatórios */ });
-    // }
 }
 
 app.Run();

@@ -1,4 +1,6 @@
-﻿using SGHSSVidaPlus.Domain.Entities;
+﻿// SGHSSVidaPlus.Application.Services/PacienteService.cs
+
+using SGHSSVidaPlus.Domain.Entities;
 using SGHSSVidaPlus.Domain.ExtensionsParams;
 using SGHSSVidaPlus.Domain.Interfaces.Repository;
 using SGHSSVidaPlus.Domain.Interfaces.Service;
@@ -18,9 +20,20 @@ namespace SGHSSVidaPlus.Application.Services
             _pacienteRepository = pacienteRepository;
         }
 
+        // --- Método auxiliar para limpar o CPF (Centralizado aqui) ---
+        private string CleanCpf(string? cpf) // Tornar string? para lidar com nulos
+        {
+            return new string(cpf?.Where(char.IsDigit).ToArray() ?? Array.Empty<char>()); // Lida com CPF nulo
+        }
+        // --- Fim do método auxiliar ---
+
         public async Task<OperationResult> Incluir(Paciente paciente)
         {
             var result = new OperationResult();
+
+            // Limpa o CPF ANTES de qualquer validação ou uso.
+            // O CPF já virá do ViewModel (RegisterInput.CPF ou PacienteAdminRegisterViewModel.CPF)
+            paciente.CPF = CleanCpf(paciente.CPF);
 
             if (string.IsNullOrWhiteSpace(paciente.Nome))
             {
@@ -32,9 +45,21 @@ namespace SGHSSVidaPlus.Application.Services
                 result.Valido = false;
                 result.Mensagens.Add("O CPF do paciente é obrigatório.");
             }
+            else if (paciente.CPF.Length < 11 || paciente.CPF.Length > 11) // Basicamente, CPF deve ter 11 dígitos após limpeza
+            {
+                // Opcional: Adicionar validação de tamanho para CPF já limpo
+                // result.Valido = false;
+                // result.Mensagens.Add("O CPF deve conter 11 dígitos.");
+            }
+
             // Verifica se o CPF já existe
+            // A busca aqui usará o CPF JÁ LIMPO
+            // Para INCLUSÃO, se um paciente com ESSE CPF JÁ EXISTE, é um duplicado.
             var pacienteComCpfExistente = (await _pacienteRepository.BuscarPacientes(new PacienteParams { CPF = paciente.CPF })).FirstOrDefault();
-            if (pacienteComCpfExistente != null && pacienteComCpfExistente.Id != paciente.Id) // Permite editar o próprio CPF
+
+            // Para Inclusão: Se pacienteComCpfExistente não for null, significa que já existe.
+            // A condição `pacienteComCpfExistente.Id != paciente.Id` só é relevante para o MÉTODO DE EDIÇÃO.
+            if (pacienteComCpfExistente != null)
             {
                 result.Valido = false;
                 result.Mensagens.Add("Já existe um paciente cadastrado com este CPF.");
@@ -42,7 +67,6 @@ namespace SGHSSVidaPlus.Application.Services
 
             if (result.Valido)
             {
-                // Esses campos já virão preenchidos do Login.cshtml.cs no novo fluxo de cadastro
                 if (string.IsNullOrWhiteSpace(paciente.UsuarioInclusao))
                     paciente.UsuarioInclusao = "Sistema (Auto-cadastro)";
                 if (paciente.DataInclusao == DateTime.MinValue)
@@ -59,6 +83,9 @@ namespace SGHSSVidaPlus.Application.Services
         {
             var result = new OperationResult();
 
+            // Limpa o CPF também na edição para manter a padronização
+            paciente.CPF = CleanCpf(paciente.CPF);
+
             if (paciente.Id <= 0)
             {
                 result.Valido = false;
@@ -69,8 +96,15 @@ namespace SGHSSVidaPlus.Application.Services
                 result.Valido = false;
                 result.Mensagens.Add("O nome do paciente é obrigatório para edição.");
             }
+            if (string.IsNullOrWhiteSpace(paciente.CPF))
+            {
+                result.Valido = false;
+                result.Mensagens.Add("O CPF do paciente é obrigatório.");
+            }
+
             // Verifica duplicidade de CPF ao editar
             var pacienteComCpfExistente = (await _pacienteRepository.BuscarPacientes(new PacienteParams { CPF = paciente.CPF })).FirstOrDefault();
+            // Para Edição: Se pacienteComCpfExistente não for null E o ID for diferente do paciente que está sendo editado, é um duplicado.
             if (pacienteComCpfExistente != null && pacienteComCpfExistente.Id != paciente.Id)
             {
                 result.Valido = false;
@@ -91,7 +125,7 @@ namespace SGHSSVidaPlus.Application.Services
                 pacienteExistente.Nome = paciente.Nome;
                 pacienteExistente.DataNascimento = paciente.DataNascimento;
                 pacienteExistente.Endereco = paciente.Endereco;
-                pacienteExistente.CPF = paciente.CPF;
+                pacienteExistente.CPF = paciente.CPF; // CPF já vem limpo
                 pacienteExistente.EstadoCivil = paciente.EstadoCivil;
                 pacienteExistente.Ativo = paciente.Ativo;
 
@@ -167,9 +201,10 @@ namespace SGHSSVidaPlus.Application.Services
             return result;
         }
 
-        // NOVO: Método para buscar pacientes com base em parâmetros (para o Login.cshtml.cs)
         public async Task<IEnumerable<Paciente>> BuscarPacientes(PacienteParams parametros)
         {
+            // Limpa o CPF dos parâmetros de busca, se houver, antes de passar para o repositório
+            parametros.CPF = CleanCpf(parametros.CPF);
             return await _pacienteRepository.BuscarPacientes(parametros);
         }
     }

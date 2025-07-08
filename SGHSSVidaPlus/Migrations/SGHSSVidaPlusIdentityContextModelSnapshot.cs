@@ -52,7 +52,7 @@ namespace SGHSSVidaPlus.MVC.Migrations
                         new
                         {
                             Id = "a2dfa1e2-b1d5-4a8e-a9b0-a3e7e0e7a1e2",
-                            ConcurrencyStamp = "fb977d3c-09a5-46a1-8d51-5b6c138128dc",
+                            ConcurrencyStamp = "f5d0e655-9e62-4082-b4c7-483c4476ebd3",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         });
@@ -252,16 +252,16 @@ namespace SGHSSVidaPlus.MVC.Migrations
                             AccessFailedCount = 0,
                             Admin = true,
                             Bloqueado = false,
-                            ConcurrencyStamp = "52de708a-487f-413c-b83a-285bcbf64e9e",
+                            ConcurrencyStamp = "deebb0a4-9667-411c-9274-8cb819416419",
                             Email = "admin@sghssvidaplus.com.br",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             Nome = "Administrador Master",
                             NormalizedEmail = "ADMIN@SGHSSVIDAPLUS.COM.BR",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAfq+geUgbWbn5rDJkMMnlESZ4K2uxu45Jiqec1kPsMbzxa1zDa/5AAZ3La7eO+86A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECqV+Eu2qHr5W3XVnod5cvw01xOC+UCtrXPas14Ls6SWw7QzHOuZKCMHbQxpIzkSsg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "c520f9b2-3ec0-4d5c-896c-7f9a5e6404d0",
+                            SecurityStamp = "8e81419f-faa2-435d-8081-1dcf1f5928ed",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         });
